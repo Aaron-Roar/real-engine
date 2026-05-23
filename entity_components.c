@@ -1,6 +1,7 @@
 #include "entity_components.h"
 #include <stdbool.h>
 #include <stdio.h>
+#include "error.h"
 #include "tools.h"
 
 
@@ -24,8 +25,11 @@ TimeWindow time_windows[MAX_ENTITIES] = {0};
 
 uint32_t entity_counter = 1; //Temporary solution. Leaks memory on entity deletion
 Entity add_entity() {
+    Error error = {0};
+
     if(entity_counter >= MAX_ENTITIES) {
-        print_error(FAILED_ADD_COMPONENTS | ENTITY_RANGE_EXCEEDED);
+        error.code |= FAILED_ADD_COMPONENTS | ENTITY_RANGE_EXCEEDED;
+        error_print(error);
         return 0; //Unused location
     }
 
@@ -35,23 +39,35 @@ Entity add_entity() {
 }
 
 void delete_entity(Entity e) {
+    Error error;
+
     if(entity_alive[e] == 0) {
-        print_error(FAILED_DELETE_COMPONENTS | ENTITY_DOES_NOT_EXIST);
+        error.code |= FAILED_ADD_COMPONENTS | ENTITY_DOES_NOT_EXIST;
+        error_add_entity(error, e);
+        error_print(error);
     }
     entity_alive[e] = 0;
     entity_mask[e] = 0;
 }
 
 void add_components(Entity e, CMask mask) {
+    Error error;
+
     if(entity_alive[e] == 0) {
-        print_error(FAILED_ADD_COMPONENTS | ENTITY_DOES_NOT_EXIST);
+        error.code |= FAILED_ADD_COMPONENTS | ENTITY_DOES_NOT_EXIST;
+        error_add_entity(error, e);
+        error_print(error);
     }
     entity_mask[e] |= mask;
 }
 
 void delete_components(Entity e, CMask mask) {
+    Error error;
+
     if(entity_alive[e] == 0) {
-        print_error(FAILED_DELETE_COMPONENTS | ENTITY_DOES_NOT_EXIST);
+        error.code |= FAILED_DELETE_COMPONENTS | ENTITY_DOES_NOT_EXIST;
+        error_add_entity(error, e);
+        error_print(error);
     }
     entity_mask[e] &= ~mask;
 }
@@ -85,15 +101,15 @@ void print_entity_components(Entity e) {
 }
 
 void set_acceleration(Entity e, Acceleration a) {
-    entity_mask[e] |= ACCELERATION | VELOCITY | POSITION | MOVEABLE;
+    entity_mask[e] |= MOVEABLE;
     accelerations[e] = a;
 }
 void set_velocity(Entity e, Velocity v) {
-    entity_mask[e] |= VELOCITY | POSITION | MOVEABLE;
+    entity_mask[e] |= MOVEABLE;
     velocities[e] = v;
 }
 void set_position(Entity e, Position p) {
-    entity_mask[e] |= POSITION | MOVEABLE;
+    entity_mask[e] |= POSITION;
     positions[e] = p;
 }
 
@@ -102,8 +118,22 @@ void set_mass(Entity e, Mass m) {
     mass[e] = m;
 }
 
-//Will work in future by appling forces to a target like in unreal
+//Applies a force to a target
 void set_force(Entity e, Force f) {
-    entity_mask[e] |= ACCELERATION | VELOCITY | POSITION | MOVEABLE;
-    forces[e] = f;
+    Entity force_entity = add_entity();
+    forces[force_entity] = f;
+    targets[force_entity] = e;
+    entity_mask[force_entity] |= TARGETABLE | FORCE;
+
+    entity_mask[e] |= MOVEABLE;
+}
+
+void print_alive_entities() {
+    printf("[*]AliveEntities: {");
+    for(int i = 0; i < MAX_ENTITIES; i++) {
+        if(entity_alive[i]) {
+            printf("%d ", i);
+        }
+    }
+    printf("}\n");
 }

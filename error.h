@@ -1,5 +1,6 @@
 #ifndef ERROR_H
 #define ERROR_H
+#include "entity_components.h"
 
 #define MAX_ENTITY_REPORT 500
 #define MAX_COMPONENT_REPORT 500
@@ -34,6 +35,7 @@ typedef enum ErrorCode {
     FAILED_DELETE_COMPONENTS    = 1 << 6,
     FAILED_UPDATE_ACCELERATION  = 1 << 7,
     ACCELERATING_MASSLESS_ENTITY= 1 << 8,
+    INCOMPATABLE_COMPONENTS     = 1 << 9,
 } ErrorCode;
 typedef enum ErrorLevel {ENTITY, COMPONENT, SYSTEM, ENGINE} ErrorLevel;
 typedef enum ErrorSeverity {WARNING, MINIMAL, CRITICAL} ErrorSeverity;
@@ -43,14 +45,15 @@ typedef struct ErrorInfo {
     ErrorSeverity severity;
     char* string;
 } ErrorInfo;
-
 typedef struct Error {
     ErrorCode code;
+    EntityList entities;
     ErrorSeverity severity;
     ErrorReport report;
 } Error;
 
-void print_error(ErrorCode code);
+void error_print(Error err);
+void error_add_entity(Error err, Entity entity);
 
 ErrorInfo error_get_info(ErrorCode code);
 #endif

@@ -10,6 +10,10 @@ typedef uint32_t Entity; //An id for an entity
 #define MAX_ENTITIES 30
 #define MAX_COMPONENTS 30
 extern bool entity_alive[MAX_ENTITIES]; //What entities are active
+typedef struct EntityList {
+    uint32_t entity_amount;
+    Entity concerned_entities[MAX_ENTITIES];
+} EntityList;
 typedef uint32_t CMask; //The bit mask for an entities components
 extern CMask entity_mask[MAX_ENTITIES]; //Bit map of the components each entity has
 //Enum for the component mask
@@ -22,6 +26,7 @@ typedef enum {
     MASS        = 1 << 4,
     TIMEWINDOW  = 1 << 5,
     MOVEABLE    = 1 << 6,
+    TARGETABLE  = 1 << 7,
 } Component;
 static const char* component_names[] = {
     "NONE",
@@ -32,6 +37,7 @@ static const char* component_names[] = {
     "MASS",
     "TIMEWINDOW",
     "MOVEABLE",
+    "TARGETABLE",
 };
 extern const int component_count;
 
@@ -67,6 +73,8 @@ extern Entity targets[MAX_ENTITIES];
 extern Force forces[MAX_ENTITIES];
 extern TimeWindow time_windows[MAX_ENTITIES];
 
+//Target Capable Effects
+
 Entity add_entity();
 void delete_entity(Entity e);
 void add_components(Entity e, CMask mask);
@@ -77,5 +85,7 @@ void set_velocity(Entity e, Velocity v);
 void set_position(Entity e, Position p);
 void set_mass(Entity e, Mass m);
 void set_force(Entity e, Force f);
+void print_alive_entities();
+bool equate_mask(CMask e_mask, CMask filter);
 
 #endif
