@@ -1,10 +1,11 @@
 #include "error.h"
 #include "tools.h"
+#include "console.h"
 #include "stdio.h"
 
 
 static const ErrorInfo error_info[] = {
-    {ERROR_CODE_DOES_NOT_EXIST, ENGINE, CRITICAL, "|ERROR_CODE_DOES_NOT_EXIST|"},
+    {ERROR_CODE_DOES_NOT_EXIST, CORE, CRITICAL, "|ERROR_CODE_DOES_NOT_EXIST|"},
     {ENTITY_RANGE_EXCEEDED, ENTITY, MINIMAL, "|ENTITY_RANGE_EXCEEDED|"},
     {ENTITY_DOES_NOT_EXIST, ENTITY, WARNING,"|ENTITY_DOES_NOT_EXIST|"},
     {FAILED_ADD_ENTITY, ENTITY, WARNING, "|FAILED_ADD_ENTITY|"},
@@ -46,7 +47,7 @@ ErrorReport error_generate_report(ErrorCode code) {
                             MAX_COMPONENT_REPORT
                     );
                     break;
-                case ENGINE:
+                case CORE:
                     tools_append_string(
                             error_info[i].string,
                             error_report.engine.report,
@@ -71,19 +72,21 @@ ErrorSeverity error_severity_level(ErrorCode code) {
     return severity;
 }
 
-void error_add_entity(Error err, Entity entity) {
-    if(err.entities.entity_amount <= MAX_ENTITIES) {
-        err.entities.concerned_entities[err.entities.entity_amount] = entity;
-        err.entities.entity_amount += 1;
+void error_add_entity(Error* err, Entity entity) {
+    if(err->entities.entity_amount <= MAX_ENTITIES) {
+        err->entities.concerned_entities[err->entities.entity_amount] = entity;
+        err->entities.entity_amount += 1;
     }
 }
 
 void error_print_entities(EntityList entities) {
-    printf("[!]Entities: {");
-    for(int i = 0; i < entities.entity_amount - 1; i++) {
-        printf("%d, ", entities.concerned_entities[i]);
+    console_write(ERROR, "Entities: { ");
+    if(entities.entity_amount > 0) {
+        for(int i = 0; i <= entities.entity_amount - 1; i++) {
+            console_write(ERROR, "%d ", entities.concerned_entities[i]);
+        }
+    console_write(ERROR, "}\n");
     }
-        printf("%d}\n", entities.concerned_entities[entities.entity_amount - 1]);
 }
 
 void error_print(Error err) {
@@ -94,12 +97,18 @@ void error_print(Error err) {
         char bit_flags[33] = {0};
         binary_to_string(err.code, bit_flags, sizeof(bit_flags));
 
-        printf("[!]Error Begin\n-----------------------\n");
-        printf("(ErrorSummary)\n");
-        printf("[!]Error: %d\n[!]ErrorFlags: %s\n[!]Severity(0-2): %d\n", err.code, bit_flags, err.severity);
-        printf("\n(ErrorReport)\n");
-        printf("[!]EntityReport: %s\n[!]ComponentReport: %s\n[!]SystemReport: %s\n[!]EngineReport: %s\n", err.report.entity.report, err.report.component.report, err.report.system.report, err.report.engine.report);
+        console_write(ERROR, "---Error---\n");
+        console_write(ERROR, "(ErrorSummary)\n");
+        console_write(ERROR, "ErrorCode: %d\n", err.code);
+        console_write(ERROR, "ErrorFlags: %s\n", bit_flags);
+        console_write(ERROR, "Severity: %d\n", err.severity);
+        console_write(ERROR,"\n");
+        console_write(ERROR, "(ErrorReport)\n");
+        console_write(ERROR, "EntityReport: %s\n", err.report.entity.report);
+        console_write(ERROR, "ComponentReport: %s\n", err.report.component.report);
+        console_write(ERROR, "SystemReport: %s\n", err.report.system.report);
+        console_write(ERROR, "EngineReport: %s\n", err.report.engine.report);
         error_print_entities(err.entities);
-        printf("-----------------------\n[!]Error End\n");
+        console_write(ERROR, "---Error---\n");
     }
 }

@@ -1,7 +1,8 @@
-#include "entity_components.h"
 #include <stdbool.h>
 #include <stdio.h>
+#include "entity_components.h"
 #include "error.h"
+#include "console.h"
 #include "tools.h"
 
 
@@ -28,7 +29,7 @@ Entity add_entity() {
     Error error = {0};
 
     if(entity_counter >= MAX_ENTITIES) {
-        error.code |= FAILED_ADD_COMPONENTS | ENTITY_RANGE_EXCEEDED;
+        error.code |= FAILED_ADD_ENTITY | ENTITY_RANGE_EXCEEDED;
         error_print(error);
         return 0; //Unused location
     }
@@ -42,8 +43,8 @@ void delete_entity(Entity e) {
     Error error;
 
     if(entity_alive[e] == 0) {
-        error.code |= FAILED_ADD_COMPONENTS | ENTITY_DOES_NOT_EXIST;
-        error_add_entity(error, e);
+        error.code |= FAILED_DELETE_ENTITY | ENTITY_DOES_NOT_EXIST;
+        error_add_entity(&error, e);
         error_print(error);
     }
     entity_alive[e] = 0;
@@ -55,7 +56,7 @@ void add_components(Entity e, CMask mask) {
 
     if(entity_alive[e] == 0) {
         error.code |= FAILED_ADD_COMPONENTS | ENTITY_DOES_NOT_EXIST;
-        error_add_entity(error, e);
+        error_add_entity(&error, e);
         error_print(error);
     }
     entity_mask[e] |= mask;
@@ -66,37 +67,37 @@ void delete_components(Entity e, CMask mask) {
 
     if(entity_alive[e] == 0) {
         error.code |= FAILED_DELETE_COMPONENTS | ENTITY_DOES_NOT_EXIST;
-        error_add_entity(error, e);
+        error_add_entity(&error, e);
         error_print(error);
     }
     entity_mask[e] &= ~mask;
 }
 
 void print_entity_components(Entity e) {
-    printf("Entity: %d\n", e);
+    console_write(ENGINE, "Entity: %d\n", e);
         if(entity_mask[e] & NONE) {
-            printf("NONE\n");
+            console_write(ENGINE, "NONE\n");
         }
         if(entity_mask[e] & POSITION) {
-            printf("POSITION\n");
+            console_write(ENGINE, "POSITION\n");
         }
         if(entity_mask[e] & VELOCITY) {
-            printf("VELOCITY\n");
+            console_write(ENGINE, "VELOCITY\n");
         }
         if(entity_mask[e] & ACCELERATION) {
-            printf("ACCELERATION\n");
+            console_write(ENGINE, "ACCELERATION\n");
         }
         if(entity_mask[e] & FORCE) {
-            printf("FORCE\n");
+            console_write(ENGINE, "FORCE\n");
         }
         if(entity_mask[e] & MASS) {
-            printf("MASS\n");
+            console_write(ENGINE, "MASS\n");
         }
         if(entity_mask[e] & TIMEWINDOW) {
-            printf("TIMEWINDOW\n");
+            console_write(ENGINE, "TIMEWINDOW\n");
         }
         if(entity_mask[e] & MOVEABLE) {
-            printf("MOVEABLE\n");
+            console_write(ENGINE, "MOVEABLE\n");
         }
 }
 
@@ -129,11 +130,11 @@ void set_force(Entity e, Force f) {
 }
 
 void print_alive_entities() {
-    printf("[*]AliveEntities: {");
+    console_write(ENGINE, "AliveEntities: {");
     for(int i = 0; i < MAX_ENTITIES; i++) {
         if(entity_alive[i]) {
-            printf("%d ", i);
+            console_write(ENGINE,"%d ", i);
         }
     }
-    printf("}\n");
+    console_write(ENGINE, "}\n");
 }

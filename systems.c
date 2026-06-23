@@ -1,7 +1,8 @@
 #include "entity_components.h"
 #include "systems.h"
-#include "stdio.h"
 #include "error.h"
+#include "console.h"
+#include <stdio.h>
 
 void system_update_positions() {
     CMask filter = MOVEABLE;
@@ -71,17 +72,21 @@ void system_apply_forces() {
                     if(mass[targets[i]] != 0) {
                         accelerations[targets[i]].x += forces[i].x/mass[targets[i]];
                         accelerations[targets[i]].y += forces[i].y/mass[targets[i]];
-                    }
-                    else {
+                    } else {
+                        //Force on massless entity
                         error.code |= ACCELERATING_MASSLESS_ENTITY | FAILED_UPDATE_ACCELERATION;
+                        error_add_entity(&error, i);
+                        error_add_entity(&error, targets[i]);
                     }
-                }
-                else {
+                } else {
+                    //Force trying to move entity
                     error.code |= INCOMPATABLE_COMPONENTS | FAILED_UPDATE_ACCELERATION;
+                        error_add_entity(&error, i);
+                        error_add_entity(&error, targets[i]);
                 }
             }
             else {
-                error.code |= ENTITY_DOES_NOT_EXIST | FAILED_UPDATE_ACCELERATION;
+                //Forces exist without targets
             }
         }
     }
@@ -98,12 +103,10 @@ void system_clear_accelerations() {
 
 
 void print_entity_movement(Entity e) {
-    char string[] =
-        "------------------------------\n"
-        "[*]Entity: %d\n"
-        "[*]Position: {x: %f, y: %f}\n"
-        "[*]Velocity: {x: %f, y: %f}\n"
-        "[*]Acceleration: {x: %f, y: %f}\n"
-        "------------------------------\n";
-    printf(string, e, positions[e].x, positions[e].y, velocities[e].x, velocities[e].y, accelerations[e].x, accelerations[e].y);
+    console_write(ENGINE, "---Movement Log---\n");
+    console_write(ENGINE, "Entity: %d\n", e);
+    console_write(ENGINE, "Position: {x: %f, y: %f}\n", positions[e].x, positions[e].y);
+    console_write(ENGINE, "Velocity: {x: %f, y: %f}\n", velocities[e].x, velocities[e].y);
+    console_write(ENGINE, "Acceleration: {x: %f, y: %f}\n", accelerations[e].x, accelerations[e].y);
+    console_write(ENGINE, "---Movement Log---\n");
 }

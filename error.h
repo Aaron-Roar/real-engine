@@ -37,7 +37,7 @@ typedef enum ErrorCode {
     ACCELERATING_MASSLESS_ENTITY= 1 << 8,
     INCOMPATABLE_COMPONENTS     = 1 << 9,
 } ErrorCode;
-typedef enum ErrorLevel {ENTITY, COMPONENT, SYSTEM, ENGINE} ErrorLevel;
+typedef enum ErrorLevel {ENTITY, COMPONENT, SYSTEM, CORE} ErrorLevel;
 typedef enum ErrorSeverity {WARNING, MINIMAL, CRITICAL} ErrorSeverity;
 typedef struct ErrorInfo {
     ErrorCode code;
@@ -53,7 +53,7 @@ typedef struct Error {
 } Error;
 
 void error_print(Error err);
-void error_add_entity(Error err, Entity entity);
+void error_add_entity(Error* err, Entity entity);
 
 ErrorInfo error_get_info(ErrorCode code);
 #endif
