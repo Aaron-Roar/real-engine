@@ -80,12 +80,12 @@ void error_add_entity(Error* err, Entity entity) {
 }
 
 void error_print_entities(EntityList entities) {
-    console_write(ERROR, "Entities: { ");
+    console_write(LOG_ERROR, "Entities: { ");
     if(entities.entity_amount > 0) {
         for(int i = 0; i <= entities.entity_amount - 1; i++) {
-            console_write(ERROR, "%d ", entities.concerned_entities[i]);
+            console_write(LOG_ERROR, "%d ", entities.concerned_entities[i]);
         }
-    console_write(ERROR, "}\n");
+    console_write(LOG_ERROR, "}\n");
     }
 }
 
@@ -97,18 +97,18 @@ void error_print(Error err) {
         char bit_flags[33] = {0};
         binary_to_string(err.code, bit_flags, sizeof(bit_flags));
 
-        console_write(ERROR, "---Error---\n");
-        console_write(ERROR, "(ErrorSummary)\n");
-        console_write(ERROR, "ErrorCode: %d\n", err.code);
-        console_write(ERROR, "ErrorFlags: %s\n", bit_flags);
-        console_write(ERROR, "Severity: %d\n", err.severity);
-        console_write(ERROR,"\n");
-        console_write(ERROR, "(ErrorReport)\n");
-        console_write(ERROR, "EntityReport: %s\n", err.report.entity.report);
-        console_write(ERROR, "ComponentReport: %s\n", err.report.component.report);
-        console_write(ERROR, "SystemReport: %s\n", err.report.system.report);
-        console_write(ERROR, "EngineReport: %s\n", err.report.engine.report);
+        console_write(LOG_ERROR, "---Error---\n");
+        console_write(LOG_ERROR, "(ErrorSummary)\n");
+        console_write(LOG_ERROR, "ErrorCode: %d\n", err.code);
+        console_write(LOG_ERROR, "ErrorFlags: %s\n", bit_flags);
+        console_write(LOG_ERROR, "Severity: %d\n", err.severity);
+        console_write(LOG_ERROR,"\n");
+        console_write(LOG_ERROR, "(ErrorReport)\n");
+        console_write(LOG_ERROR, "EntityReport: %s\n", err.report.entity.report);
+        console_write(LOG_ERROR, "ComponentReport: %s\n", err.report.component.report);
+        console_write(LOG_ERROR, "SystemReport: %s\n", err.report.system.report);
+        console_write(LOG_ERROR, "EngineReport: %s\n", err.report.engine.report);
         error_print_entities(err.entities);
-        console_write(ERROR, "---Error---\n");
+        console_write(LOG_ERROR, "---Error---\n");
     }
 }

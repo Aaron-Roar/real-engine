@@ -77,30 +77,30 @@ void delete_components(Entity e, CMask mask) {
 }
 
 void print_entity_components(Entity e) {
-    console_write(ENGINE, "Entity: %d\n", e);
+    console_write(LOG_ENGINE, "Entity: %d\n", e);
         if(entity_mask[e] & NONE) {
-            console_write(ENGINE, "NONE\n");
+            console_write(LOG_ENGINE, "NONE\n");
         }
         if(entity_mask[e] & POSITION) {
-            console_write(ENGINE, "POSITION\n");
+            console_write(LOG_ENGINE, "POSITION\n");
         }
         if(entity_mask[e] & VELOCITY) {
-            console_write(ENGINE, "VELOCITY\n");
+            console_write(LOG_ENGINE, "VELOCITY\n");
         }
         if(entity_mask[e] & ACCELERATION) {
-            console_write(ENGINE, "ACCELERATION\n");
+            console_write(LOG_ENGINE, "ACCELERATION\n");
         }
         if(entity_mask[e] & FORCE) {
-            console_write(ENGINE, "FORCE\n");
+            console_write(LOG_ENGINE, "FORCE\n");
         }
         if(entity_mask[e] & MASS) {
-            console_write(ENGINE, "MASS\n");
+            console_write(LOG_ENGINE, "MASS\n");
         }
         if(entity_mask[e] & TIMEWINDOW) {
-            console_write(ENGINE, "TIMEWINDOW\n");
+            console_write(LOG_ENGINE, "TIMEWINDOW\n");
         }
         if(entity_mask[e] & MOVEABLE) {
-            console_write(ENGINE, "MOVEABLE\n");
+            console_write(LOG_ENGINE, "MOVEABLE\n");
         }
 }
 
@@ -133,13 +133,13 @@ void set_force(Entity e, Force f) {
 }
 
 void print_alive_entities() {
-    console_write(ENGINE, "AliveEntities: {");
+    console_write(LOG_ENGINE, "AliveEntities: {");
     for(int i = 0; i < MAX_ENTITIES; i++) {
         if(entity_alive[i]) {
-            console_write(ENGINE,"%d ", i);
+            console_write(LOG_ENGINE,"%d ", i);
         }
     }
-    console_write(ENGINE, "}\n");
+    console_write(LOG_ENGINE, "}\n");
 }
 
 void set_hitbox(Entity e, Shape hitbox) {

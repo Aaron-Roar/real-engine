@@ -10,6 +10,8 @@ bool new_log = false;
 int input_index = 0;
 ConsoleInput input = {0};
 
+int console_scroll_offset = 0;
+
 TermWindow capture_window() {
     TermWindow window = {0};
     getmaxyx(stdscr, window.rows, window.cols);
@@ -53,9 +55,10 @@ void print_logs(ConsoleLog logs) {
 
     clear_logs(logs);
     int log_size = count_logs(logs);
-    int log_overflow = (log_size > (window.rows - LOG_ROW_OFFSET)) ? log_size - (window.rows - LOG_ROW_OFFSET) : 0; //If log_size > window.rows ? true : false;
+    int log_overflow = (log_size > (window.rows - LOG_ROW_OFFSET)) ? log_size - (window.rows - LOG_ROW_OFFSET) : 0; //If log_size > window.rows
+
     for(int i = 0; i < log_size - log_overflow; i++) {
-        mvprintw(i, 0, "%s", logs[i + log_overflow]);
+        mvprintw(i, 0, "%s", logs[(i + log_overflow) - console_scroll_offset]);
     }
 }
 
@@ -110,6 +113,14 @@ void console_shutdown() {
     endwin(); //Kills ncurses now terminal is back to normal
 }
 
+void console_scroll_logs_up() {
+
+}
+
+void console_scroll_logs_down() {
+
+}
+
 bool read_console(ConsoleInput console_str) {
     TermWindow w = capture_window();
     move(w.rows - INPUT_ROW_OFFSET, input_index + 2);
@@ -150,13 +161,36 @@ bool read_console(ConsoleInput console_str) {
         return false;
 }
 
-void console_write(SourceType source, const char *fmt, ...)
+char source_symbol(LogSourceType source) {
+    char result = 0;
+    switch(source) {
+        case LOG_ENGINE:
+             result = '#';
+             break;
+        case LOG_APP:
+             result = '*';
+             break;
+        case LOG_ERROR:
+             result = '!';
+             break;
+        default:
+             result = 'a';
+             break;
+    }
+
+    return result;
+}
+
+void console_write(LogSourceType source, const char *fmt, ...)
 {
     ConsoleInput str_buff = {0};
+    str_buff[0] = '[';
+    str_buff[2] = ']';
+    str_buff[1] = source_symbol(source);
 
     va_list args;
     va_start(args, fmt);
-    vsnprintf(str_buff, sizeof(str_buff), fmt, args);
+    vsnprintf(&str_buff[CONSOLE_SYMBOL_OFFSET] , sizeof(str_buff) - CONSOLE_SYMBOL_OFFSET, fmt, args);
     va_end(args);
     log_input(str_buff);
 }

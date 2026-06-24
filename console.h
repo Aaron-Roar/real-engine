@@ -10,9 +10,14 @@
 #define INPUT_COL_OFFSET 3
 #define CURSOR_HOME_ROW 1
 #define CURSOR_HOME_COL 3
+#define CONSOLE_SYMBOL_OFFSET 3
 
 
-typedef enum SourceType {ENGINE, APP, ERROR} SourceType;
+typedef enum LogSourceType {
+    LOG_ENGINE,
+    LOG_APP,
+    LOG_ERROR
+} LogSourceType;
 
 typedef enum Key {
     KEY_NONE      = ERR,
@@ -53,7 +58,7 @@ void console_init();
 void console_backspace();
 void console_shutdown();
 bool read_console(ConsoleInput console_str);
-void console_write(SourceType source, const char *fmt, ...);
+void console_write(LogSourceType source, const char *fmt, ...);
 
 
 #endif

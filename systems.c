@@ -103,10 +103,10 @@ void system_clear_accelerations() {
 
 
 void print_entity_movement(Entity e) {
-    console_write(ENGINE, "---Movement Log---\n");
-    console_write(ENGINE, "Entity: %d\n", e);
-    console_write(ENGINE, "Position: {x: %f, y: %f}\n", positions[e].x, positions[e].y);
-    console_write(ENGINE, "Velocity: {x: %f, y: %f}\n", velocities[e].x, velocities[e].y);
-    console_write(ENGINE, "Acceleration: {x: %f, y: %f}\n", accelerations[e].x, accelerations[e].y);
-    console_write(ENGINE, "---Movement Log---\n");
+    console_write(LOG_ENGINE, "---Movement Log---\n");
+    console_write(LOG_ENGINE, "Entity: %d\n", e);
+    console_write(LOG_ENGINE, "Position: {x: %f, y: %f}\n", positions[e].x, positions[e].y);
+    console_write(LOG_ENGINE, "Velocity: {x: %f, y: %f}\n", velocities[e].x, velocities[e].y);
+    console_write(LOG_ENGINE, "Acceleration: {x: %f, y: %f}\n", accelerations[e].x, accelerations[e].y);
+    console_write(LOG_ENGINE, "---Movement Log---\n");
 }
