@@ -1,8 +1,42 @@
-#include "console.h"
-#include <stdio.h>
-#include <stdarg.h>
+#include <ncurses.h>
 #include <stdbool.h>
 #include <string.h>
+#include <stdio.h>
+
+#define MAX_LOGS 100
+#define MAX_LOG 50
+#define LOG_ROW_OFFSET 2
+#define INPUT_ROW_OFFSET 1
+#define INPUT_COL_OFFSET 3
+#define CURSOR_HOME_ROW 1
+#define CURSOR_HOME_COL 3
+
+
+typedef enum Key {
+    KEY_NONE      = ERR,
+    KEY_ESC       = 27,
+    KEY_ENTER_1   = '\n',
+    KEY_ENTER_2   = '\r',
+    KEY_BACKSPACE_1    = KEY_BACKSPACE,
+    KEY_BACKSPACE_2    = 127,
+    KEY_BACKSPACE_3    = 8,
+} Key;
+
+typedef enum ConsoleCmd {
+    CONSOLE_NONE,
+    CONSOLE_ADD,
+    CONSOLE_DELETE,
+    CONSOLE_SHOW,
+    CONSOLE_HELP,
+} ConsoleCmd;
+
+typedef struct TermWindow {
+    int cols;
+    int rows;
+} TermWindow;
+
+typedef char ConsoleLog[MAX_LOGS][MAX_LOG];
+typedef char ConsoleInput[MAX_LOG];
 
 ConsoleLog console_log = {0};
 int log_index = 0;
@@ -150,32 +184,24 @@ bool read_console(ConsoleInput console_str) {
         return false;
 }
 
-void console_write(SourceType source, const char *fmt, ...)
-{
-    ConsoleInput str_buff = {0};
-
-    va_list args;
-    va_start(args, fmt);
-    vsnprintf(str_buff, sizeof(str_buff), fmt, args);
-    va_end(args);
-    log_input(str_buff);
-}
-
-//int main() {
-//    console_init();
-//
-//    while(true) {
-//        ConsoleInput console_line = {0};
-//        if(read_console(console_line)) {
-//            log_input(console_line);
-//        }
-//        refresh();
-//    }
-//
-//    //console_shutdown();
+//ConsoleCmd console_parse_cmd(ConsoleInput cmd_str) {
 //
 //}
+
+int main() {
+    console_init();
+
+    while(true) {
+        ConsoleInput console_line = {0};
+        if(read_console(console_line)) {
+            log_input(console_line);
+        }
+        refresh();
+    }
+
+    //console_shutdown();
+
+}
         //console_cmd = Read console
         //console_log(cmd)
         //run_cmd
-

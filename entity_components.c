@@ -1,10 +1,12 @@
-#include <stdbool.h>
-#include <stdio.h>
 #include "entity_components.h"
 #include "error.h"
 #include "console.h"
 #include "tools.h"
+#include <stdbool.h>
+#include <stdio.h>
+#include <math.h>
 
+#define PI_F 3.14159265358979323846f
 
 
 
@@ -23,6 +25,7 @@ float mass[MAX_ENTITIES] = {0};
 Entity targets[MAX_ENTITIES] = {0};
 Force forces[MAX_ENTITIES] = {0};
 TimeWindow time_windows[MAX_ENTITIES] = {0};
+Shape hit_boxes[MAX_ENTITIES] = {0};
 
 uint32_t entity_counter = 1; //Temporary solution. Leaks memory on entity deletion
 Entity add_entity() {
@@ -137,4 +140,42 @@ void print_alive_entities() {
         }
     }
     console_write(ENGINE, "}\n");
+}
+
+void set_hitbox(Entity e, Shape hitbox) {
+    hit_boxes[e] = hitbox;
+    entity_mask[e] |= COLLISION;
+}
+
+Shape square(float width, float height) {
+    Shape shape = {
+        .vertex_amount = 4,
+        .vertices = {
+            {.x = width/2, .y = height/2},
+            {.x = width/2, .y = -height/2},
+            {.x = -width/2, .y = -height/2},
+            {.x = -width/2, .y = height/2},
+        }
+    };
+    return shape;
+}
+
+Shape circle(float radius, uint8_t verticies) {
+    Shape shape = {0};
+    if(verticies < MIN_VERTICIES) {
+        shape.vertex_amount = MIN_VERTICIES;
+    }
+    else if(verticies > MAX_VERTICIES) {
+        shape.vertex_amount = MAX_VERTICIES;
+    }
+    else {
+        shape.vertex_amount = verticies;
+    }
+
+    float angle_increment = ((float)2*PI_F)/((float)shape.vertex_amount);
+    for(int i = 0; i < shape.vertex_amount; i++) {
+        shape.vertices[i].x = cosf(angle_increment*i)*radius;
+        shape.vertices[i].y = sinf(angle_increment*i)*radius;
+    }
+    return shape;
 }
