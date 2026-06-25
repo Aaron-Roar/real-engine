@@ -70,3 +70,23 @@ void graphics_event_listener_start() {
         }
     }
 }
+
+void draw_background() {
+    /* as you can see from this, rendering draws over whatever was drawn before it. */
+    SDL_SetRenderDrawColor(renderer, 33, 33, 33, SDL_ALPHA_OPAQUE);  /* dark gray, full alpha */
+    SDL_RenderClear(renderer);  /* start with a blank canvas. */
+}
+
+void draw_rect() {
+    SDL_FRect rect;
+    /* draw a filled rectangle in the middle of the canvas. */
+    SDL_SetRenderDrawColor(renderer, 0, 0, 255, SDL_ALPHA_OPAQUE);  /* blue, full alpha */
+    rect.x = rect.y = 100;
+    rect.w = 440;
+    rect.h = 280;
+    SDL_RenderFillRect(renderer, &rect);
+}
+
+void show_graphics() {
+    SDL_RenderPresent(renderer);
+}

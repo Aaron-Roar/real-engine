@@ -1,14 +1,18 @@
 #include "console.h"
+#include "graphics.h"
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <string.h>
+#include <time.h>
+
 
 ConsoleLog console_log = {0};
 int log_index = 0;
 bool new_log = false;
 int input_index = 0;
 ConsoleInput input = {0};
+bool console_active = false;
 
 int console_scroll_offset = 0;
 
@@ -51,27 +55,31 @@ void clear_logs(ConsoleLog logs) {
 }
 
 void print_logs(ConsoleLog logs) {
-    TermWindow window = capture_window();
+    if(console_active) {
+        TermWindow window = capture_window();
 
-    clear_logs(logs);
-    int log_size = count_logs(logs);
-    int log_overflow = (log_size > (window.rows - LOG_ROW_OFFSET)) ? log_size - (window.rows - LOG_ROW_OFFSET) : 0; //If log_size > window.rows
+        clear_logs(logs);
+        int log_size = count_logs(logs);
+        int log_overflow = (log_size > (window.rows - LOG_ROW_OFFSET)) ? log_size - (window.rows - LOG_ROW_OFFSET) : 0; //If log_size > window.rows
 
-    for(int i = 0; i < log_size - log_overflow; i++) {
-        mvprintw(i, 0, "%s", logs[(i + log_overflow) - console_scroll_offset]);
+        for(int i = 0; i < log_size - log_overflow; i++) {
+            mvprintw(i, 0, "%s", logs[(i + log_overflow) - console_scroll_offset]);
+        }
     }
 }
 
 
 void print_input(ConsoleInput input) {
-    TermWindow w = capture_window();
-    char input_line[w.cols - 1];
-    memset(input_line, '-', sizeof(input_line));
-    input_line[w.cols - 2] = '\0';
+    if(console_active) {
+        TermWindow w = capture_window();
+        char input_line[w.cols - 1];
+        memset(input_line, '-', sizeof(input_line));
+        input_line[w.cols - 2] = '\0';
 
-    mvprintw(w.rows - LOG_ROW_OFFSET, 0, "%s", input_line);
-    clear_row(w.rows - INPUT_ROW_OFFSET);
-    mvprintw(w.rows - INPUT_ROW_OFFSET, 0, ">>%s", input);
+        mvprintw(w.rows - LOG_ROW_OFFSET, 0, "%s", input_line);
+        clear_row(w.rows - INPUT_ROW_OFFSET);
+        mvprintw(w.rows - INPUT_ROW_OFFSET, 0, ">>%s", input);
+    }
 }
 
 void log_input(ConsoleInput input) {
@@ -99,6 +107,7 @@ void console_init() {
     noecho(); //Stops the terminal from auto showing typed characters. We want to do this our own way instead.
     keypad(stdscr, TRUE); //Allows ncurses to detect special keypresses
     nodelay(stdscr, TRUE); //Makes getch return immediatley and not hang. it returns ERR if nothing input
+    console_active = true;
 }
 
 void console_backspace() {
@@ -110,6 +119,14 @@ void console_backspace() {
 }
 
 void console_shutdown() {
+    //Goodbye MSG
+    console_write(LOG_CONSOLE, "<ESC-Key> Recived.\nConsole Shutting...\n");
+    clear_logs(console_log);
+    print_logs(console_log);
+
+    console_active = false;
+    clear_logs(console_log);
+    clear_input(input);
     endwin(); //Kills ncurses now terminal is back to normal
 }
 
@@ -121,44 +138,48 @@ void console_scroll_logs_down() {
 
 }
 
+//ConsoleStr will be all JSON
 bool read_console(ConsoleInput console_str) {
-    TermWindow w = capture_window();
-    move(w.rows - INPUT_ROW_OFFSET, input_index + 2);
+    if(console_active) {
+        TermWindow w = capture_window();
+        move(w.rows - INPUT_ROW_OFFSET, input_index + 2);
 
-        int ch = getch();
-        switch(ch) {
-            case KEY_NONE:
-                break;
-            case KEY_ESC:
-                //Exit ??
-                console_shutdown();
-                break;
-            case KEY_ENTER_1:
-                memcpy(console_str, input, sizeof(ConsoleInput));
-                clear_input(input);
-                input_index = 0;
-                return true;
-            case KEY_ENTER_2:
-                memcpy(console_str, input, sizeof(ConsoleInput));
-                clear_input(input);
-                input_index = 0;
-                return true;
-            case KEY_BACKSPACE_1:
-                console_backspace();
-                break;
-            case KEY_BACKSPACE_2:
-                console_backspace();
-                break;
-            case KEY_BACKSPACE_3:
-                console_backspace();
-                break;
-            default:
-                input[input_index] = ch;
-                input_index += 1;
-                break;
-        }
-        print_input(input);
-        return false;
+            int ch = getch();
+            switch(ch) {
+                case KEY_NONE:
+                    break;
+                case KEY_ESC:
+                    //Exit ??
+                    console_shutdown();
+                    break;
+                case KEY_ENTER_1:
+                    memcpy(console_str, input, sizeof(ConsoleInput));
+                    clear_input(input);
+                    input_index = 0;
+                    return true;
+                case KEY_ENTER_2:
+                    memcpy(console_str, input, sizeof(ConsoleInput));
+                    clear_input(input);
+                    input_index = 0;
+                    return true;
+                case KEY_BACKSPACE_1:
+                    console_backspace();
+                    break;
+                case KEY_BACKSPACE_2:
+                    console_backspace();
+                    break;
+                case KEY_BACKSPACE_3:
+                    console_backspace();
+                    break;
+                default:
+                    input[input_index] = ch;
+                    input_index += 1;
+                    break;
+            }
+            print_input(input);
+            return false;
+    }
+    return false;
 }
 
 char source_symbol(LogSourceType source) {
@@ -172,6 +193,9 @@ char source_symbol(LogSourceType source) {
              break;
         case LOG_ERROR:
              result = '!';
+             break;
+        case LOG_CONSOLE:
+             result = '>';
              break;
         default:
              result = 'a';
@@ -195,20 +219,6 @@ void console_write(LogSourceType source, const char *fmt, ...)
     log_input(str_buff);
 }
 
-//int main() {
-//    console_init();
-//
-//    while(true) {
-//        ConsoleInput console_line = {0};
-//        if(read_console(console_line)) {
-//            log_input(console_line);
-//        }
-//        refresh();
-//    }
-//
-//    //console_shutdown();
-//
-//}
         //console_cmd = Read console
         //console_log(cmd)
         //run_cmd

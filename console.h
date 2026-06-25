@@ -3,6 +3,9 @@
 
 #include <ncurses.h>
 
+//Parse commands with JSON
+//https://github.com/ibireme/yyjson
+//
 #define MAX_LOGS 100
 #define MAX_LOG 50
 #define LOG_ROW_OFFSET 2
@@ -12,11 +15,14 @@
 #define CURSOR_HOME_COL 3
 #define CONSOLE_SYMBOL_OFFSET 3
 
+extern bool console_active;
+
 
 typedef enum LogSourceType {
     LOG_ENGINE,
     LOG_APP,
-    LOG_ERROR
+    LOG_ERROR,
+    LOG_CONSOLE,
 } LogSourceType;
 
 typedef enum Key {
@@ -36,6 +42,14 @@ typedef enum ConsoleCmd {
     CONSOLE_SHOW,
     CONSOLE_HELP,
 } ConsoleCmd;
+
+typedef enum ConsoleAdd {
+    CONSOLE_ADD_ENTITY,
+    CONSOLE_ADD_COMPONENTS,
+    CONSOLE_ADD_HITBOX,
+    CONSOLE_ADD_ASSET,
+    CONSOLE_ADD_FORCE,
+} ConsoleAdd;
 
 typedef struct TermWindow {
     int cols;
