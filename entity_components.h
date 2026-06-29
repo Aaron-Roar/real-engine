@@ -69,7 +69,7 @@ typedef struct {
     Force force;
     TimeWindow time_window;
 } TimedForce;
-typedef struct {
+typedef struct Shape {
     uint8_t vertex_amount;
     Position vertices[MAX_VERTICIES]; //Local coordinate of vertices. Must be translated to world coordinate
 } Shape;
@@ -97,6 +97,6 @@ void set_force(Entity e, Force f);
 void print_alive_entities();
 bool equate_mask(CMask e_mask, CMask filter);
 void set_hitbox(Entity e, Shape hitbox);
-Shape square(float width, float height);
-Shape circle(float radius, uint8_t verticies);
+Shape create_square(float width, float height);
+Shape create_circle(float radius, uint8_t verticies);
 #endif

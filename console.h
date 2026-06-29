@@ -1,13 +1,19 @@
 #ifndef CONSOLE_H
 #define CONSOLE_H
-
-#include <ncurses.h>
+#include <stdbool.h>
 
 //Parse commands with JSON
 //https://github.com/ibireme/yyjson
 //
 #define MAX_LOGS 100
-#define MAX_LOG 50
+#define MAX_LOG_STR 50
+#define CONSOLE_TOKEN_LENGTH 3
+#define CONSOLE_TIME_LENGTH 10
+#define CONSOLE_NULL_CHAR_SIZE 1
+#define MAX_LOG (MAX_LOG_STR + CONSOLE_TOKEN_LENGTH + CONSOLE_TIME_LENGTH + CONSOLE_NULL_CHAR_SIZE)
+//Log: |ConsoleToken|ConsoleStr|ConsoleTime|ConsoleNull|
+
+
 #define LOG_ROW_OFFSET 2
 #define INPUT_ROW_OFFSET 1
 #define INPUT_COL_OFFSET 3
@@ -25,15 +31,6 @@ typedef enum LogSourceType {
     LOG_CONSOLE,
 } LogSourceType;
 
-typedef enum Key {
-    KEY_NONE      = ERR,
-    KEY_ESC       = 27,
-    KEY_ENTER_1   = '\n',
-    KEY_ENTER_2   = '\r',
-    KEY_BACKSPACE_1    = KEY_BACKSPACE,
-    KEY_BACKSPACE_2    = 127,
-    KEY_BACKSPACE_3    = 8,
-} Key;
 
 typedef enum ConsoleCmd {
     CONSOLE_NONE,
@@ -56,24 +53,29 @@ typedef struct TermWindow {
     int rows;
 } TermWindow;
 
-typedef char ConsoleLog[MAX_LOGS][MAX_LOG];
-typedef char ConsoleInput[MAX_LOG];
-extern ConsoleLog console_log;
+typedef struct ConsoleLogString {
+    char string[MAX_LOG_STR];
+} ConsoleLogString;
+
+typedef struct ConsoleLog {
+    double time;
+    LogSourceType source;
+    ConsoleLogString log;
+} ConsoleLog;
+
+extern ConsoleLog logs[MAX_LOGS];
 
 TermWindow capture_window();
-int count_logs(ConsoleLog logs);
-void clear_row(int row);
-void clear_logs(ConsoleLog logs);
-void print_logs(ConsoleLog logs);
-void print_input(ConsoleInput input);
-void log_input(ConsoleInput input);
-void clear_input(ConsoleInput input);
+int count_logs();
+void print_logs();
+void print_input();
 void console_init();
 void console_backspace();
 void console_shutdown();
-bool read_console(ConsoleInput console_str);
+void clear_input();
+void clear_logs();
+void clear_row(int row);
+void log_input(ConsoleLogString input);
+bool read_console(ConsoleLogString *input);
 void console_write(LogSourceType source, const char *fmt, ...);
-
-
 #endif
-

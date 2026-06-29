@@ -3,61 +3,36 @@
 #include "error.h"
 #include "console.h"
 #include <stdio.h>
+#include <time.h>
 
-void system_update_positions() {
+
+void system_update_positions(double dt) {
     CMask filter = MOVEABLE;
     for (int i = 0; i < MAX_ENTITIES; i++) {
         if(entity_alive[i]) {
             if( (entity_mask[i] & filter) == filter ) {
                 positions[i] = (Position){
-                    .x = positions[i].x + velocities[i].x,
-                    .y = positions[i].y + velocities[i].y
+                    .x = positions[i].x + (velocities[i].x)*dt,
+                    .y = positions[i].y + (velocities[i].y)*dt
                 };
             }
         }
     }
 }
 
-void system_update_velocities() {
+void system_update_velocities(double dt) {
     CMask filter = MOVEABLE;
     for (int i = 0; i < MAX_ENTITIES; i++) {
         if(entity_alive[i]) {
             if( (entity_mask[i] & filter) == filter) {
                 velocities[i] = (Velocity){
-                    .x = velocities[i].x + accelerations[i].x,
-                    .y = velocities[i].y + accelerations[i].y
+                    .x = velocities[i].x + (accelerations[i].x)*dt,
+                    .y = velocities[i].y + (accelerations[i].y)*dt
                 };
             }
         }
     }
 }
-
-//void system_update_accelerations() {
-//    //Based on force, mass, inertia
-//    EntityList failed_entities = {0};
-//
-//    CMask filter = MOVEABLE | ACCELERATION | MASS;
-//    for (int i = 0; i < MAX_ENTITIES; i++) {
-//        if(entity_alive[i]) {
-//            if( (entity_mask[i] & filter) == filter) {
-//                if(mass[i] == 0) {
-//                    failed_entities.concerned_entities[failed_entities.entity_amount] = i;
-//                    failed_entities.entity_amount += 1;
-//                }
-//                else {
-//                    accelerations[i] = (Acceleration){
-//                        .x = forces[i].x/mass[i],
-//                        .y = forces[i].y/mass[i]
-//                    };
-//                }
-//            }
-//        }
-//    }
-//
-//    if(failed_entities.entity_amount != 0)
-//        error_print(FAILED_UPDATE_ACCELERATION | ACCELERATING_MASSLESS_ENTITY, failed_entities);
-//}
-
 
 void system_apply_forces() {
   Error error = {0};

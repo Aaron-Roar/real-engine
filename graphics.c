@@ -1,16 +1,18 @@
 #include "graphics.h"
 #include "console.h"
 #include <stdio.h>
+#include <SDL3/SDL.h>
 
-SDL_Window *window = NULL;
-SDL_Renderer *renderer = NULL;
-SDL_Event event;
+static SDL_Window *window = NULL;
+static SDL_Renderer *renderer = NULL;
+static SDL_Event event;
 
-void graphics_start() {
+bool graphics_start() {
     console_write(LOG_ENGINE, "---Initializing Graphics---\n");
-    if (!SDL_Init(SDL_INIT_VIDEO)) {
+    if (!SDL_InitSubSystem(SDL_INIT_VIDEO)) {
         SDL_Log("Couldn't initialize SDL: %s", SDL_GetError());
         //Can fail need error
+        return false;
     }
 
     console_write(LOG_ENGINE, "Starting game window and renderer\n");
@@ -25,8 +27,7 @@ void graphics_start() {
             &renderer
         )) {
         SDL_Log("Couldn't create window/renderer: %s", SDL_GetError());
-        SDL_Quit();
-        //Can fail need error
+        return false;
     }
 
     console_write(LOG_ENGINE, "Configuring renderer\n");
@@ -39,6 +40,7 @@ void graphics_start() {
 
     console_write(LOG_ENGINE, "Graphics initialization complete\n");
     console_write(LOG_ENGINE, "---Initializing Graphics---\n");
+    return true;
 }
 
 void renderer_end(SDL_Renderer *r) {
@@ -55,15 +57,14 @@ void graphics_end() {
     console_write(LOG_ENGINE, "---Graphics Termination---\n");
     renderer_end(renderer);
     window_end(window);
-    SDL_Quit();
+    SDL_QuitSubSystem(SDL_INIT_VIDEO);
     console_write(LOG_ENGINE, "SDL3 terminated\n");
     console_write(LOG_ENGINE, "Graphics termination complete\n");
     console_write(LOG_ENGINE, "---Graphics Termination---\n");
 
 }
 
-void graphics_event_listener_start() {
-    console_write(LOG_ENGINE, "Graphics event listener created\n");
+void graphics_poll_events() {
     while (SDL_PollEvent(&event)) {
         if (event.type == SDL_EVENT_QUIT) {
             graphics_end();
@@ -77,14 +78,15 @@ void draw_background() {
     SDL_RenderClear(renderer);  /* start with a blank canvas. */
 }
 
-void draw_rect() {
-    SDL_FRect rect;
+void draw_rect(Shape rect, Position pos) {
+    SDL_FRect sdl_rect;
     /* draw a filled rectangle in the middle of the canvas. */
     SDL_SetRenderDrawColor(renderer, 0, 0, 255, SDL_ALPHA_OPAQUE);  /* blue, full alpha */
-    rect.x = rect.y = 100;
-    rect.w = 440;
-    rect.h = 280;
-    SDL_RenderFillRect(renderer, &rect);
+    sdl_rect.x = pos.x;
+    sdl_rect.y = pos.y;
+    sdl_rect.w = 20;
+    sdl_rect.h = 20;
+    SDL_RenderFillRect(renderer, &sdl_rect);
 }
 
 void show_graphics() {

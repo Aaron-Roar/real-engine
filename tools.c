@@ -1,9 +1,11 @@
 #include <time.h>
-#include "entity_components.h"
 #include "stdint.h"
 #include <stdio.h>
-//#include "entity_components.h"
 
+double tools_get_currenttime(time_t start_time) {
+  //Cant use time_t directlt because time_t is platform specific. Need to minimize its use in app.
+    return difftime(time(NULL), start_time);
+}
 
 void delay(int number_of_seconds)
 {
@@ -16,6 +18,7 @@ void delay(int number_of_seconds)
     // looping till required time is not achieved
     while (clock() < start_time + milli_seconds);
 }
+
 
 #define MAX_COMBINED_STRING 250
 typedef struct {

@@ -8,8 +8,6 @@
 
 #define PI_F 3.14159265358979323846f
 
-
-
 bool entity_alive[MAX_ENTITIES] = {0}; //What entities are active
 uint32_t entity_mask[MAX_ENTITIES] = {0}; //Bit map of the components each entity has
 
@@ -37,13 +35,13 @@ Entity add_entity() {
         return 0; //Unused location
     }
 
-    entity_counter += 1;
     entity_alive[entity_counter] = 1;
+    entity_counter += 1;
     return entity_counter;
 }
 
 void delete_entity(Entity e) {
-    Error error;
+    Error error = {0};
 
     if(entity_alive[e] == 0) {
         error.code |= FAILED_DELETE_ENTITY | ENTITY_DOES_NOT_EXIST;
@@ -55,7 +53,7 @@ void delete_entity(Entity e) {
 }
 
 void add_components(Entity e, CMask mask) {
-    Error error;
+    Error error = {0};
 
     if(entity_alive[e] == 0) {
         error.code |= FAILED_ADD_COMPONENTS | ENTITY_DOES_NOT_EXIST;
@@ -66,7 +64,7 @@ void add_components(Entity e, CMask mask) {
 }
 
 void delete_components(Entity e, CMask mask) {
-    Error error;
+    Error error = {0};
 
     if(entity_alive[e] == 0) {
         error.code |= FAILED_DELETE_COMPONENTS | ENTITY_DOES_NOT_EXIST;
@@ -147,7 +145,7 @@ void set_hitbox(Entity e, Shape hitbox) {
     entity_mask[e] |= COLLISION;
 }
 
-Shape square(float width, float height) {
+Shape create_square(float width, float height) {
     Shape shape = {
         .vertex_amount = 4,
         .vertices = {
@@ -160,7 +158,7 @@ Shape square(float width, float height) {
     return shape;
 }
 
-Shape circle(float radius, uint8_t verticies) {
+Shape create_circle(float radius, uint8_t verticies) {
     Shape shape = {0};
     if(verticies < MIN_VERTICIES) {
         shape.vertex_amount = MIN_VERTICIES;

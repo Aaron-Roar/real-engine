@@ -1,9 +1,9 @@
 #ifndef SYSTEMS_H
 #define SYSTEMS_H
 #include "entity_components.h"
-void system_update_positions();
-void system_update_velocities();
-void system_update_accelerations();
+
+void system_update_positions(double dt);
+void system_update_velocities(double dt);
 void system_apply_forces();
 void system_clear_accelerations();
 void print_entity_movement(Entity e);
