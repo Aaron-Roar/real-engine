@@ -1,20 +1,45 @@
 #include "console.h"
 #include <stdio.h>
 #include <stdarg.h>
-#include <stdbool.h>
 #include <string.h>
 #include <ncurses.h>
 
-//PORTING TO USE STRUCTS INSTEAD OF ARRAYS TO ALLOW PASSING OF SIZE AND NOT DEXAYING POINTERS. This way you can do size of. Check console.h bottom types and port over!
-typedef enum Key {
-    KEY_NONE      = ERR,
-    KEY_ESC       = 27,
-    KEY_ENTER_1   = '\n',
-    KEY_ENTER_2   = '\r',
-    KEY_BACKSPACE_1    = KEY_BACKSPACE,
-    KEY_BACKSPACE_2    = 127,
-    KEY_BACKSPACE_3    = 8,
-} Key;
+#define MAX_LOGS 100
+#define CONSOLE_TOKEN_LENGTH 3
+#define CONSOLE_TIME_LENGTH 10
+#define CONSOLE_NULL_CHAR_SIZE 1
+#define MAX_LOG (MAX_LOG_STR + CONSOLE_TOKEN_LENGTH + CONSOLE_TIME_LENGTH + CONSOLE_NULL_CHAR_SIZE)
+//Log: |ConsoleToken|ConsoleStr|ConsoleTime|ConsoleNull|
+
+
+#define LOG_ROW_OFFSET 2
+#define INPUT_ROW_OFFSET 1
+#define INPUT_COL_OFFSET 3
+#define CURSOR_HOME_ROW 1
+#define CURSOR_HOME_COL 3
+#define CONSOLE_SYMBOL_OFFSET 3
+
+typedef struct TermWindow {
+    int cols;
+    int rows;
+} TermWindow;
+TermWindow capture_window();
+typedef enum ConsoleKey {
+    Console_KEY_NONE      = ERR,
+    Console_KEY_ESC       = 27,
+    Console_KEY_ENTER_1   = '\n',
+    Console_KEY_ENTER_2   = '\r',
+    Console_KEY_BACKSPACE_1    = KEY_BACKSPACE,
+    Console_KEY_BACKSPACE_2    = 127,
+    Console_KEY_BACKSPACE_3    = 8,
+} ConsoleKey;
+
+
+typedef struct ConsoleLog {
+    double time;
+    LogSourceType source;
+    ConsoleLogString log;
+} ConsoleLog;
 
 ConsoleLog logs[MAX_LOGS] = {0};
 int log_index = 0;
@@ -25,6 +50,9 @@ int cmd_line_input_index = 0;
 bool console_active = false;
 int console_scroll_offset = 0;
 
+bool console_is_active() {
+    return console_active;
+}
 TermWindow capture_window() {
     TermWindow window = {0};
     getmaxyx(stdscr, window.rows, window.cols);
@@ -149,7 +177,10 @@ void console_scroll_logs_down() {
 
 }
 
+ConsoleLogString input_log_buffer = {0};
+int input_log_buffer_index = 0;
 //ConsoleStr will be all JSON
+
 bool read_console(ConsoleLogString *console_str) {
     if(console_active) {
         TermWindow w = capture_window();
@@ -157,29 +188,29 @@ bool read_console(ConsoleLogString *console_str) {
 
             int ch = getch();
             switch(ch) {
-                case KEY_NONE:
+                case Console_KEY_NONE:
                     break;
-                case KEY_ESC:
+                case Console_KEY_ESC:
                     //Exit ??
                     console_shutdown();
                     break;
-                case KEY_ENTER_1:
+                case Console_KEY_ENTER_1:
                     memcpy(console_str->string, cmd_line_input.string, sizeof(ConsoleLogString));
                     clear_input();
                     cmd_line_input_index = 0;
                     return true;
-                case KEY_ENTER_2:
+                case Console_KEY_ENTER_2:
                     memcpy(console_str->string, cmd_line_input.string, sizeof(ConsoleLogString));
                     clear_input();
                     cmd_line_input_index = 0;
                     return true;
-                case KEY_BACKSPACE_1:
+                case Console_KEY_BACKSPACE_1:
                     console_backspace();
                     break;
-                case KEY_BACKSPACE_2:
+                case Console_KEY_BACKSPACE_2:
                     console_backspace();
                     break;
-                case KEY_BACKSPACE_3:
+                case Console_KEY_BACKSPACE_3:
                     console_backspace();
                     break;
                 default:
@@ -239,19 +270,4 @@ void console_write(LogSourceType source, const char *fmt, ...)
     va_end(args);
 
     log_input(str_buff);
-    //ConsoleLogString str_buff = {0};
-    //str_buff.string[0] = '[';
-    //str_buff.string[2] = ']';
-    //str_buff.string[1] = source_symbol(source);
-
-    //va_list args;
-    //va_start(args, fmt);
-    //vsnprintf(&str_buff.string[CONSOLE_SYMBOL_OFFSET] , sizeof(str_buff) - CONSOLE_SYMBOL_OFFSET, fmt, args);
-    //va_end(args);
-    //log_input(str_buff);
 }
-
-        //console_cmd = Read console
-        //console_log(cmd)
-        //run_cmd
-

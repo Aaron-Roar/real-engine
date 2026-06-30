@@ -1,10 +1,12 @@
 #include <time.h>
 #include "stdint.h"
 #include <stdio.h>
+#include <SDL3/SDL.h>
 
-double tools_get_currenttime(time_t start_time) {
+//Depends on time being activated
+double tools_get_time() {
   //Cant use time_t directlt because time_t is platform specific. Need to minimize its use in app.
-    return difftime(time(NULL), start_time);
+    return (double)SDL_GetPerformanceCounter()/(double)SDL_GetPerformanceFrequency();
 }
 
 void delay(int number_of_seconds)

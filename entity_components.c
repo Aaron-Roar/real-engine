@@ -37,7 +37,7 @@ Entity add_entity() {
 
     entity_alive[entity_counter] = 1;
     entity_counter += 1;
-    return entity_counter;
+    return entity_counter - 1;
 }
 
 void delete_entity(Entity e) {

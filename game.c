@@ -13,13 +13,13 @@
 
 float pi = 3.14;
 int main() {
-    engine_init();
     console_init();
+    engine_init();
     graphics_start();
 
     //Game setup
     //
-    time_t start_time = time(NULL);
+    time_t start_time = tools_get_time();
     double prev_time = 0;
     double current_time = 0;
 
@@ -27,7 +27,6 @@ int main() {
     set_position(rock, (Position){.x = 0, .y = 0});
     set_mass(rock, 1000);
     //set_force(rock, (Force){.x = .1, .y = .1});
-    set_velocity(rock, (Velocity){5,5});
     Shape box = create_square(10, 10);
     set_hitbox(rock, box);
     //
@@ -35,36 +34,52 @@ int main() {
 
     //float i = 0;
     //Game Loop
-    while (1) {
-        //console_write(LOG_APP, "Game Tick!\n");
+    while (console_is_active()) {
 
-        //Input (Console + IO Devices)
+        //Console
+        //
         ConsoleLogString console_line = {0};
         if(read_console(&console_line)) {
             console_write(LOG_CONSOLE, "%s", console_line.string);
-            //log_input(console_line);
-            //parse console cmd
-            //execite console cmd
+
         }
-            //refresh();
+        //parse console cmd
+        //execite console cmd
+        //refresh();
+        //
 
 
         //physics
+        //
         prev_time = current_time;
-        current_time = tools_get_currenttime(start_time);
+        current_time = tools_get_time() - start_time;
         double dt = current_time - prev_time;
-        console_write(LOG_APP, "Time:%f\n", tools_get_currenttime(start_time));
         system_clear_accelerations();
         system_apply_forces();
         system_update_velocities(dt);
         system_update_positions(dt);
-        //print_entity_movement(rock);
+
+        //App
+        //
+        //console_write(LOG_APP, "{%f, %f}\n", positions[rock].x, positions[rock].y);
+        float base_x = 200.0f;
+        float amplitude = 50.0f;
+        float frequency = 2.0f; // cycles per second
+        float speed_down = 80.0f;
+        float omega = 2.0f * pi * frequency;
+        float x = base_x + amplitude * sinf(omega * current_time);
+        float y = positions[rock].y + speed_down * dt;
+        set_position(rock,(Position){x,y});
+        //
 
         //render
+        //
         graphics_poll_events();
         draw_background();
         draw_rect(hit_boxes[rock], positions[rock]);
         show_graphics();
+        //
+
     }
     graphics_end();
     engine_shutdown();
