@@ -6,17 +6,13 @@
 #include <stdio.h>
 #include <math.h>
 
-#define PI_F 3.14159265358979323846f
 
 bool entity_alive[MAX_ENTITIES] = {0}; //What entities are active
 uint32_t entity_mask[MAX_ENTITIES] = {0}; //Bit map of the components each entity has
 
-//Disasters
-DisasterType disaster_type[MAX_ENTITIES] = {0};
-DisasterSeverity disaster_serverity[MAX_ENTITIES] = {0};
-
 //Moveable Objects
 Position positions[MAX_ENTITIES] = {0};
+Orientation orientations[MAX_ENTITIES] = {0};
 Velocity velocities[MAX_ENTITIES] = {0};
 Acceleration accelerations[MAX_ENTITIES] = {0};
 float mass[MAX_ENTITIES] = {0};
@@ -144,36 +140,7 @@ void set_hitbox(Entity e, Shape hitbox) {
     hit_boxes[e] = hitbox;
     entity_mask[e] |= COLLISION;
 }
-
-Shape create_square(float width, float height) {
-    Shape shape = {
-        .vertex_amount = 4,
-        .vertices = {
-            {.x = width/2, .y = height/2},
-            {.x = width/2, .y = -height/2},
-            {.x = -width/2, .y = -height/2},
-            {.x = -width/2, .y = height/2},
-        }
-    };
-    return shape;
+void set_orientation(Entity e, Orientation angle) {
+  orientations[e] = angle;
 }
 
-Shape create_circle(float radius, uint8_t verticies) {
-    Shape shape = {0};
-    if(verticies < MIN_VERTICIES) {
-        shape.vertex_amount = MIN_VERTICIES;
-    }
-    else if(verticies > MAX_VERTICIES) {
-        shape.vertex_amount = MAX_VERTICIES;
-    }
-    else {
-        shape.vertex_amount = verticies;
-    }
-
-    float angle_increment = ((float)2*PI_F)/((float)shape.vertex_amount);
-    for(int i = 0; i < shape.vertex_amount; i++) {
-        shape.vertices[i].x = cosf(angle_increment*i)*radius;
-        shape.vertices[i].y = sinf(angle_increment*i)*radius;
-    }
-    return shape;
-}

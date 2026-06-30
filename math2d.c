@@ -1,0 +1,215 @@
+#include <math.h>
+#include "math2d.h"
+
+#define PI_F 3.14159265358979323846f
+
+float list_maximum(Vec1DList list) {
+    float max_value = list.vectors[0];
+    for(int i = 0; i < list.amount_of_vectors; i += 1) {
+        if( list.vectors[i] > max_value)
+            max_value = list.vectors[i];
+    }
+    return max_value;
+}
+
+float list_minimum(Vec1DList list) {
+    float min_value = list.vectors[0];
+    for(int i = 0; i < list.amount_of_vectors; i += 1) {
+        if( list.vectors[i] < min_value)
+            min_value = list.vectors[i];
+    }
+    return min_value;
+}
+
+Vec2DList create_normals(Shape shape) {
+    Vec2DList normals = {0};
+    if (shape.amount_of_vertices <= 1 || shape.amount_of_vertices > MAX_VECTORS) {
+        //Error
+        return normals;
+    }
+
+    normals.amount_of_vectors = shape.amount_of_vertices;
+
+    //Could be seg fault if out of range!!
+    for(int i = 0; i < shape.amount_of_vertices; i++) {
+        int j = (i + 1)%shape.amount_of_vertices;  //makes the last vertex wrap to the first one
+
+        // Getting vector by final-initial then doing perpendicular
+        // (x, y) -> PERPENDICULAR -> (-y, x)
+        normals.vectors[i].y = -(shape.vertices[j].x - shape.vertices[i].x);
+        normals.vectors[i].x = shape.vertices[j].y - shape.vertices[i].y;
+    }
+
+    return normals;
+}
+
+Vec2D normalize_vector(Vec2D vec) {
+    return (Vec2D){
+        .x = vec.x/sqrt(vec.x*vec.x + vec.y*vec.y),
+        .y = vec.y/sqrt(vec.x*vec.x + vec.y*vec.y),
+    };
+}
+
+Vec2DList normalize_vectors(Vec2DList vecs) {
+    Vec2DList normalized_vecs = {0};
+    normalized_vecs.amount_of_vectors = vecs.amount_of_vectors;
+    for(int i = 0; i < vecs.amount_of_vectors; i += 1) {
+        normalized_vecs.vectors[i] = normalize_vector(vecs.vectors[i]);
+    }
+    return normalized_vecs;
+}
+
+float dot_product(Vec2D v1, Vec2D v2) {
+    return v1.x*v2.x + v1.y*v2.y;
+}
+
+Shape create_square(float width, float height) {
+    Shape shape = {
+        .amount_of_vertices = 4,
+        .vertices = {
+            {.x = width/2, .y = height/2},
+            {.x = width/2, .y = -height/2},
+            {.x = -width/2, .y = -height/2},
+            {.x = -width/2, .y = height/2},
+        }
+    };
+    return shape;
+}
+
+Shape create_circle(float radius, uint8_t verticies) {
+    Shape shape = {0};
+    if(verticies < MIN_VERTICIES) {
+        shape.amount_of_vertices = MIN_VERTICIES;
+    }
+    else if(verticies > MAX_VERTICIES) {
+        shape.amount_of_vertices = MAX_VERTICIES;
+    }
+    else {
+        shape.amount_of_vertices = verticies;
+    }
+
+    float angle_increment = ((float)2*PI_F)/((float)shape.amount_of_vertices);
+    for(int i = 0; i < shape.amount_of_vertices; i++) {
+        shape.vertices[i].x = cosf(angle_increment*i)*radius;
+        shape.vertices[i].y = sinf(angle_increment*i)*radius;
+    }
+    return shape;
+}
+
+Projection project_shape_on_axis(Shape shape, Axis axis) {
+    Vec1DList list = {0};
+    list.amount_of_vectors = shape.amount_of_vertices;
+    for(int i = 0; i < shape.amount_of_vertices; i += 1) {
+        list.vectors[i] = dot_product(shape.vertices[i], axis);
+    }
+    return (Projection){
+        .max = list_maximum(list),
+        .min = list_minimum(list)
+    };
+}
+
+Position polygon_centroid(Shape shape)
+{
+    double area_sum = 0.0;
+    double cx_sum = 0.0;
+    double cy_sum = 0.0;
+
+    for (int i = 0; i < shape.amount_of_vertices; i++) {
+        int j = (i + 1) % shape.amount_of_vertices;
+
+        double xi = shape.vertices[i].x;
+        double yi = shape.vertices[i].y;
+        double xj = shape.vertices[j].x;
+        double yj = shape.vertices[j].y;
+
+        double cross = xi * yj - xj * yi;
+
+        area_sum += cross;
+        cx_sum += (xi + xj) * cross;
+        cy_sum += (yi + yj) * cross;
+    }
+
+    double area = area_sum * 0.5;
+
+    if (fabs(area) < 1e-8) {
+        // Degenerate polygon fallback: average vertices
+        Position avg = {0};
+
+        for (int i = 0; i < shape.amount_of_vertices; i++) {
+            avg.x += shape.vertices[i].x;
+            avg.y += shape.vertices[i].y;
+        }
+
+        avg.x /= shape.amount_of_vertices;
+        avg.y /= shape.amount_of_vertices;
+
+        return avg;
+    }
+
+    Position centroid = {
+        .x = cx_sum / (6.0 * area),
+        .y = cy_sum / (6.0 * area),
+    };
+
+    return centroid;
+}
+
+Shape shape_world_translate(Shape shape, Position pos, Orientation angle) {
+    Shape world_shape = {0};
+    world_shape.amount_of_vertices = shape.amount_of_vertices;
+
+    Position center = polygon_centroid(shape);
+
+    float cos_a = cosf(angle);
+    float sin_a = sinf(angle);
+
+    for (int i = 0; i < shape.amount_of_vertices; i++) {
+        float x = shape.vertices[i].x - center.x;
+        float y = shape.vertices[i].y - center.y;
+
+        float rotated_x = x*cos_a - y*sin_a;
+        float rotated_y = x*sin_a + y*cos_a;
+
+        world_shape.vertices[i].x = pos.x + rotated_x;
+        world_shape.vertices[i].y = pos.y + rotated_y;
+    }
+
+    return world_shape;
+}
+
+float projection_overlap(Projection a, Projection b) {
+    return fminf(a.max, b.max) - fmaxf(a.min, b.min);
+}
+
+bool shape_overlap_on_axes(Shape shape1, Shape shape2, Vec2DList axes) {
+    for (int i = 0; i < axes.amount_of_vectors; i += 1) {
+        Axis axis = axes.vectors[i];
+
+        Projection p1 = project_shape_on_axis(shape1, axis);
+        Projection p2 = project_shape_on_axis(shape2, axis);
+
+        float overlap = projection_overlap(p1, p2);
+
+        if (overlap <= 0.0f) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool shape_overlap(Shape shape1, Shape shape2) {
+    Vec2DList shape1_normals = normalize_vectors(create_normals(shape1));
+    Vec2DList shape2_normals = normalize_vectors(create_normals(shape2));
+
+    if (!shape_overlap_on_axes(shape1, shape2, shape1_normals)) {
+        return false;
+    }
+
+    if (!shape_overlap_on_axes(shape1, shape2, shape2_normals)) {
+        return false;
+    }
+
+    return true;
+}
+

@@ -4,6 +4,7 @@
 #include "graphics.h"
 #include "console.h"
 #include "engine.h"
+#include "math2d.h"
 #include <stdio.h>
 #include <time.h>
 
@@ -12,10 +13,19 @@
 #include <math.h>
 
 float pi = 3.14;
+const Color background_color = (Color){0,0,255,255};
+const Color shape_color = (Color){255,0,0,255};
+
 int main() {
     console_init();
     engine_init();
-    graphics_start();
+    SDL_Renderer *renderer = NULL;
+    SDL_Window *window = NULL;
+    SDL_Event event = {0};
+    if (!graphics_start(&renderer, &window)) {
+    engine_shutdown();
+    return 1;
+}
 
     //Game setup
     //
@@ -25,14 +35,20 @@ int main() {
 
     Entity rock = add_entity();
     set_position(rock, (Position){.x = 0, .y = 0});
+    set_orientation(rock, 20*(2*pi/360));
     set_mass(rock, 1000);
-    //set_force(rock, (Force){.x = .1, .y = .1});
-    Shape box = create_square(10, 10);
+    set_velocity(rock, (Velocity){.x = 15, .y = 15});
+    Shape box = create_square(20, 20);
     set_hitbox(rock, box);
-    //
-    //
 
-    //float i = 0;
+    Entity ball = add_entity();
+    set_position(ball, (Position){.x = 200, .y = 200});
+    set_orientation(ball, 20*(2*pi/360));
+    set_mass(ball, 1000);
+    set_velocity(ball, (Velocity){.x = -15, .y = -15});
+    Shape circle = create_circle(90, 6);
+    set_hitbox(ball, circle);
+
     //Game Loop
     while (console_is_active()) {
 
@@ -59,29 +75,26 @@ int main() {
         system_update_velocities(dt);
         system_update_positions(dt);
 
-        //App
-        //
-        //console_write(LOG_APP, "{%f, %f}\n", positions[rock].x, positions[rock].y);
-        float base_x = 200.0f;
-        float amplitude = 50.0f;
-        float frequency = 2.0f; // cycles per second
-        float speed_down = 80.0f;
-        float omega = 2.0f * pi * frequency;
-        float x = base_x + amplitude * sinf(omega * current_time);
-        float y = positions[rock].y + speed_down * dt;
-        set_position(rock,(Position){x,y});
-        //
-
         //render
         //
-        graphics_poll_events();
-        draw_background();
-        draw_rect(hit_boxes[rock], positions[rock]);
-        show_graphics();
+        graphics_poll_events(&event);
+        draw_background(renderer, background_color);
+        
+        Shape world_shape_rock = shape_world_translate(hit_boxes[rock], positions[rock], orientations[rock]);
+        Shape world_shape_ball = shape_world_translate(hit_boxes[ball], positions[ball], orientations[ball]);
+        if(shape_overlap(world_shape_ball, world_shape_rock)) {
+            draw_shape_filled(renderer, world_shape_rock, shape_color);
+            draw_shape_filled(renderer, world_shape_ball, shape_color);
+        }
+        else {
+            draw_shape_outline(renderer, world_shape_rock, shape_color);
+            draw_shape_outline(renderer, world_shape_ball, shape_color);
+        }
+        show_graphics(renderer);
         //
 
     }
-    graphics_end();
+    graphics_end(renderer, window);
     engine_shutdown();
 }
 

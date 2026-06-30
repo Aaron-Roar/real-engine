@@ -3,14 +3,13 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include "math2d.h"
 
 
 //Entities
 typedef uint32_t Entity; //An id for an entity
 #define MAX_ENTITIES 30
 #define MAX_COMPONENTS 30
-#define MAX_VERTICIES 50
-#define MIN_VERTICIES 4
 extern bool entity_alive[MAX_ENTITIES]; //What entities are active
 typedef struct EntityList {
     uint32_t entity_amount;
@@ -43,24 +42,6 @@ static const char* component_names[] = {
     "TARGETABLE",
     "COLLISION",
 };
-extern const int component_count;
-
-//Disasters
-typedef enum {FIRE, WATER, GROWTH} DisasterType;
-typedef enum {MINOR, MODERATE, URGENT} DisasterSeverity;
-extern DisasterType disaster_type[MAX_ENTITIES];
-extern DisasterSeverity disaster_serverity[MAX_ENTITIES];
-
-//Moveable Objects
-typedef struct {
-    float x;
-    float y;
-} Vec2D;
-typedef Vec2D Position;
-typedef Vec2D Velocity;
-typedef Vec2D Acceleration;
-typedef Vec2D Force;
-typedef float Mass;
 typedef struct {
     float start;
     float end;
@@ -69,10 +50,9 @@ typedef struct {
     Force force;
     TimeWindow time_window;
 } TimedForce;
-typedef struct Shape {
-    uint8_t vertex_amount;
-    Position vertices[MAX_VERTICIES]; //Local coordinate of vertices. Must be translated to world coordinate
-} Shape;
+extern const int component_count;
+//Disasters
+
 extern Position positions[MAX_ENTITIES];
 extern Velocity velocities[MAX_ENTITIES];
 extern Acceleration accelerations[MAX_ENTITIES];
@@ -81,6 +61,7 @@ extern Entity targets[MAX_ENTITIES];
 extern Force forces[MAX_ENTITIES];
 extern TimeWindow time_windows[MAX_ENTITIES];
 extern Shape hit_boxes[MAX_ENTITIES];
+extern Orientation orientations[MAX_ENTITIES];
 
 //Target Capable Effects
 
@@ -97,6 +78,5 @@ void set_force(Entity e, Force f);
 void print_alive_entities();
 bool equate_mask(CMask e_mask, CMask filter);
 void set_hitbox(Entity e, Shape hitbox);
-Shape create_square(float width, float height);
-Shape create_circle(float radius, uint8_t verticies);
+void set_orientation(Entity e, Orientation angle);
 #endif
