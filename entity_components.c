@@ -21,6 +21,8 @@ Force forces[MAX_ENTITIES] = {0};
 TimeWindow time_windows[MAX_ENTITIES] = {0};
 Shape hit_boxes[MAX_ENTITIES] = {0};
 AngularVelocity angular_velocities[MAX_ENTITIES] = {0};
+AngularAcceleration angular_accelerations[MAX_ENTITIES] = {0};
+Torque torques[MAX_ENTITIES] = {0};
 
 uint32_t entity_counter = 1; //Temporary solution. Leaks memory on entity deletion
 Entity add_entity() {
@@ -127,6 +129,15 @@ void set_force(Entity e, Force f) {
     entity_mask[e] |= MOVEABLE;
 }
 
+void set_torque(Entity e, Torque t) {
+    Entity torque_entity = add_entity();
+    torques[torque_entity] = t;
+    targets[torque_entity] = e;
+    entity_mask[torque_entity] |= TARGETABLE | TORQUE;
+
+    entity_mask[e] |= MOVEABLE;
+}
+
 void set_angular_velocity(Entity e, AngularVelocity v) {
     entity_mask[e] |= MOVEABLE;
     angular_velocities[e] = v;
@@ -144,9 +155,21 @@ void print_alive_entities() {
 
 void set_hitbox(Entity e, Shape hitbox) {
     hit_boxes[e] = hitbox;
-    entity_mask[e] |= COLLISION;
+    entity_mask[e] |= COLLISION | HIT_BOX;
 }
 void set_orientation(Entity e, Orientation angle) {
   orientations[e] = angle;
 }
 
+Shape get_global_hit_box(Entity e) {
+    CMask filter = HIT_BOX;
+    if(entity_alive[e]) {
+        if( (entity_mask[e] & filter) == filter ) {
+            Position pos = positions[e];
+            Orientation ort = orientations[e];
+            Shape hit_box = hit_boxes[e];
+            return shape_world_translate(hit_box, pos, ort);
+        }
+    }
+    return (Shape){0};
+}

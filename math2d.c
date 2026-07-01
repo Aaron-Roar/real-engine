@@ -1,5 +1,6 @@
 #include <math.h>
 #include "math2d.h"
+#include <float.h>
 
 #define PI_F 3.14159265358979323846f
 
@@ -213,3 +214,109 @@ bool shape_overlap(Shape shape1, Shape shape2) {
     return true;
 }
 
+
+float polygon_moment_of_inertia(Shape shape, Mass mass)
+{
+    Position c = polygon_centroid(shape);
+
+    float area_sum = 0.0f;
+    float inertia_sum = 0.0f;
+
+    for (int i = 0; i < shape.amount_of_vertices; i++) {
+        int j = (i + 1) % shape.amount_of_vertices;
+
+        float xi = shape.vertices[i].x - c.x;
+        float yi = shape.vertices[i].y - c.y;
+
+        float xj = shape.vertices[j].x - c.x;
+        float yj = shape.vertices[j].y - c.y;
+
+        float cross = xi * yj - xj * yi;
+
+        float q =
+            xi*xi + xi*xj + xj*xj +
+            yi*yi + yi*yj + yj*yj;
+
+        area_sum += cross;
+        inertia_sum += cross * q;
+    }
+
+    float area = 0.5f * area_sum;
+    float area_moment = inertia_sum / 12.0f;
+
+    if (fabsf(area) < 1e-8f) {
+        return 0.0f; // invalid/degenerate polygon
+    }
+
+    float density = mass / fabsf(area);
+    float inertia = density * fabsf(area_moment);
+
+    return inertia;
+}
+
+
+Collision sat_collision_on_axes(
+    Shape shape1,
+    Shape shape2,
+    Vec2DList axes,
+    Collision collision
+) {
+    for (int i = 0; i < axes.amount_of_vectors; i += 1) {
+        Axis axis = axes.vectors[i];
+
+        Projection p1 = project_shape_on_axis(shape1, axis);
+        Projection p2 = project_shape_on_axis(shape2, axis);
+
+        float overlap = projection_overlap(p1, p2);
+
+        if (overlap <= 0.0f) {
+            return (Collision){ .overlap = false };
+        }
+
+        if (overlap < collision.depth) {
+            collision.depth = overlap;
+            collision.normal = axis;
+        }
+    }
+
+    return collision;
+}
+
+Collision sat_collision(Shape shape1, Shape shape2)
+{
+    Collision collision = {
+        .overlap = true,
+        .normal = {0},
+        .depth = FLT_MAX
+    };
+
+    Vec2DList shape1_axes = normalize_vectors(create_normals(shape1));
+    Vec2DList shape2_axes = normalize_vectors(create_normals(shape2));
+
+    collision = sat_collision_on_axes(shape1, shape2, shape1_axes, collision);
+
+    if (!collision.overlap) {
+        return collision;
+    }
+
+    collision = sat_collision_on_axes(shape1, shape2, shape2_axes, collision);
+
+    if (!collision.overlap) {
+        return collision;
+    }
+
+    Position c1 = polygon_centroid(shape1);
+    Position c2 = polygon_centroid(shape2);
+
+    Vec2D center_delta = {
+        .x = c2.x - c1.x,
+        .y = c2.y - c1.y
+    };
+
+    if (dot_product(center_delta, collision.normal) < 0.0f) {
+        collision.normal.x *= -1.0f;
+        collision.normal.y *= -1.0f;
+    }
+
+    return collision;
+}

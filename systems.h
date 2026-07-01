@@ -9,9 +9,5 @@ void system_clear_accelerations();
 void print_entity_movement(Entity e);
 void system_update_orientations(double dt);
 void system_update_physics(double dt);
-
-//void systems_set_position(Entity e, Position p);
-//void system_set_velocity(Entity e, Velocity v);
-//void systems_set_acceleration(Entity e, Acceleration a);
-//void systems_set_force(Entity e, Force f);
+Collision system_get_entity_collision(Entity e1, Entity e2);
 #endif

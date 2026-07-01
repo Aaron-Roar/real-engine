@@ -30,14 +30,21 @@ typedef struct Projection {
     float min;
     float max;
 } Projection;
+typedef struct Collision {
+    bool overlap;
+    Axis normal;
+    Vec1D depth;
+} Collision;
 
 typedef Vec1D Orientation;
 typedef Vec2D Position;
 typedef Vec2D Velocity;
 typedef Orientation AngularVelocity;
+typedef Orientation AngularAcceleration;
 typedef Vec2D Acceleration;
 typedef Vec2D Force;
 typedef float Mass;
+typedef Orientation Torque;
 
 Vec2DList create_normals(Shape shape);
 Vec2D normalize_vector(Vec2D vec);
@@ -48,4 +55,6 @@ Shape create_circle(float radius, uint8_t verticies);
 Projection project_shape_on_axis(Shape shape, Axis axis);
 Shape shape_world_translate(Shape shape, Position pos, Orientation angle);
 bool shape_overlap(Shape shape1, Shape shape2);
+float polygon_moment_of_inertia(Shape shape, Mass mass);
+Collision sat_collision(Shape shape1, Shape shape2);
 #endif

@@ -29,6 +29,8 @@ typedef enum {
     MOVEABLE    = 1 << 6,
     TARGETABLE  = 1 << 7,
     COLLISION   = 1 << 8,
+    TORQUE      = 1 << 9,
+    HIT_BOX     = 1 << 10,
 } Component;
 static const char* component_names[] = {
     "NONE",
@@ -63,7 +65,8 @@ extern TimeWindow time_windows[MAX_ENTITIES];
 extern Shape hit_boxes[MAX_ENTITIES];
 extern Orientation orientations[MAX_ENTITIES];
 extern AngularVelocity angular_velocities[MAX_ENTITIES];
-
+extern AngularAcceleration angular_accelerations[MAX_ENTITIES];
+extern Torque torques[MAX_ENTITIES];
 //Target Capable Effects
 
 Entity add_entity();
@@ -76,9 +79,11 @@ void set_velocity(Entity e, Velocity v);
 void set_position(Entity e, Position p);
 void set_mass(Entity e, Mass m);
 void set_force(Entity e, Force f);
+void set_torque(Entity e, Torque t);
 void print_alive_entities();
 bool equate_mask(CMask e_mask, CMask filter);
 void set_hitbox(Entity e, Shape hitbox);
 void set_orientation(Entity e, Orientation angle);
 void set_angular_velocity(Entity e, AngularVelocity v);
+Shape get_global_hit_box(Entity e);
 #endif

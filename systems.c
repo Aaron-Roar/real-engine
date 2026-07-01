@@ -37,8 +37,7 @@ void system_update_angular_velocities(double dt) {
     for (int i = 0; i < MAX_ENTITIES; i++) {
         if(entity_alive[i]) {
             if( (entity_mask[i] & filter) == filter) {
-                //Apply based on torque force
-                //angular_velocities[i] = (AngularVelocity)5;
+                angular_velocities[i] = (AngularVelocity)angular_accelerations[i]*dt;
             }
         }
     }
@@ -95,6 +94,37 @@ void system_apply_forces() {
 
 void system_apply_torques() {
     //Apply force offset from centroid and torque applied directly
+  Error error = {0};
+  CMask filter = TORQUE | TARGETABLE;
+  CMask target_filter = MOVEABLE | MASS;
+
+  for(int i = 0; i < MAX_ENTITIES; i++) {
+    if(entity_alive[i]) { //Check if this entity exists
+        if( (entity_mask[i] & filter) == filter ) { //Check if this entity is a targetable force
+            if( entity_alive[targets[i]] ) { //Check if the target to the force exists
+                if( (entity_mask[targets[i]] & target_filter) == target_filter ) { //Check if the target is moveable
+                    if(mass[targets[i]] != 0) {
+                        angular_accelerations[targets[i]] += torques[i]/polygon_moment_of_inertia(hit_boxes[targets[i]], mass[targets[i]]);
+                    } else {
+                        //Force on massless entity
+                        error.code |= ACCELERATING_MASSLESS_ENTITY | FAILED_UPDATE_ACCELERATION;
+                        error_add_entity(&error, i);
+                        error_add_entity(&error, targets[i]);
+                    }
+                } else {
+                    //Force trying to move entity
+                    error.code |= INCOMPATABLE_COMPONENTS | FAILED_UPDATE_ACCELERATION;
+                        error_add_entity(&error, i);
+                        error_add_entity(&error, targets[i]);
+                }
+            }
+            else {
+                //Forces exist without targets
+            }
+        }
+    }
+  }
+  error_print(error);
 }
 
 void system_clear_accelerations() {
@@ -113,6 +143,12 @@ void system_update_physics(double dt) {
     system_update_angular_velocities(dt);
     system_update_orientations(dt);
     system_update_positions(dt);
+}
+
+Collision system_get_entity_collision(Entity e1, Entity e2) {
+    Shape shape1 = get_global_hit_box(e1);
+    Shape shape2 = get_global_hit_box(e2);
+    return sat_collision(shape1, shape2);
 }
 
 

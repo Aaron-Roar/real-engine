@@ -6,6 +6,12 @@
 #define WINDOW_WIDTH 640
 #define WINDOW_HEIGHT 480
 
+
+typedef enum Fill {
+    GRAPHICS_OUTLINE,
+    GRAPHICS_FILLED
+} Fill;
+
 typedef struct Color {
   uint8_t red;
   uint8_t green;
@@ -22,5 +28,6 @@ void draw_background(SDL_Renderer *renderer, Color color);
 void show_graphics(SDL_Renderer *renderer);
 bool draw_shape_outline(SDL_Renderer *renderer, Shape shape, Color color);
 bool draw_shape_filled(SDL_Renderer *renderer, Shape shape, Color color);
+void draw_hit_box(SDL_Renderer *renderer, Entity e, Fill fill);
 
 #endif

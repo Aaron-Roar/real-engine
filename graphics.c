@@ -2,6 +2,8 @@
 #include "console.h"
 #include <stdio.h>
 
+const Color hit_box_color = (Color){255,0,0,255};
+
 Color creat_color_hex(uint32_t hex) {
   return (Color) {
     .red = (hex >> 16) & 0xFF,
@@ -163,4 +165,14 @@ bool draw_shape_filled(SDL_Renderer *renderer, Shape shape, Color color)
         indices,
         index_count
     );
+}
+
+void draw_hit_box(SDL_Renderer *renderer, Entity e, Fill fill) {
+    Shape shape = get_global_hit_box(e);
+    if(fill == GRAPHICS_FILLED) {
+        draw_shape_filled(renderer, shape, hit_box_color);
+    }
+    else {
+        draw_shape_outline(renderer, shape, hit_box_color);
+    }
 }
