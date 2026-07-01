@@ -20,6 +20,30 @@ void system_update_positions(double dt) {
     }
 }
 
+void system_update_orientations(double dt) {
+    CMask filter = MOVEABLE;
+    for (int i = 0; i < MAX_ENTITIES; i++) {
+        if(entity_alive[i]) {
+            if( (entity_mask[i] & filter) == filter ) {
+                orientations[i] = orientations[i] + angular_velocities[i]*dt;
+            }
+        }
+    }
+}
+
+
+void system_update_angular_velocities(double dt) {
+    CMask filter = MOVEABLE;
+    for (int i = 0; i < MAX_ENTITIES; i++) {
+        if(entity_alive[i]) {
+            if( (entity_mask[i] & filter) == filter) {
+                //Apply based on torque force
+                //angular_velocities[i] = (AngularVelocity)5;
+            }
+        }
+    }
+}
+
 void system_update_velocities(double dt) {
     CMask filter = MOVEABLE;
     for (int i = 0; i < MAX_ENTITIES; i++) {
@@ -69,11 +93,26 @@ void system_apply_forces() {
   error_print(error);
 }
 
+void system_apply_torques() {
+    //Apply force offset from centroid and torque applied directly
+}
+
 void system_clear_accelerations() {
     for(int i = 0; i < MAX_ENTITIES; i++) {
         accelerations[i].x = 0;
         accelerations[i].y = 0;
     }
+}
+
+void system_update_physics(double dt) {
+    system_clear_accelerations();
+
+    system_apply_forces();
+    system_apply_torques();
+    system_update_velocities(dt);
+    system_update_angular_velocities(dt);
+    system_update_orientations(dt);
+    system_update_positions(dt);
 }
 
 

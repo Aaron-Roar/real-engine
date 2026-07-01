@@ -20,6 +20,7 @@ Entity targets[MAX_ENTITIES] = {0};
 Force forces[MAX_ENTITIES] = {0};
 TimeWindow time_windows[MAX_ENTITIES] = {0};
 Shape hit_boxes[MAX_ENTITIES] = {0};
+AngularVelocity angular_velocities[MAX_ENTITIES] = {0};
 
 uint32_t entity_counter = 1; //Temporary solution. Leaks memory on entity deletion
 Entity add_entity() {
@@ -124,6 +125,11 @@ void set_force(Entity e, Force f) {
     entity_mask[force_entity] |= TARGETABLE | FORCE;
 
     entity_mask[e] |= MOVEABLE;
+}
+
+void set_angular_velocity(Entity e, AngularVelocity v) {
+    entity_mask[e] |= MOVEABLE;
+    angular_velocities[e] = v;
 }
 
 void print_alive_entities() {

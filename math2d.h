@@ -34,6 +34,7 @@ typedef struct Projection {
 typedef Vec1D Orientation;
 typedef Vec2D Position;
 typedef Vec2D Velocity;
+typedef Orientation AngularVelocity;
 typedef Vec2D Acceleration;
 typedef Vec2D Force;
 typedef float Mass;

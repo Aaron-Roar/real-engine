@@ -62,6 +62,7 @@ extern Force forces[MAX_ENTITIES];
 extern TimeWindow time_windows[MAX_ENTITIES];
 extern Shape hit_boxes[MAX_ENTITIES];
 extern Orientation orientations[MAX_ENTITIES];
+extern AngularVelocity angular_velocities[MAX_ENTITIES];
 
 //Target Capable Effects
 
@@ -79,4 +80,5 @@ void print_alive_entities();
 bool equate_mask(CMask e_mask, CMask filter);
 void set_hitbox(Entity e, Shape hitbox);
 void set_orientation(Entity e, Orientation angle);
+void set_angular_velocity(Entity e, AngularVelocity v);
 #endif

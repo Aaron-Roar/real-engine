@@ -34,10 +34,10 @@ int main() {
     double current_time = 0;
 
     Entity rock = add_entity();
-    set_position(rock, (Position){.x = 0, .y = 0});
+    set_position(rock, (Position){.x = 30, .y = 0});
     set_orientation(rock, 20*(2*pi/360));
     set_mass(rock, 1000);
-    set_velocity(rock, (Velocity){.x = 15, .y = 15});
+    set_velocity(rock, (Velocity){.x = 5, .y = 5});
     Shape box = create_square(20, 20);
     set_hitbox(rock, box);
 
@@ -46,7 +46,8 @@ int main() {
     set_orientation(ball, 20*(2*pi/360));
     set_mass(ball, 1000);
     set_velocity(ball, (Velocity){.x = -15, .y = -15});
-    Shape circle = create_circle(90, 6);
+    set_angular_velocity(ball, 5);
+    Shape circle = create_circle(90, 4);
     set_hitbox(ball, circle);
 
     //Game Loop
@@ -70,10 +71,7 @@ int main() {
         prev_time = current_time;
         current_time = tools_get_time() - start_time;
         double dt = current_time - prev_time;
-        system_clear_accelerations();
-        system_apply_forces();
-        system_update_velocities(dt);
-        system_update_positions(dt);
+        system_update_physics(dt);
 
         //render
         //
