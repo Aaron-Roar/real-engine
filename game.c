@@ -16,6 +16,7 @@ float pi = 3.14;
 const Color background_color = (Color){0,0,255,255};
 const Color shape_color = (Color){255,0,0,255};
 
+float i = 1;
 int main() {
     console_init();
     engine_init();
@@ -45,14 +46,18 @@ int main() {
     Entity ball = add_entity();
     set_position(ball, (Position){.x = 200, .y = 200});
     set_orientation(ball, 20*(2*pi/360));
-    set_mass(ball, 10);
+    set_mass(ball, 1000);
     set_velocity(ball, (Velocity){.x = -15, .y = -15});
-    set_torque(ball, 4000);
-    Shape shape2 = create_circle(90, 4);
+    set_torque(ball, 2000);
+    Shape shape2 = create_circle(i, 4);
     set_hitbox(ball, shape2);
 
     //Game Loop
     while (console_is_active()) {
+        shape2 = create_circle(i, 4);
+        set_hitbox(ball, shape2);
+        i += 0.001;
+
         //Console
         ConsoleLogString console_line = {0};
         if(read_console(&console_line)) {
