@@ -10,7 +10,7 @@
 
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
-#include <math.h>
+
 
 float pi = 3.14;
 const Color background_color = (Color){0,0,255,255};
@@ -23,9 +23,10 @@ int main() {
     SDL_Window *window = NULL;
     SDL_Event event = {0};
     if (!graphics_start(&renderer, &window)) {
-    engine_shutdown();
-    return 1;
-}
+        engine_shutdown();
+        return 1;
+    }
+
     //Game setup
     time_t start_time = tools_get_time();
     double prev_time = 0;
@@ -37,8 +38,8 @@ int main() {
     set_orientation(rock, 20*(2*pi/360));
     set_mass(rock, 10);
     set_velocity(rock, (Velocity){.x = 5, .y = 5});
-    Shape box = create_square(20, 20);
-    set_hitbox(rock, box);
+    Shape shape1 = create_circle(20, 20);
+    set_hitbox(rock, shape1);
 
     //Initializing entity ball
     Entity ball = add_entity();
@@ -47,8 +48,8 @@ int main() {
     set_mass(ball, 10);
     set_velocity(ball, (Velocity){.x = -15, .y = -15});
     set_torque(ball, 4000);
-    Shape circle = create_circle(90, 4);
-    set_hitbox(ball, circle);
+    Shape shape2 = create_circle(90, 4);
+    set_hitbox(ball, shape2);
 
     //Game Loop
     while (console_is_active()) {
@@ -74,7 +75,7 @@ int main() {
             draw_hit_box(renderer, rock, GRAPHICS_OUTLINE);
             draw_hit_box(renderer, ball, GRAPHICS_OUTLINE);
         }
-        
+
         show_graphics(renderer);
     }
     graphics_end(renderer, window);

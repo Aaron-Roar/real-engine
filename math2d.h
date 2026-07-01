@@ -35,6 +35,8 @@ typedef struct Collision {
     Axis normal;
     Vec1D depth;
 } Collision;
+typedef Vec1D Friction;
+typedef Vec1D Restitution;
 
 typedef Vec1D Orientation;
 typedef Vec2D Position;
@@ -47,14 +49,14 @@ typedef float Mass;
 typedef Orientation Torque;
 
 Vec2DList create_normals(Shape shape);
-Vec2D normalize_vector(Vec2D vec);
-Vec2DList normalize_vectors(Vec2DList vecs);
-float dot_product(Vec2D v1, Vec2D v2);
+Vec2D normalize_vector(Vec2D vector);
+Vec2DList normalize_vectors(Vec2DList vectors);
+float dot_product(Vec2D vector_1, Vec2D vector_2);
 Shape create_square(float width, float height);
 Shape create_circle(float radius, uint8_t verticies);
 Projection project_shape_on_axis(Shape shape, Axis axis);
-Shape shape_world_translate(Shape shape, Position pos, Orientation angle);
-bool shape_overlap(Shape shape1, Shape shape2);
+Shape shape_world_translate(Shape shape, Position position, Orientation angle);
+bool shape_overlap(Shape shape_1, Shape shape_2);
 float polygon_moment_of_inertia(Shape shape, Mass mass);
-Collision sat_collision(Shape shape1, Shape shape2);
+Collision sat_collision(Shape shape_1, Shape shape_2);
 #endif

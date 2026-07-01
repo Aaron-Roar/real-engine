@@ -145,18 +145,18 @@ void system_update_physics(double dt) {
     system_update_positions(dt);
 }
 
-Collision system_get_entity_collision(Entity e1, Entity e2) {
-    Shape shape1 = get_global_hit_box(e1);
-    Shape shape2 = get_global_hit_box(e2);
+Collision system_get_entity_collision(Entity entity_1, Entity entity_2) {
+    Shape shape1 = get_global_hit_box(entity_1);
+    Shape shape2 = get_global_hit_box(entity_2);
     return sat_collision(shape1, shape2);
 }
 
 
-void print_entity_movement(Entity e) {
+void print_entity_movement(Entity entity) {
     console_write(LOG_ENGINE, "---Movement Log---\n");
-    console_write(LOG_ENGINE, "Entity: %d\n", e);
-    console_write(LOG_ENGINE, "Position: {x: %f, y: %f}\n", positions[e].x, positions[e].y);
-    console_write(LOG_ENGINE, "Velocity: {x: %f, y: %f}\n", velocities[e].x, velocities[e].y);
-    console_write(LOG_ENGINE, "Acceleration: {x: %f, y: %f}\n", accelerations[e].x, accelerations[e].y);
+    console_write(LOG_ENGINE, "Entity: %d\n", entity);
+    console_write(LOG_ENGINE, "Position: {x: %f, y: %f}\n", positions[entity].x, positions[entity].y);
+    console_write(LOG_ENGINE, "Velocity: {x: %f, y: %f}\n", velocities[entity].x, velocities[entity].y);
+    console_write(LOG_ENGINE, "Acceleration: {x: %f, y: %f}\n", accelerations[entity].x, accelerations[entity].y);
     console_write(LOG_ENGINE, "---Movement Log---\n");
 }

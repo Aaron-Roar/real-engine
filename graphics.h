@@ -19,7 +19,7 @@ typedef struct Color {
   uint8_t alpha;
 } Color;
 
-Color creat_color_hex(uint32_t hex);
+Color creat_color_hex(uint32_t hex_color_code);
 Color creat_color_rgba(uint8_t red, uint8_t green, uint8_t blue, uint8_t alpha);
 bool graphics_start(SDL_Renderer **renderer, SDL_Window **window);
 void graphics_end(SDL_Renderer *renderer, SDL_Window *window);
@@ -28,6 +28,6 @@ void draw_background(SDL_Renderer *renderer, Color color);
 void show_graphics(SDL_Renderer *renderer);
 bool draw_shape_outline(SDL_Renderer *renderer, Shape shape, Color color);
 bool draw_shape_filled(SDL_Renderer *renderer, Shape shape, Color color);
-void draw_hit_box(SDL_Renderer *renderer, Entity e, Fill fill);
+void draw_hit_box(SDL_Renderer *renderer, Entity entity, Fill fill_type);
 
 #endif

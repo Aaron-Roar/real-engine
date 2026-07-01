@@ -44,24 +44,24 @@ Vec2DList create_normals(Shape shape) {
     return normals;
 }
 
-Vec2D normalize_vector(Vec2D vec) {
+Vec2D normalize_vector(Vec2D vector) {
     return (Vec2D){
-        .x = vec.x/sqrt(vec.x*vec.x + vec.y*vec.y),
-        .y = vec.y/sqrt(vec.x*vec.x + vec.y*vec.y),
+        .x = vector.x/sqrt(vector.x*vector.x + vector.y*vector.y),
+        .y = vector.y/sqrt(vector.x*vector.x + vector.y*vector.y),
     };
 }
 
-Vec2DList normalize_vectors(Vec2DList vecs) {
+Vec2DList normalize_vectors(Vec2DList vectors) {
     Vec2DList normalized_vecs = {0};
-    normalized_vecs.amount_of_vectors = vecs.amount_of_vectors;
-    for(int i = 0; i < vecs.amount_of_vectors; i += 1) {
-        normalized_vecs.vectors[i] = normalize_vector(vecs.vectors[i]);
+    normalized_vecs.amount_of_vectors = vectors.amount_of_vectors;
+    for(int i = 0; i < vectors.amount_of_vectors; i += 1) {
+        normalized_vecs.vectors[i] = normalize_vector(vectors.vectors[i]);
     }
     return normalized_vecs;
 }
 
-float dot_product(Vec2D v1, Vec2D v2) {
-    return v1.x*v2.x + v1.y*v2.y;
+float dot_product(Vec2D vector_1, Vec2D vector_2) {
+    return vector_1.x*vector_2.x + vector_1.y*vector_2.y;
 }
 
 Shape create_square(float width, float height) {
@@ -155,7 +155,7 @@ Position polygon_centroid(Shape shape)
     return centroid;
 }
 
-Shape shape_world_translate(Shape shape, Position pos, Orientation angle) {
+Shape shape_world_translate(Shape shape, Position position, Orientation angle) {
     Shape world_shape = {0};
     world_shape.amount_of_vertices = shape.amount_of_vertices;
 
@@ -171,23 +171,23 @@ Shape shape_world_translate(Shape shape, Position pos, Orientation angle) {
         float rotated_x = x*cos_a - y*sin_a;
         float rotated_y = x*sin_a + y*cos_a;
 
-        world_shape.vertices[i].x = pos.x + rotated_x;
-        world_shape.vertices[i].y = pos.y + rotated_y;
+        world_shape.vertices[i].x = position.x + rotated_x;
+        world_shape.vertices[i].y = position.y + rotated_y;
     }
 
     return world_shape;
 }
 
-float projection_overlap(Projection a, Projection b) {
-    return fminf(a.max, b.max) - fmaxf(a.min, b.min);
+float projection_overlap(Projection projection_1, Projection projection_2) {
+    return fminf(projection_1.max, projection_2.max) - fmaxf(projection_1.min, projection_2.min);
 }
 
-bool shape_overlap_on_axes(Shape shape1, Shape shape2, Vec2DList axes) {
+bool shape_overlap_on_axes(Shape shape_1, Shape shape_2, Vec2DList axes) {
     for (int i = 0; i < axes.amount_of_vectors; i += 1) {
         Axis axis = axes.vectors[i];
 
-        Projection p1 = project_shape_on_axis(shape1, axis);
-        Projection p2 = project_shape_on_axis(shape2, axis);
+        Projection p1 = project_shape_on_axis(shape_1, axis);
+        Projection p2 = project_shape_on_axis(shape_2, axis);
 
         float overlap = projection_overlap(p1, p2);
 
@@ -199,15 +199,15 @@ bool shape_overlap_on_axes(Shape shape1, Shape shape2, Vec2DList axes) {
     return true;
 }
 
-bool shape_overlap(Shape shape1, Shape shape2) {
-    Vec2DList shape1_normals = normalize_vectors(create_normals(shape1));
-    Vec2DList shape2_normals = normalize_vectors(create_normals(shape2));
+bool shape_overlap(Shape shape_1, Shape shape_2) {
+    Vec2DList shape1_normals = normalize_vectors(create_normals(shape_1));
+    Vec2DList shape2_normals = normalize_vectors(create_normals(shape_2));
 
-    if (!shape_overlap_on_axes(shape1, shape2, shape1_normals)) {
+    if (!shape_overlap_on_axes(shape_1, shape_2, shape1_normals)) {
         return false;
     }
 
-    if (!shape_overlap_on_axes(shape1, shape2, shape2_normals)) {
+    if (!shape_overlap_on_axes(shape_1, shape_2, shape2_normals)) {
         return false;
     }
 
@@ -255,17 +255,12 @@ float polygon_moment_of_inertia(Shape shape, Mass mass)
 }
 
 
-Collision sat_collision_on_axes(
-    Shape shape1,
-    Shape shape2,
-    Vec2DList axes,
-    Collision collision
-) {
+Collision sat_collision_on_axes(Shape shape_1, Shape shape_2, Vec2DList axes, Collision collision) {
     for (int i = 0; i < axes.amount_of_vectors; i += 1) {
         Axis axis = axes.vectors[i];
 
-        Projection p1 = project_shape_on_axis(shape1, axis);
-        Projection p2 = project_shape_on_axis(shape2, axis);
+        Projection p1 = project_shape_on_axis(shape_1, axis);
+        Projection p2 = project_shape_on_axis(shape_2, axis);
 
         float overlap = projection_overlap(p1, p2);
 
@@ -282,7 +277,7 @@ Collision sat_collision_on_axes(
     return collision;
 }
 
-Collision sat_collision(Shape shape1, Shape shape2)
+Collision sat_collision(Shape shape_1, Shape shape_2)
 {
     Collision collision = {
         .overlap = true,
@@ -290,23 +285,23 @@ Collision sat_collision(Shape shape1, Shape shape2)
         .depth = FLT_MAX
     };
 
-    Vec2DList shape1_axes = normalize_vectors(create_normals(shape1));
-    Vec2DList shape2_axes = normalize_vectors(create_normals(shape2));
+    Vec2DList shape1_axes = normalize_vectors(create_normals(shape_1));
+    Vec2DList shape2_axes = normalize_vectors(create_normals(shape_2));
 
-    collision = sat_collision_on_axes(shape1, shape2, shape1_axes, collision);
-
-    if (!collision.overlap) {
-        return collision;
-    }
-
-    collision = sat_collision_on_axes(shape1, shape2, shape2_axes, collision);
+    collision = sat_collision_on_axes(shape_1, shape_2, shape1_axes, collision);
 
     if (!collision.overlap) {
         return collision;
     }
 
-    Position c1 = polygon_centroid(shape1);
-    Position c2 = polygon_centroid(shape2);
+    collision = sat_collision_on_axes(shape_1, shape_2, shape2_axes, collision);
+
+    if (!collision.overlap) {
+        return collision;
+    }
+
+    Position c1 = polygon_centroid(shape_1);
+    Position c2 = polygon_centroid(shape_2);
 
     Vec2D center_delta = {
         .x = c2.x - c1.x,

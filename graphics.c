@@ -4,11 +4,11 @@
 
 const Color hit_box_color = (Color){255,0,0,255};
 
-Color creat_color_hex(uint32_t hex) {
+Color creat_color_hex(uint32_t hex_color_code) {
   return (Color) {
-    .red = (hex >> 16) & 0xFF,
-    .green = (hex >> 8)  & 0xFF,
-    .blue = hex         & 0xFF,
+    .red = (hex_color_code >> 16) & 0xFF,
+    .green = (hex_color_code >> 8)  & 0xFF,
+    .blue = hex_color_code         & 0xFF,
     .alpha = 255
   };
 }
@@ -167,9 +167,9 @@ bool draw_shape_filled(SDL_Renderer *renderer, Shape shape, Color color)
     );
 }
 
-void draw_hit_box(SDL_Renderer *renderer, Entity e, Fill fill) {
-    Shape shape = get_global_hit_box(e);
-    if(fill == GRAPHICS_FILLED) {
+void draw_hit_box(SDL_Renderer *renderer, Entity entity, Fill fill_type) {
+    Shape shape = get_global_hit_box(entity);
+    if(fill_type == GRAPHICS_FILLED) {
         draw_shape_filled(renderer, shape, hit_box_color);
     }
     else {
