@@ -186,8 +186,8 @@ void resolve_collision(Entity entity_1, Entity entity_2, Collision collision) {
 
     velocities[entity_1].x -= impulse.x / mass[entity_1];
     velocities[entity_1].y -= impulse.y / mass[entity_1];
-    velocities[entity_2].x -= impulse.x / mass[entity_2];
-    velocities[entity_2].y -= impulse.y / mass[entity_2];
+    velocities[entity_2].x += impulse.x / mass[entity_2];
+    velocities[entity_2].y += impulse.y / mass[entity_2];
 }
 
 void apply_collisions() {

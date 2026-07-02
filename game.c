@@ -36,7 +36,7 @@ int main() {
     Entity rock = add_entity();
     set_position(rock, (Position){.x = 100, .y = 100});
     set_orientation(rock, 20*(2*pi/360));
-    set_mass(rock, 1000);
+    set_mass(rock, 50);
     set_velocity(rock, (Velocity){.x = 0, .y = 0});
     set_restitution(rock, 0.5);
     Shape shape1 = create_square(50, 50);
@@ -47,7 +47,7 @@ int main() {
     set_position(ball, (Position){.x = 200, .y = 200});
     set_orientation(ball, 20*(2*pi/360));
     set_mass(ball, 10);
-    set_velocity(ball, (Velocity){.x = -10, .y = -10});
+    set_velocity(ball, (Velocity){.x = -50, .y = -50});
     set_restitution(ball, 0.5);
     //set_torque(ball, 2000);
     Shape shape2 = create_circle(30, 20);
@@ -71,6 +71,8 @@ int main() {
         //render
         graphics_poll_events(&event);
         draw_background(renderer, background_color);
+        draw_hit_box(renderer, rock, GRAPHICS_OUTLINE);
+        draw_hit_box(renderer, ball, GRAPHICS_OUTLINE);
         apply_collisions();
 
         show_graphics(renderer);
