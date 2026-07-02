@@ -176,5 +176,13 @@ Shape get_global_hit_box(Entity entity) {
     return (Shape){0};
 }
  void set_restitution(Entity entity, Restitution restitution) {
-
+     if(restitution < 0) {
+        restitutions[entity] = 0;
+     }
+     else if(restitution > 1) {
+        restitutions[entity] = 1;
+     }
+     else {
+        restitutions[entity] = restitution;
+     }
  }

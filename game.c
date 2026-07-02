@@ -16,7 +16,6 @@ float pi = 3.14;
 const Color background_color = (Color){0,0,255,255};
 const Color shape_color = (Color){255,0,0,255};
 
-float i = 1;
 int main() {
     console_init();
     engine_init();
@@ -35,28 +34,27 @@ int main() {
 
     //Initializing entity rock
     Entity rock = add_entity();
-    set_position(rock, (Position){.x = 30, .y = 0});
+    set_position(rock, (Position){.x = 100, .y = 100});
     set_orientation(rock, 20*(2*pi/360));
-    set_mass(rock, 10);
-    set_velocity(rock, (Velocity){.x = 5, .y = 5});
-    Shape shape1 = create_circle(20, 20);
+    set_mass(rock, 1000);
+    set_velocity(rock, (Velocity){.x = 0, .y = 0});
+    set_restitution(rock, 0.5);
+    Shape shape1 = create_square(50, 50);
     set_hitbox(rock, shape1);
 
     //Initializing entity ball
     Entity ball = add_entity();
     set_position(ball, (Position){.x = 200, .y = 200});
     set_orientation(ball, 20*(2*pi/360));
-    set_mass(ball, 1000);
-    set_velocity(ball, (Velocity){.x = -15, .y = -15});
-    set_torque(ball, 2000);
-    Shape shape2 = create_circle(i, 4);
+    set_mass(ball, 10);
+    set_velocity(ball, (Velocity){.x = -10, .y = -10});
+    set_restitution(ball, 0.5);
+    //set_torque(ball, 2000);
+    Shape shape2 = create_circle(30, 20);
     set_hitbox(ball, shape2);
 
     //Game Loop
     while (console_is_active()) {
-        shape2 = create_circle(i, 4);
-        set_hitbox(ball, shape2);
-        i += 0.001;
 
         //Console
         ConsoleLogString console_line = {0};
@@ -73,13 +71,7 @@ int main() {
         //render
         graphics_poll_events(&event);
         draw_background(renderer, background_color);
-        if(system_get_entity_collision(ball, rock).overlap) {
-            draw_hit_box(renderer, rock, GRAPHICS_FILLED);
-            draw_hit_box(renderer, ball, GRAPHICS_FILLED);
-        } else {
-            draw_hit_box(renderer, rock, GRAPHICS_OUTLINE);
-            draw_hit_box(renderer, ball, GRAPHICS_OUTLINE);
-        }
+        apply_collisions();
 
         show_graphics(renderer);
     }

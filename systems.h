@@ -10,4 +10,7 @@ void print_entity_movement(Entity entity);
 void system_update_orientations(double dt);
 void system_update_physics(double dt);
 Collision system_get_entity_collision(Entity entity_1, Entity entity_2);
+void separate_entities(Entity entity_1, Entity entity_2, Collision collision);
+void resolve_collision(Entity entity_1, Entity entity_2, Collision collision);
+void apply_collisions();
 #endif

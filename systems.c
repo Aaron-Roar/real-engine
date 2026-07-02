@@ -2,6 +2,7 @@
 #include "systems.h"
 #include "error.h"
 #include "console.h"
+#include <math.h>
 #include <stdio.h>
 #include <time.h>
 
@@ -134,6 +135,90 @@ void system_clear_accelerations() {
     }
 }
 
+
+Collision system_get_entity_collision(Entity entity_1, Entity entity_2) {
+    Shape shape1 = get_global_hit_box(entity_1);
+    Shape shape2 = get_global_hit_box(entity_2);
+    return sat_collision(shape1, shape2);
+}
+
+void separate_entities(Entity entity_1, Entity entity_2, Collision collision)
+{
+    if ((mass[entity_1] + mass[entity_2]) <= 0.0f) {
+        //Then no mass!
+        return;
+    }
+
+    Vec2D correction = {
+        .x = collision.normal.x * collision.depth,
+        .y = collision.normal.y * collision.depth
+    };
+
+    positions[entity_1].x -= correction.x * mass[entity_2]/(mass[entity_1] + mass[entity_2]);
+    positions[entity_1].y -= correction.y * mass[entity_2]/(mass[entity_1] + mass[entity_2]);
+
+    positions[entity_2].x += correction.x * mass[entity_1]/(mass[entity_1] + mass[entity_2]);
+    positions[entity_2].y += correction.y * mass[entity_1]/(mass[entity_1] + mass[entity_2]);
+}
+
+void resolve_collision(Entity entity_1, Entity entity_2, Collision collision) {
+    separate_entities(entity_1, entity_2, collision);
+    //Assume collision points from E1->E2 
+    Velocity v_rel = {
+        .x = velocities[entity_2].x - velocities[entity_1].x,
+        .y = velocities[entity_2].y - velocities[entity_1].y,
+    };
+
+    Vec1D v_normal = dot_product(v_rel, collision.normal);
+
+    if(v_normal > 0) {
+        //No collision objects moving away from eachother
+        return;
+    }
+
+    Vec1D restitution = fminf(restitutions[entity_1], restitutions[entity_2]);
+    Vec1D impulse_magnitude = (-(1 + restitution)*v_normal) / ((1/mass[entity_1]) + (1/mass[entity_2]));
+
+    Vec2D impulse = {
+        .x = collision.normal.x * impulse_magnitude,
+        .y = collision.normal.y * impulse_magnitude
+    };
+
+    velocities[entity_1].x -= impulse.x / mass[entity_1];
+    velocities[entity_1].y -= impulse.y / mass[entity_1];
+    velocities[entity_2].x -= impulse.x / mass[entity_2];
+    velocities[entity_2].y -= impulse.y / mass[entity_2];
+}
+
+void apply_collisions() {
+    CMask filter = COLLISION;
+    for(int i = 0; i < MAX_ENTITIES; i += 1) {
+        if(!entity_alive[i]) {
+            continue;
+        }
+        if( (entity_mask[i] & filter) != filter) {
+            continue;
+        }
+
+        for(int j = 0; j < MAX_ENTITIES; j += 1) {
+            if(!entity_alive[j]) {
+                continue;
+            }
+            if( (entity_mask[j] & filter) != filter) {
+                continue;
+            }
+            if(i == j) {
+                continue;
+            }
+
+            Collision collision = system_get_entity_collision(i, j);
+            if(collision.overlap == true) {
+                resolve_collision(i, j, collision);
+            }
+        }
+    }
+}
+
 void system_update_physics(double dt) {
     system_clear_accelerations();
 
@@ -143,14 +228,8 @@ void system_update_physics(double dt) {
     system_update_angular_velocities(dt);
     system_update_orientations(dt);
     system_update_positions(dt);
+    apply_collisions();
 }
-
-Collision system_get_entity_collision(Entity entity_1, Entity entity_2) {
-    Shape shape1 = get_global_hit_box(entity_1);
-    Shape shape2 = get_global_hit_box(entity_2);
-    return sat_collision(shape1, shape2);
-}
-
 
 void print_entity_movement(Entity entity) {
     console_write(LOG_ENGINE, "---Movement Log---\n");
