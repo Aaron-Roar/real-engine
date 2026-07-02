@@ -315,3 +315,25 @@ Collision sat_collision(Shape shape_1, Shape shape_2)
 
     return collision;
 }
+
+float cross_2d(Vec2D a, Vec2D b)
+{
+    return a.x * b.y - a.y * b.x;
+}
+
+Vec2D angular_velocity_cross_vec(float omega, Vec2D r)
+{
+    return (Vec2D){
+        .x = -omega * r.y,
+        .y =  omega * r.x
+    };
+}
+
+//uses center (wrong for now)
+Position approximate_contact_point(Position p1, Position p2)
+{
+    return (Position){
+        .x = (p1.x + p2.x) * 0.5f,
+        .y = (p1.y + p2.y) * 0.5f
+    };
+}

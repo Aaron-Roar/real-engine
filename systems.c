@@ -38,7 +38,7 @@ void system_update_angular_velocities(double dt) {
     for (int i = 0; i < MAX_ENTITIES; i++) {
         if(entity_alive[i]) {
             if( (entity_mask[i] & filter) == filter) {
-                angular_velocities[i] = (AngularVelocity)angular_accelerations[i]*dt;
+                angular_velocities[i] += (AngularVelocity)angular_accelerations[i]*dt;
             }
         }
     }
@@ -132,6 +132,7 @@ void system_clear_accelerations() {
     for(int i = 0; i < MAX_ENTITIES; i++) {
         accelerations[i].x = 0;
         accelerations[i].y = 0;
+        angular_accelerations[i] = 0;
     }
 }
 
@@ -162,32 +163,157 @@ void separate_entities(Entity entity_1, Entity entity_2, Collision collision)
 }
 
 void resolve_collision(Entity entity_1, Entity entity_2, Collision collision) {
-    separate_entities(entity_1, entity_2, collision);
-    //Assume collision points from E1->E2 
-    Velocity v_rel = {
-        .x = velocities[entity_2].x - velocities[entity_1].x,
-        .y = velocities[entity_2].y - velocities[entity_1].y,
-    };
+    // Assume collision.normal points from entity_1 -> entity_2
 
-    Vec1D v_normal = dot_product(v_rel, collision.normal);
+    // ================================
+    // CHANGED: use your MOVABLE bitmask
+    // ================================
+    bool entity_1_movable =
+        ((entity_mask[entity_1] & MOVEABLE) == MOVEABLE);
 
-    if(v_normal > 0) {
-        //No collision objects moving away from eachother
+    bool entity_2_movable =
+        ((entity_mask[entity_2] & MOVEABLE) == MOVEABLE);
+
+    // ================================
+    // CHANGED: local inverse mass from your mass[] array
+    // If not movable, inverse mass = 0.
+    // ================================
+    float inv_mass_1 = 0.0f;
+    float inv_mass_2 = 0.0f;
+
+    if (entity_1_movable && mass[entity_1] > 0.0f) {
+        inv_mass_1 = 1.0f / mass[entity_1];
+    }
+
+    if (entity_2_movable && mass[entity_2] > 0.0f) {
+        inv_mass_2 = 1.0f / mass[entity_2];
+    }
+
+    // If neither body can move, no velocity response is needed.
+    if (inv_mass_1 + inv_mass_2 <= 0.0f) {
         return;
     }
 
-    Vec1D restitution = fminf(restitutions[entity_1], restitutions[entity_2]);
-    Vec1D impulse_magnitude = (-(1 + restitution)*v_normal) / ((1/mass[entity_1]) + (1/mass[entity_2]));
+    Position contact = approximate_contact_point(positions[entity_1], positions[entity_2]);
+
+    Vec2D r1 = {
+        .x = contact.x - positions[entity_1].x,
+        .y = contact.y - positions[entity_1].y
+    };
+
+    Vec2D r2 = {
+        .x = contact.x - positions[entity_2].x,
+        .y = contact.y - positions[entity_2].y
+    };
+
+    // ================================
+    // CHANGED: static/non-movable objects should not contribute contact velocity
+    // for now. Later you may add kinematic objects.
+    // ================================
+    Vec2D rotational_velocity_1 = {0};
+    Vec2D rotational_velocity_2 = {0};
+
+    if (entity_1_movable) {
+        rotational_velocity_1 =
+            angular_velocity_cross_vec(angular_velocities[entity_1], r1);
+    }
+
+    if (entity_2_movable) {
+        rotational_velocity_2 =
+            angular_velocity_cross_vec(angular_velocities[entity_2], r2);
+    }
+
+    Vec2D contact_velocity_1 = {0};
+    Vec2D contact_velocity_2 = {0};
+
+    if (entity_1_movable) {
+        contact_velocity_1.x = velocities[entity_1].x + rotational_velocity_1.x;
+        contact_velocity_1.y = velocities[entity_1].y + rotational_velocity_1.y;
+    }
+
+    if (entity_2_movable) {
+        contact_velocity_2.x = velocities[entity_2].x + rotational_velocity_2.x;
+        contact_velocity_2.y = velocities[entity_2].y + rotational_velocity_2.y;
+    }
+
+    Vec2D v_rel = {
+        .x = contact_velocity_2.x - contact_velocity_1.x,
+        .y = contact_velocity_2.y - contact_velocity_1.y
+    };
+
+    float v_normal = dot_product(v_rel, collision.normal);
+
+    if (v_normal > 0.0f) {
+        return;
+    }
+
+    float restitution = fminf(restitutions[entity_1], restitutions[entity_2]);
+
+    // ================================
+    // CHANGED: local inverse inertia
+    // Non-movable objects get inverse inertia = 0.
+    // ================================
+    float inv_inertia_1 = 0.0f;
+    float inv_inertia_2 = 0.0f;
+
+    if (entity_1_movable) {
+        float inertia_1 =
+            polygon_moment_of_inertia(hit_boxes[entity_1], mass[entity_1]);
+
+        if (inertia_1 > 0.0f) {
+            inv_inertia_1 = 1.0f / inertia_1;
+        }
+    }
+
+    if (entity_2_movable) {
+        float inertia_2 =
+            polygon_moment_of_inertia(hit_boxes[entity_2], mass[entity_2]);
+
+        if (inertia_2 > 0.0f) {
+            inv_inertia_2 = 1.0f / inertia_2;
+        }
+    }
+
+    float r1_cross_n = cross_2d(r1, collision.normal);
+    float r2_cross_n = cross_2d(r2, collision.normal);
+
+    // ================================
+    // CHANGED: denominator uses inverse mass/inertia
+    // ================================
+    float denominator =
+        inv_mass_1 +
+        inv_mass_2 +
+        (r1_cross_n * r1_cross_n) * inv_inertia_1 +
+        (r2_cross_n * r2_cross_n) * inv_inertia_2;
+
+    if (denominator <= 0.0f) {
+        return;
+    }
+
+    float impulse_magnitude =
+        (-(1.0f + restitution) * v_normal) / denominator;
 
     Vec2D impulse = {
         .x = collision.normal.x * impulse_magnitude,
         .y = collision.normal.y * impulse_magnitude
     };
 
-    velocities[entity_1].x -= impulse.x / mass[entity_1];
-    velocities[entity_1].y -= impulse.y / mass[entity_1];
-    velocities[entity_2].x += impulse.x / mass[entity_2];
-    velocities[entity_2].y += impulse.y / mass[entity_2];
+    // ================================
+    // CHANGED: velocity update uses inverse mass
+    // If entity is not movable, inv_mass = 0, so it does not change.
+    // ================================
+    velocities[entity_1].x -= impulse.x * inv_mass_1;
+    velocities[entity_1].y -= impulse.y * inv_mass_1;
+
+    velocities[entity_2].x += impulse.x * inv_mass_2;
+    velocities[entity_2].y += impulse.y * inv_mass_2;
+
+    // ================================
+    // CHANGED: angular velocity update uses inverse inertia
+    // If entity is not movable, inv_inertia = 0, so it does not rotate.
+    // ================================
+    angular_velocities[entity_1] -= cross_2d(r1, impulse) * inv_inertia_1;
+    angular_velocities[entity_2] += cross_2d(r2, impulse) * inv_inertia_2;
 }
 
 void apply_collisions() {
@@ -213,6 +339,7 @@ void apply_collisions() {
 
             Collision collision = system_get_entity_collision(i, j);
             if(collision.overlap == true) {
+                separate_entities(i, j, collision);
                 resolve_collision(i, j, collision);
             }
         }

@@ -156,8 +156,8 @@ void print_alive_entities() {
 }
 
 void set_hitbox(Entity entity, Shape hitbox) {
-    hit_boxes[entity] = hitbox;
     entity_mask[entity] |= COLLISION | HIT_BOX;
+    hit_boxes[entity] = hitbox;
 }
 void set_orientation(Entity entity, Orientation angle) {
   orientations[entity] = angle;
@@ -185,4 +185,5 @@ Shape get_global_hit_box(Entity entity) {
      else {
         restitutions[entity] = restitution;
      }
+     entity_mask[entity] |= COLLISION;
  }

@@ -38,7 +38,7 @@ int main() {
     set_orientation(rock, 20*(2*pi/360));
     set_mass(rock, 50);
     set_velocity(rock, (Velocity){.x = 0, .y = 0});
-    set_restitution(rock, 0.5);
+    set_restitution(rock, 1);
     Shape shape1 = create_square(50, 50);
     set_hitbox(rock, shape1);
 
@@ -48,7 +48,7 @@ int main() {
     set_orientation(ball, 20*(2*pi/360));
     set_mass(ball, 10);
     set_velocity(ball, (Velocity){.x = -50, .y = -50});
-    set_restitution(ball, 0.5);
+    set_restitution(ball, 1);
     //set_torque(ball, 2000);
     Shape shape2 = create_circle(30, 20);
     set_hitbox(ball, shape2);
