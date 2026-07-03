@@ -30,7 +30,7 @@ Restitution restitutions[MAX_ENTITIES] = {0};
 AngleLock angle_locks[MAX_ENTITIES] = {0};
 AxisLock axis_locks[MAX_ENTITIES] = {0};
 Parent parents[MAX_ENTITIES] = {0};
-Child childs[MAX_ENTITIES] = {0};
+Child children[MAX_ENTITIES] = {0};
 
 uint32_t entity_counter = 1; //Temporary solution. Leaks memory on entity deletion
 Entity add_entity() {
@@ -279,4 +279,57 @@ void set_friction(Entity entity, float friction) {
     else if(friction >= 0) {
         frictions[entity] = friction;
     }
+}
+
+void set_child(Entity parent, Entity child) {
+    if(!entity_alive[parent] || !entity_alive[child]) {
+        //Error parent or child not alive 
+        return;
+    }
+    add_components(parent, HAS_CHILDREN);
+    add_components(child, HAS_PARENT);
+    children[parent].entities[child] = child;
+    parents[child] = parent;
+}
+
+void set_parent(Entity child, Entity parent) {
+    if(!entity_alive[parent] || !entity_alive[child]) {
+        //Error parent or child not alive 
+        return;
+    }
+    add_components(parent, HAS_CHILDREN);
+    add_components(child, HAS_PARENT);
+    children[parent].entities[child] = child;
+    parents[child] = parent;
+}
+
+void remove_parent(Entity child) {
+    //Removing this child from the parent
+    children[parents[child]].entities[child] = 0;
+    //If the parent has no more children remove the flag
+    for(int i = 0; i < MAX_ENTITIES; i += 1) {
+        if(children[parents[child]].entities[i] != 0) {
+            delete_components(parents[child], HAS_CHILDREN);
+        }
+    }
+
+    //Remove the parent from the child
+    parents[child] = 0;
+    delete_components(child, HAS_PARENT);
+}
+
+void remove_child(Entity parent, Entity child) {
+    //Removing the child from the parent
+    children[parent].entities[child] = 0;
+    //If the parent has no more children remove the flag
+    for(int i = 0; i < MAX_ENTITIES; i += 1) {
+        if(children[parent].entities[i] != 0) {
+            delete_components(parents[child], HAS_CHILDREN);
+        }
+    }
+
+    //Removing the parent from the child
+    parents[child] = 0;
+    delete_components(child, HAS_PARENT);
+
 }

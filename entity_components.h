@@ -33,6 +33,8 @@ typedef enum {
 
     MASS                    = 1 << 9,
     TIMEWINDOW              = 1 << 10,
+    HAS_PARENT                  = 1 << 11,
+    HAS_CHILDREN                = 1 << 12,
 } Component;
 static const char* component_names[] = {
     "NONE",
@@ -67,7 +69,7 @@ typedef struct AngleLock {
 
 typedef Entity Parent;
 typedef struct Child {
-    Entity children[MAX_ENTITIES];
+    Entity entities[MAX_ENTITIES];
 } Child;
 
 extern Position positions[MAX_ENTITIES];
@@ -89,7 +91,7 @@ extern Restitution restitutions[MAX_ENTITIES];
 extern AngleLock angle_locks[MAX_ENTITIES];
 extern AxisLock axis_locks[MAX_ENTITIES];
 extern Parent parents[MAX_ENTITIES];
-extern Child childs[MAX_ENTITIES];
+extern Child children[MAX_ENTITIES];
 //Target Capable Effects
 
 Entity add_entity();
@@ -115,5 +117,9 @@ void set_static(Entity entity);
 void set_angle_lock(Entity entity, Orientation min, Orientation max);
 void set_axis_lock(Entity entity, Axis axis, Position axis_point);
 void set_friction(Entity entity, float friction);
+void set_child(Entity parent, Entity child);
+void set_parent(Entity child, Entity parent);
+void remove_parent(Entity child);
+void remove_child(Entity parent, Entity child);
 
 #endif
