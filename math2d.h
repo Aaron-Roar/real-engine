@@ -63,4 +63,6 @@ Collision sat_collision(Shape shape_1, Shape shape_2);
 float cross_2d(Vec2D a, Vec2D b);
 Vec2D angular_velocity_cross_vec(float omega, Vec2D r);
 Position approximate_contact_point(Position p1, Position p2);
+Vec2D project_onto_axis(Vec2D v, Axis axis);
+float axis_magnitude(Axis axis);
 #endif

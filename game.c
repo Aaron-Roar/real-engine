@@ -47,6 +47,7 @@ int main() {
     set_restitution(plate, 0.9);
     Shape shape1 = create_square(1000, 50);
     set_hitbox(plate, shape1);
+    set_friction(plate, 0.5);
     set_static(plate);
 
     Entity plate2 = add_entity();
@@ -58,7 +59,10 @@ int main() {
     set_restitution(plate2, 0.6);
     Shape shape2 = create_circle(50, 10);
     set_hitbox(plate2, shape2);
+    set_friction(plate2, 0);
     set_dynamic(plate2);
+    set_axis_lock(plate2,(Position){0,5}, positions[plate2]);
+    set_angle_lock(plate2,0,0.1);
 
     time_t seed = 1003463;
     srand(seed);
@@ -74,6 +78,7 @@ int main() {
         //set_torque(ball, 2000);
         Shape shape3 = create_circle(30, random_range(3, 10));
         set_hitbox(ball, shape3);
+        set_friction(ball, 0.5);
         set_dynamic(ball);
     }
 

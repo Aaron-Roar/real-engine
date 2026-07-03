@@ -254,6 +254,93 @@ Position collision_contact_point(Entity entity_1, Entity entity_2, Collision col
     };
 }
 
+void apply_friction_impulse(
+    Entity entity_1,
+    Entity entity_2,
+    Collision collision,
+    Vec2D r1,
+    Vec2D r2,
+    float normal_impulse_magnitude,
+    float inv_mass_1,
+    float inv_mass_2,
+    float inv_inertia_1,
+    float inv_inertia_2
+) {
+    Vec2D angular_v1 = angular_velocity_cross_vec(angular_velocities[entity_1], r1);
+    Vec2D angular_v2 = angular_velocity_cross_vec(angular_velocities[entity_2], r2);
+
+    Vec2D contact_v1 = {
+        .x = velocities[entity_1].x + angular_v1.x,
+        .y = velocities[entity_1].y + angular_v1.y
+    };
+
+    Vec2D contact_v2 = {
+        .x = velocities[entity_2].x + angular_v2.x,
+        .y = velocities[entity_2].y + angular_v2.y
+    };
+
+    Vec2D rel_v = {
+        .x = contact_v2.x - contact_v1.x,
+        .y = contact_v2.y - contact_v1.y
+    };
+
+    float rel_v_along_normal = dot_product(rel_v, collision.normal);
+
+    Vec2D tangent = {
+        .x = rel_v.x - collision.normal.x * rel_v_along_normal,
+        .y = rel_v.y - collision.normal.y * rel_v_along_normal
+    };
+
+    float tangent_mag = sqrtf(tangent.x * tangent.x + tangent.y * tangent.y);
+
+    if(tangent_mag <= 0.00001f) {
+        return;
+    }
+
+    tangent.x /= tangent_mag;
+    tangent.y /= tangent_mag;
+
+    float r1_cross_t = cross_2d(r1, tangent);
+    float r2_cross_t = cross_2d(r2, tangent);
+
+    float denominator =
+        inv_mass_1 +
+        inv_mass_2 +
+        (r1_cross_t * r1_cross_t) * inv_inertia_1 +
+        (r2_cross_t * r2_cross_t) * inv_inertia_2;
+
+    if(denominator <= 0.00001f) {
+        return;
+    }
+
+    float jt = -dot_product(rel_v, tangent) / denominator;
+
+    float mu = sqrtf(frictions[entity_1] * frictions[entity_2]);
+
+    float max_friction = fabsf(normal_impulse_magnitude) * mu;
+
+    if(jt > max_friction) {
+        jt = max_friction;
+    }
+    else if(jt < -max_friction) {
+        jt = -max_friction;
+    }
+
+    Vec2D friction_impulse = {
+        .x = tangent.x * jt,
+        .y = tangent.y * jt
+    };
+
+    velocities[entity_1].x -= friction_impulse.x * inv_mass_1;
+    velocities[entity_1].y -= friction_impulse.y * inv_mass_1;
+
+    velocities[entity_2].x += friction_impulse.x * inv_mass_2;
+    velocities[entity_2].y += friction_impulse.y * inv_mass_2;
+
+    angular_velocities[entity_1] -= cross_2d(r1, friction_impulse) * inv_inertia_1;
+    angular_velocities[entity_2] += cross_2d(r2, friction_impulse) * inv_inertia_2;
+}
+
 void resolve_collision(Entity entity_1, Entity entity_2, Collision collision) {
     // Assume collision.normal points from entity_1 -> entity_2
 
@@ -411,6 +498,19 @@ void resolve_collision(Entity entity_1, Entity entity_2, Collision collision) {
     // ================================
     angular_velocities[entity_1] -= cross_2d(r1, impulse) * inv_inertia_1;
     angular_velocities[entity_2] += cross_2d(r2, impulse) * inv_inertia_2;
+
+        apply_friction_impulse(
+        entity_1,
+        entity_2,
+        collision,
+        r1,
+        r2,
+        impulse_magnitude,              // pass normal impulse magnitude
+        inv_mass_1,
+        inv_mass_2,
+        inv_inertia_1,
+        inv_inertia_2
+    );
 }
 
 void apply_collisions() {
@@ -445,6 +545,149 @@ void apply_collisions() {
     }
 }
 
+void system_apply_angle_locks() {
+    for(Entity entity = 0; entity < MAX_ENTITIES; entity += 1) {
+        if(!entity_alive[entity]) {
+            continue;
+        }
+
+        if((entity_mask[entity] & ANGLE_LOCK) != ANGLE_LOCK) {
+            continue;
+        }
+
+        Orientation min = angle_locks[entity].min;
+        Orientation max = angle_locks[entity].max;
+
+        if(min > max) {
+            Orientation temp = min;
+            min = max;
+            max = temp;
+        }
+
+        /*
+            Locked completely.
+        */
+        if(fabsf(max - min) <= 0.00001f) {
+            orientations[entity] = min;
+            angular_velocities[entity] = 0.0f;
+            angular_accelerations[entity] = 0.0f;
+            torque_angular_accelerations[entity] = 0.0f;
+            torques[entity] = 0.0f;
+            continue;
+        }
+
+        /*
+            Hit minimum angle.
+        */
+        if(orientations[entity] < min) {
+            orientations[entity] = min;
+
+            if(angular_velocities[entity] < 0.0f) {
+                angular_velocities[entity] = 0.0f;
+            }
+
+            if(angular_accelerations[entity] < 0.0f) {
+                angular_accelerations[entity] = 0.0f;
+            }
+
+            if(torque_angular_accelerations[entity] < 0.0f) {
+                torque_angular_accelerations[entity] = 0.0f;
+            }
+
+            if(torques[entity] < 0.0f) {
+                torques[entity] = 0.0f;
+            }
+        }
+
+        /*
+            Hit maximum angle.
+        */
+        if(orientations[entity] > max) {
+            orientations[entity] = max;
+
+            if(angular_velocities[entity] > 0.0f) {
+                angular_velocities[entity] = 0.0f;
+            }
+
+            if(angular_accelerations[entity] > 0.0f) {
+                angular_accelerations[entity] = 0.0f;
+            }
+
+            if(torque_angular_accelerations[entity] > 0.0f) {
+                torque_angular_accelerations[entity] = 0.0f;
+            }
+
+            if(torques[entity] > 0.0f) {
+                torques[entity] = 0.0f;
+            }
+        }
+    }
+}
+
+void system_apply_axis_locks() {
+    for(Entity entity = 0; entity < MAX_ENTITIES; entity += 1) {
+        if(!entity_alive[entity]) {
+            continue;
+        }
+
+        if((entity_mask[entity] & AXIS_LOCK) != AXIS_LOCK) {
+            continue;
+        }
+
+        Axis axis = axis_locks[entity].axis;
+
+        float mag = axis_magnitude(axis);
+
+        if(mag <= 0.00001f) {
+            continue;
+        }
+
+        /*
+            Safety normalize.
+            Ideally this already happened in set_axis_lock(),
+            but this prevents bad input from exploding.
+        */
+        axis.x /= mag;
+        axis.y /= mag;
+
+        Position point_on_axis = axis_locks[entity].point_on_axis;
+
+        /*
+            1. Lock position onto the line.
+
+            relative = position - point_on_axis
+            distance = dot(relative, axis)
+            new_position = point_on_axis + axis * distance
+        */
+        Vec2D relative = {
+            .x = positions[entity].x - point_on_axis.x,
+            .y = positions[entity].y - point_on_axis.y
+        };
+
+        float distance_along_axis = dot_product(relative, axis);
+
+        positions[entity].x = point_on_axis.x + axis.x * distance_along_axis;
+        positions[entity].y = point_on_axis.y + axis.y * distance_along_axis;
+
+        /*
+            2. Lock velocity onto the axis.
+        */
+        velocities[entity] = project_onto_axis(velocities[entity], axis);
+
+        /*
+            3. Lock acceleration onto the axis.
+        */
+        accelerations[entity] = project_onto_axis(accelerations[entity], axis);
+        force_accelerations[entity] = project_onto_axis(force_accelerations[entity], axis);
+
+        /*
+            4. Optional: lock direct force accumulator too.
+            This only matters if forces[entity] is used directly.
+        */
+        forces[entity] = project_onto_axis(forces[entity], axis);
+    }
+}
+
 void system_update_physics(double dt) {
     system_clear_force_torque_accelerations();
 
@@ -455,6 +698,8 @@ void system_update_physics(double dt) {
     system_update_orientations(dt);
     system_update_positions(dt);
     apply_collisions();
+    system_apply_axis_locks();
+    system_apply_angle_locks();
 }
 
 void print_entity_movement(Entity entity) {

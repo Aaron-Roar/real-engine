@@ -337,3 +337,16 @@ Position approximate_contact_point(Position p1, Position p2)
         .y = (p1.y + p2.y) * 0.5f
     };
 }
+
+Vec2D project_onto_axis(Vec2D v, Axis axis) {
+    float amount = dot_product(v, axis);
+
+    return (Vec2D){
+        .x = axis.x * amount,
+        .y = axis.y * amount
+    };
+}
+
+float axis_magnitude(Axis axis) {
+    return sqrtf(axis.x * axis.x + axis.y * axis.y);
+}

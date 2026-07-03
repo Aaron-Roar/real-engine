@@ -29,6 +29,8 @@ Friction frictions[MAX_ENTITIES] = {0};
 Restitution restitutions[MAX_ENTITIES] = {0};
 AngleLock angle_locks[MAX_ENTITIES] = {0};
 AxisLock axis_locks[MAX_ENTITIES] = {0};
+Parent parents[MAX_ENTITIES] = {0};
+Child childs[MAX_ENTITIES] = {0};
 
 uint32_t entity_counter = 1; //Temporary solution. Leaks memory on entity deletion
 Entity add_entity() {
@@ -241,10 +243,11 @@ void set_axis_lock(Entity entity, Axis axis, Position axis_point) {
         return;
     }
     add_components(entity, AXIS_LOCK);
+    Axis normalized_axis = normalize_vector(axis);
     axis_locks[entity] = (AxisLock){
         .axis = (Axis){
-            .x = axis.x,
-            .y = axis.y
+            .x = normalized_axis.x,
+            .y = normalized_axis.y
         },
         .point_on_axis = (Position){
             .x = axis_point.x,
@@ -263,4 +266,17 @@ void set_angle_lock(Entity entity, Orientation min, Orientation max) {
         .min = min,
         .max = max
     };
+}
+
+void set_friction(Entity entity, float friction) {
+    if(!entity_alive[entity]) {
+        //Error
+        return;
+    }
+    if(friction < 0) {
+        frictions[entity] = 0;
+    }
+    else if(friction >= 0) {
+        frictions[entity] = friction;
+    }
 }
