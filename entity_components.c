@@ -34,7 +34,7 @@ TransformLock transform_locks[MAX_ENTITIES] = {0};
 Joint joints[MAX_ENTITIES] = {0};
 LifeTime life_times[MAX_ENTITIES] = {0};
 
-uint32_t entity_counter = 1; //Temporary solution. Leaks memory on entity deletion
+uint32_t entity_counter = 0; //Temporary solution. Leaks memory on entity deletion
 Entity add_entity() {
     Error error = {0};
 
@@ -44,9 +44,16 @@ Entity add_entity() {
         return 0; //Unused location
     }
 
-    entity_alive[entity_counter] = 1;
-    entity_counter += 1;
-    return entity_counter - 1;
+    for(int i = 0; i < MAX_ENTITIES; i += 1) {
+        if(!entity_alive[i]) {
+            entity_counter += 1;
+            entity_alive[i] = 1;
+            return i;
+        }
+    }
+
+    //All entities filled
+    return 0;
 }
 
 void clear_entity(Entity entity) {
@@ -85,6 +92,8 @@ void delete_entity(Entity entity) {
         error_print(error);
     }
     clear_entity(entity);
+
+    entity_counter -= 1;
 }
 
 void add_components(Entity entity, CMask mask) {

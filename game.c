@@ -56,7 +56,7 @@ int main() {
     set_hitbox(plate2, shape2);
     set_friction(plate2, 0);
     set_dynamic(plate2);
-    set_life_time(plate2,0.2,0);
+    set_life_time(plate2,3,0);
     //set_axis_lock(plate2,(Position){0,5}, positions[plate2]);
     //set_angle_lock(plate2,0,0.1);
 
