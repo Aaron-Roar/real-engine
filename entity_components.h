@@ -35,6 +35,7 @@ typedef enum {
     TIMEWINDOW              = 1 << 10,
     HAS_PARENT                  = 1 << 11,
     HAS_CHILDREN                = 1 << 12,
+    TRANSFORM_LOCK              = 1 << 13,
 } Component;
 static const char* component_names[] = {
     "NONE",
@@ -72,6 +73,16 @@ typedef Entity Child;
 typedef struct Children {
     Entity entities[MAX_ENTITIES];
 } Children;
+typedef struct TransformLock {
+    Entity driver;
+
+    Vec2D local_offset;
+    Orientation local_angle;
+
+    bool lock_position;
+    bool lock_orientation;
+    bool inherit_velocity;
+} TransformLock;
 
 extern Position positions[MAX_ENTITIES];
 extern Velocity velocities[MAX_ENTITIES];
@@ -93,6 +104,7 @@ extern AngleLock angle_locks[MAX_ENTITIES];
 extern AxisLock axis_locks[MAX_ENTITIES];
 extern Parent parents[MAX_ENTITIES];
 extern Children children[MAX_ENTITIES];
+extern TransformLock transform_locks[MAX_ENTITIES];
 //Target Capable Effects
 
 Entity add_entity();
@@ -122,5 +134,16 @@ void set_child(Entity parent, Entity child);
 void set_parent(Entity child, Entity parent);
 void remove_parent(Entity child);
 void remove_child(Entity parent, Entity child);
-
+Children get_children(Entity entity);
+Parent get_parent(Entity entity);
+void add_transform_lock(
+        Entity driven,
+        Entity driver, 
+        Vec2D local_offset,
+        Orientation local_angle,
+        bool lock_position,
+        bool lock_orientation,
+        bool inherit_velocity
+);
+void remove_transform_lock(Entity entity);
 #endif

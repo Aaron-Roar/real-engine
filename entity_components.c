@@ -31,6 +31,7 @@ AngleLock angle_locks[MAX_ENTITIES] = {0};
 AxisLock axis_locks[MAX_ENTITIES] = {0};
 Parent parents[MAX_ENTITIES] = {0};
 Children children[MAX_ENTITIES] = {0};
+TransformLock transform_locks[MAX_ENTITIES] = {0};
 
 uint32_t entity_counter = 1; //Temporary solution. Leaks memory on entity deletion
 Entity add_entity() {
@@ -326,6 +327,13 @@ void remove_parent(Entity child) {
 }
 
 void remove_child(Entity parent, Entity child) {
+    if(!entity_alive[parent]) {
+        //Error
+        return;
+    }
+    if(!entity_alive[child]) {
+        //Warning this child is currently not alive
+    }
     //Removing the child from the parent
     children[parent].entities[child] = 0;
     //If the parent has no more children remove the flag
@@ -342,8 +350,43 @@ void remove_child(Entity parent, Entity child) {
 }
 
 Children get_children(Entity entity) {
+    if(!entity_alive[entity]) {
+        //Error
+        return (Children){0};
+    }
     return children[entity];
 }
 Entity get_parent(Entity entity) {
     return parents[entity];
+}
+
+void add_transform_lock(
+        Entity driven,
+        Entity driver, 
+        Vec2D local_offset,
+        Orientation local_angle,
+        bool lock_position,
+        bool lock_orientation,
+        bool inherit_velocity
+        ) {
+    if(!entity_alive[driven] || !entity_alive[driver]) {
+        //Error
+        return;
+    }
+    transform_locks[driven] = (TransformLock) {
+        .driver = driver,
+        .local_offset = local_offset,
+        .local_angle = local_angle,
+        .lock_position = lock_position,
+        .lock_orientation = lock_orientation,
+        .inherit_velocity = inherit_velocity
+    };
+}
+
+void remove_transform_lock(Entity entity) {
+    if(!entity_alive[entity]) {
+        //Error
+        return;
+    }
+    transform_locks[entity] = (TransformLock){0};
 }
