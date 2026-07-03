@@ -30,7 +30,7 @@ Restitution restitutions[MAX_ENTITIES] = {0};
 AngleLock angle_locks[MAX_ENTITIES] = {0};
 AxisLock axis_locks[MAX_ENTITIES] = {0};
 Parent parents[MAX_ENTITIES] = {0};
-Child children[MAX_ENTITIES] = {0};
+Children children[MAX_ENTITIES] = {0};
 
 uint32_t entity_counter = 1; //Temporary solution. Leaks memory on entity deletion
 Entity add_entity() {
@@ -304,6 +304,13 @@ void set_parent(Entity child, Entity parent) {
 }
 
 void remove_parent(Entity child) {
+    if(!entity_alive[child]) {
+        //Error
+        return;
+    }
+    if(!entity_alive[parents[child]]) {
+        //Warning no parent is currently set
+    }
     //Removing this child from the parent
     children[parents[child]].entities[child] = 0;
     //If the parent has no more children remove the flag
@@ -332,4 +339,11 @@ void remove_child(Entity parent, Entity child) {
     parents[child] = 0;
     delete_components(child, HAS_PARENT);
 
+}
+
+Children get_children(Entity entity) {
+    return children[entity];
+}
+Entity get_parent(Entity entity) {
+    return parents[entity];
 }

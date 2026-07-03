@@ -68,9 +68,10 @@ typedef struct AngleLock {
 } AngleLock;
 
 typedef Entity Parent;
-typedef struct Child {
+typedef Entity Child;
+typedef struct Children {
     Entity entities[MAX_ENTITIES];
-} Child;
+} Children;
 
 extern Position positions[MAX_ENTITIES];
 extern Velocity velocities[MAX_ENTITIES];
@@ -91,7 +92,7 @@ extern Restitution restitutions[MAX_ENTITIES];
 extern AngleLock angle_locks[MAX_ENTITIES];
 extern AxisLock axis_locks[MAX_ENTITIES];
 extern Parent parents[MAX_ENTITIES];
-extern Child children[MAX_ENTITIES];
+extern Children children[MAX_ENTITIES];
 //Target Capable Effects
 
 Entity add_entity();
