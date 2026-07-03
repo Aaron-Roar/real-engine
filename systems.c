@@ -156,11 +156,26 @@ void separate_entities(Entity entity_1, Entity entity_2, Collision collision)
         .y = collision.normal.y * collision.depth
     };
 
-    positions[entity_1].x -= correction.x * mass[entity_2]/(mass[entity_1] + mass[entity_2]);
-    positions[entity_1].y -= correction.y * mass[entity_2]/(mass[entity_1] + mass[entity_2]);
+    bool entity_1_dynamic = (entity_mask[entity_1] & DYNAMIC) == DYNAMIC;
+    bool entity_2_dynamic = (entity_mask[entity_2] & DYNAMIC) == DYNAMIC;
+    if(entity_1_dynamic && entity_2_dynamic) {
+        positions[entity_1].x -= correction.x * mass[entity_2]/(mass[entity_1] + mass[entity_2]);
+        positions[entity_1].y -= correction.y * mass[entity_2]/(mass[entity_1] + mass[entity_2]);
 
-    positions[entity_2].x += correction.x * mass[entity_1]/(mass[entity_1] + mass[entity_2]);
-    positions[entity_2].y += correction.y * mass[entity_1]/(mass[entity_1] + mass[entity_2]);
+        positions[entity_2].x += correction.x * mass[entity_1]/(mass[entity_1] + mass[entity_2]);
+        positions[entity_2].y += correction.y * mass[entity_1]/(mass[entity_1] + mass[entity_2]);
+    }
+    else if(entity_1_dynamic && !entity_2_dynamic) {
+        //Only entity 1 can move
+        positions[entity_1].x += correction.x;
+        positions[entity_1].y += correction.y;
+    }
+    else if(!entity_1_dynamic && entity_2_dynamic) {
+        //Only entity 2 can move
+        positions[entity_2].x += correction.x;
+        positions[entity_2].y += correction.y;
+    }
+    //Nothing can move all is static
 }
 
 Position support_point_average(Shape shape, Vec2D direction)
@@ -404,7 +419,7 @@ void apply_collisions() {
 }
 
 void system_update_physics(double dt) {
-    system_clear_accelerations();
+    //system_clear_accelerations();
 
     system_apply_forces();
     system_apply_torques();

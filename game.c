@@ -38,24 +38,35 @@ int main() {
     set_orientation(rock, 0);
     set_mass(rock, 5);
     //set_velocity(rock, (Velocity){.x = 0, .y = 0});
-    set_restitution(rock, .4);
+    set_restitution(rock, 1);
     Shape shape1 = create_square(500, 50);
     set_hitbox(rock, shape1);
     set_static(rock);
 
     //Initializing entity ball
     Entity ball = add_entity();
-    set_position(ball, (Position){.x = 100, .y = 330});
-    set_orientation(ball, 20*(2*pi/360));
-    set_mass(ball, 10);
+    set_position(ball, (Position){.x = 100, .y = 200});
+    set_orientation(ball, 0);
+    set_mass(ball, 100);
     //set_velocity(ball, (Velocity){.x = 0, .y = -90});
-    set_force(ball, (Force){0, 200});
-    set_velocity(ball, (Velocity){.x = 10, .y = 0});
-    //set_acceleration(ball, (Acceleration){0, 9.8});
-    set_restitution(ball, .4);
+    set_velocity(ball, (Velocity){.x = 0, .y = 50});
+    set_acceleration(ball, (Acceleration){0, 0});
+    set_restitution(ball, 1);
     //set_torque(ball, 2000);
-    Shape shape2 = create_circle(30, 20);
+    Shape shape2 = create_circle(30, 7);
     set_hitbox(ball, shape2);
+
+    Entity ball1 = add_entity();
+    set_position(ball1, (Position){.x = 100, .y = 100});
+    set_orientation(ball1, 0);
+    set_mass(ball1, 100);
+    //set_velocity(ball, (Velocity){.x = 0, .y = -90});
+    set_velocity(ball1, (Velocity){.x = 0, .y = 50});
+    set_acceleration(ball1, (Acceleration){0, 0});
+    set_restitution(ball1, 1);
+    //set_torque(ball, 2000);
+    Shape shape3 = create_circle(30, 4);
+    set_hitbox(ball1, shape3);
 
     //Game Loop
     while (console_is_active()) {
@@ -77,6 +88,7 @@ int main() {
         draw_background(renderer, background_color);
         draw_hit_box(renderer, rock, GRAPHICS_OUTLINE);
         draw_hit_box(renderer, ball, GRAPHICS_OUTLINE);
+        draw_hit_box(renderer, ball1, GRAPHICS_OUTLINE);
         apply_collisions();
 
         show_graphics(renderer);
