@@ -55,14 +55,14 @@ int main() {
     Shape shape2 = create_circle(50, 10);
     set_hitbox(plate2, shape2);
     set_friction(plate2, 0);
-    set_dynamic(plate2);
-    set_life_time(plate2,3,0);
+    set_static(plate2);
+    set_life_time(plate2,10,0);
     //set_axis_lock(plate2,(Position){0,5}, positions[plate2]);
     //set_angle_lock(plate2,0,0.1);
 
     time_t seed = 1003463;
     srand(seed);
-    for(int i = 0; i < 50; i += 1) {
+    for(int i = 0; i < 3; i += 1) {
         Entity ball = add_entity();
         set_position(ball, (Position){.x = random_range(0, 400), .y = random_range(0, 300)});
         set_orientation(ball, random_range(0, 2*pi));
@@ -76,7 +76,8 @@ int main() {
         set_hitbox(ball, shape3);
         set_friction(ball, 0.5);
         set_dynamic(ball);
-        set_transform_lock(ball, plate2, (Vec2D){random_range(100, 400), random_range(100, 400)}, random_range(0, 10), true, true, false);
+        //set_transform_lock(ball, plate2, (Vec2D){random_range(100, 400), random_range(100, 400)}, random_range(0, 10), true, true, false);
+        set_joint(ball, plate2, JOINT_DISTANCE, (Vec2D){0}, (Vec2D){0}, 10, 0);
     }
 
     //Game Loop

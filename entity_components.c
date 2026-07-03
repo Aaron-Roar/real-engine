@@ -127,7 +127,7 @@ void set_static(Entity entity) {
         return;
     }
     add_components(entity, STATIC);
-    entity_mask[entity] &= ~DYNAMIC;
+    delete_components(entity, DYNAMIC);
     console_debug_write(LOG_ENGINE, "Set Entity: %d to DYNAMIC\n", entity);
 }
 
@@ -137,7 +137,7 @@ void set_dynamic(Entity entity) {
         return;
     }
     add_components(entity, DYNAMIC);
-    entity_mask[entity] &= ~STATIC;
+    delete_components(entity, STATIC);
     console_debug_write(LOG_ENGINE, "Set Entity: %d to STATIC\n", entity);
 }
 
@@ -178,10 +178,10 @@ void set_mass(Entity entity, Mass m) {
 
 
 //Applies a force to a target
-void set_force(Entity entity, Force f) {
+Entity set_force(Entity entity, Force f) {
     if(!entity_alive[entity]) {
         //Error
-        return;
+        return 0;
     }
     set_dynamic(entity);
     Entity force_entity = add_entity();
@@ -189,12 +189,13 @@ void set_force(Entity entity, Force f) {
     targets[force_entity] = entity;
     entity_mask[force_entity] |= TARGETABLE | FORCE;
     console_debug_write(LOG_ENGINE, "Set Entity: %d Force: {x: %f, y: %f}\n", entity, f.x, f.y);
+    return force_entity;
 }
 
-void set_torque(Entity entity, Torque t) {
+Entity set_torque(Entity entity, Torque t) {
     if(!entity_alive[entity]) {
         //Error
-        return;
+        return 0;
     }
     set_dynamic(entity);
     Entity torque_entity = add_entity();
@@ -202,6 +203,7 @@ void set_torque(Entity entity, Torque t) {
     targets[torque_entity] = entity;
     entity_mask[torque_entity] |= TARGETABLE | TORQUE;
     console_debug_write(LOG_ENGINE, "Set Entity: %d Torque: %f\n", entity, t);
+    return torque_entity;
 }
 
 void set_angular_velocity(Entity entity, AngularVelocity v) {

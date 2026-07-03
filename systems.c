@@ -739,8 +739,172 @@ void system_apply_transform_locks()
     }
 }
 
+void clean_entities_past_lifetime() {
+    for(int i = 0; i < MAX_ENTITIES; i += 1) {
+        if( (entity_mask[i] & LIFETIME) == LIFETIME ) {
+
+            if( (life_times[i].expirey_time != 0 && life_times[i].expirey_time <= engine_get_time()) ) {
+                delete_entity(i);
+            }
+            else if( (life_times[i].expirey_tick != 0 && life_times[i].expirey_tick <= engine_get_tick()) ) {
+                delete_entity(i);
+            }
+        }
+    }
+}
+
+static Velocity point_velocity(Entity entity, Vec2D world_offset)
+{
+    Vec2D angular_part = angular_velocity_cross_vec(
+        angular_velocities[entity],
+        world_offset
+    );
+
+    return (Velocity){
+        .x = velocities[entity].x + angular_part.x,
+        .y = velocities[entity].y + angular_part.y
+    };
+}
+static void add_joint_force_for_one_tick(Entity target, Force force)
+{
+    Entity force_entity = set_force(target, force);
+
+    if(force_entity == 0) {
+        return;
+    }
+
+    set_life_time(
+        force_entity,
+        0.0,
+        engine_get_tick() + 1
+    );
+}
+static void add_joint_torque_for_one_tick(Entity target, Torque torque)
+{
+    Entity torque_entity = set_torque(target, torque);
+
+    if(torque_entity == 0) {
+        return;
+    }
+
+    set_life_time(
+        torque_entity,
+        0.0,
+        engine_get_tick() + 1
+    );
+}
+
+void system_apply_joints()
+{
+    for(Entity joint_entity = 1; joint_entity < MAX_ENTITIES; joint_entity += 1) {
+        if(!entity_alive[joint_entity]) {
+            continue;
+        }
+
+        if((entity_mask[joint_entity] & JOINT) != JOINT) {
+            continue;
+        }
+
+        Joint joint = joints[joint_entity];
+
+        Entity a = joint.a;
+        Entity b = joint.b;
+
+        if(!entity_alive[a] || !entity_alive[b]) {
+            delete_entity(joint_entity);
+            continue;
+        }
+
+        if(joint.type != JOINT_DISTANCE) {
+            continue;
+        }
+
+        Vec2D offset_a = rotate_vector(
+            joint.local_anchor_a,
+            orientations[a]
+        );
+
+        Vec2D offset_b = rotate_vector(
+            joint.local_anchor_b,
+            orientations[b]
+        );
+
+        Position world_anchor_a = {
+            .x = positions[a].x + offset_a.x,
+            .y = positions[a].y + offset_a.y
+        };
+
+        Position world_anchor_b = {
+            .x = positions[b].x + offset_b.x,
+            .y = positions[b].y + offset_b.y
+        };
+
+        Vec2D delta = {
+            .x = world_anchor_b.x - world_anchor_a.x,
+            .y = world_anchor_b.y - world_anchor_a.y
+        };
+
+        float length = vector_magnitude(delta);
+
+        if(length <= 0.00001f) {
+            continue;
+        }
+
+        Vec2D normal = {
+            .x = delta.x / length,
+            .y = delta.y / length
+        };
+
+        Velocity velocity_a = point_velocity(a, offset_a);
+        Velocity velocity_b = point_velocity(b, offset_b);
+
+        Vec2D relative_velocity = {
+            .x = velocity_b.x - velocity_a.x,
+            .y = velocity_b.y - velocity_a.y
+        };
+
+        float relative_speed = dot_product(relative_velocity, normal);
+
+        float stretch = length - joint.rest_length;
+
+        float force_magnitude =
+            joint.stiffness * stretch +
+            joint.damping * relative_speed;
+
+        Force force_on_a = {
+            .x = normal.x * force_magnitude,
+            .y = normal.y * force_magnitude
+        };
+
+        Force force_on_b = {
+            .x = -force_on_a.x,
+            .y = -force_on_a.y
+        };
+
+        Vec2D r_a = {
+            .x = world_anchor_a.x - positions[a].x,
+            .y = world_anchor_a.y - positions[a].y
+        };
+
+        Vec2D r_b = {
+            .x = world_anchor_b.x - positions[b].x,
+            .y = world_anchor_b.y - positions[b].y
+        };
+
+        Torque torque_on_a = cross_2d(r_a, force_on_a);
+        Torque torque_on_b = cross_2d(r_b, force_on_b);
+
+        add_joint_force_for_one_tick(a, force_on_a);
+        add_joint_force_for_one_tick(b, force_on_b);
+
+        add_joint_torque_for_one_tick(a, torque_on_a);
+        add_joint_torque_for_one_tick(b, torque_on_b);
+    }
+}
+
 void system_update_physics(double dt) {
     system_clear_force_torque_accelerations();
+    system_apply_joints();
 
     system_apply_forces();
     system_apply_torques();
@@ -752,16 +916,6 @@ void system_update_physics(double dt) {
     system_apply_axis_locks();
     system_apply_angle_locks();
     system_apply_transform_locks();
-}
-
-void clean_entities_past_lifetime() {
-    for(int i = 0; i < MAX_ENTITIES; i += 1) {
-        if( (entity_mask[i] & LIFETIME) == LIFETIME ) {
-            if( (life_times[i].expirey_time < engine_get_time()) && (life_times[i].expirey_tick < engine_get_tick())) {
-                delete_entity(i);
-            }
-        }
-    }
 }
 
 void print_entity_movement(Entity entity) {
