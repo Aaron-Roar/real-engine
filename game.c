@@ -34,24 +34,24 @@ int main() {
 
     //Initializing entity rock
     Entity rock = add_entity();
-    set_position(rock, (Position){.x = 250, .y = 400});
-    set_orientation(rock, 0);
-    set_mass(rock, 50);
+    set_position(rock, (Position){.x = 100, .y = 100});
+    set_orientation(rock, 50);
+    set_mass(rock, 500000);
     //set_velocity(rock, (Velocity){.x = 0, .y = 0});
-    set_restitution(rock, 1);
+    set_restitution(rock, 0.5);
     Shape shape1 = create_square(500, 50);
     set_hitbox(rock, shape1);
     entity_mask[rock] &= ~MOVEABLE;
 
     //Initializing entity ball
     Entity ball = add_entity();
-    set_position(ball, (Position){.x = 100, .y = 100});
+    set_position(ball, (Position){.x = 250, .y = 400});
     set_orientation(ball, 20*(2*pi/360));
     set_mass(ball, 10);
-    set_velocity(ball, (Velocity){.x = 0, .y = 0});
-    set_force(ball, (Force){0, 200});
-    set_acceleration(ball, (Acceleration){0, 9.8});
-    set_restitution(ball, 1);
+    set_velocity(ball, (Velocity){.x = 0, .y = -40});
+    //set_force(ball, (Force){0, 200});
+    //set_acceleration(ball, (Acceleration){0, 9.8});
+    set_restitution(ball, 0.5);
     //set_torque(ball, 2000);
     Shape shape2 = create_circle(30, 20);
     set_hitbox(ball, shape2);
