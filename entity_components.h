@@ -90,4 +90,6 @@ void set_orientation(Entity entity, Orientation angle);
 void set_angular_velocity(Entity entity, AngularVelocity v);
 Shape get_global_hit_box(Entity entity);
 void set_restitution(Entity entity, Restitution restitution);
+void set_dynamic(Entity entity);
+void set_static(Entity entity);
 #endif

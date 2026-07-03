@@ -103,12 +103,22 @@ void print_entity_components(Entity entity) {
         }
 }
 
+void set_static(Entity entity) {
+    add_components(entity, STATIC);
+    delete_components(entity, DYNAMIC);
+}
+
+void set_dynamic(Entity entity) {
+    add_components(entity, DYNAMIC);
+    delete_components(entity, STATIC);
+}
+
 void set_acceleration(Entity entity, Acceleration a) {
-    entity_mask[entity] |= DYNAMIC;
+    set_dynamic(entity);
     accelerations[entity] = a;
 }
 void set_velocity(Entity entity, Velocity v) {
-    entity_mask[entity] |= DYNAMIC;
+    set_dynamic(entity);
     velocities[entity] = v;
 }
 void set_position(Entity entity, Position p) {
@@ -121,27 +131,26 @@ void set_mass(Entity entity, Mass m) {
     mass[entity] = m;
 }
 
+
 //Applies a force to a target
 void set_force(Entity entity, Force f) {
+    set_dynamic(entity);
     Entity force_entity = add_entity();
     forces[force_entity] = f;
     targets[force_entity] = entity;
     entity_mask[force_entity] |= TARGETABLE | FORCE;
-
-    entity_mask[entity] |= DYNAMIC;
 }
 
 void set_torque(Entity entity, Torque t) {
+    set_dynamic(entity);
     Entity torque_entity = add_entity();
     torques[torque_entity] = t;
     targets[torque_entity] = entity;
     entity_mask[torque_entity] |= TARGETABLE | TORQUE;
-
-    entity_mask[entity] |= DYNAMIC;
 }
 
 void set_angular_velocity(Entity entity, AngularVelocity v) {
-    entity_mask[entity] |= DYNAMIC;
+    set_dynamic(entity);
     angular_velocities[entity] = v;
 }
 

@@ -41,6 +41,7 @@ int main() {
     set_restitution(rock, .4);
     Shape shape1 = create_square(500, 50);
     set_hitbox(rock, shape1);
+    set_static(rock);
 
     //Initializing entity ball
     Entity ball = add_entity();
