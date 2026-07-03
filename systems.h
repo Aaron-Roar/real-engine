@@ -2,6 +2,8 @@
 #define SYSTEMS_H
 #include "entity_components.h"
 
+extern int collision_count;
+
 void system_update_positions(double dt);
 void system_update_velocities(double dt);
 void system_apply_forces();

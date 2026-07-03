@@ -105,30 +105,36 @@ void print_entity_components(Entity entity) {
 
 void set_static(Entity entity) {
     add_components(entity, STATIC);
-    delete_components(entity, DYNAMIC);
+    entity_mask[entity] &= ~DYNAMIC;
+    console_debug_write(LOG_ENGINE, "Set Entity: %d to DYNAMIC\n", entity);
 }
 
 void set_dynamic(Entity entity) {
     add_components(entity, DYNAMIC);
-    delete_components(entity, STATIC);
+    entity_mask[entity] &= ~STATIC;
+    console_debug_write(LOG_ENGINE, "Set Entity: %d to STATIC\n", entity);
 }
 
 void set_acceleration(Entity entity, Acceleration a) {
     set_dynamic(entity);
     accelerations[entity] = a;
+    console_debug_write(LOG_ENGINE, "Set Entity: %d Acceleration: {x: %f, y: %f}\n", entity, a.x, a.y);
 }
 void set_velocity(Entity entity, Velocity v) {
     set_dynamic(entity);
     velocities[entity] = v;
+    console_debug_write(LOG_ENGINE, "Set Entity: %d Velocity: {x: %f, y: %f}\n", entity, v.x, v.y);
 }
 void set_position(Entity entity, Position p) {
     entity_mask[entity] |= POSITION;
     positions[entity] = p;
+    console_debug_write(LOG_ENGINE, "Set Entity: %d Position: {x: %f, y: %f}\n", entity, p.x, p.y);
 }
 
 void set_mass(Entity entity, Mass m) {
     entity_mask[entity] |= MASS;
     mass[entity] = m;
+    console_debug_write(LOG_ENGINE, "Set Entity: %d Mass: %f\n", entity, m);
 }
 
 
@@ -139,6 +145,7 @@ void set_force(Entity entity, Force f) {
     forces[force_entity] = f;
     targets[force_entity] = entity;
     entity_mask[force_entity] |= TARGETABLE | FORCE;
+    console_debug_write(LOG_ENGINE, "Set Entity: %d Force: {x: %f, y: %f}\n", entity, f.x, f.y);
 }
 
 void set_torque(Entity entity, Torque t) {
@@ -147,11 +154,13 @@ void set_torque(Entity entity, Torque t) {
     torques[torque_entity] = t;
     targets[torque_entity] = entity;
     entity_mask[torque_entity] |= TARGETABLE | TORQUE;
+    console_debug_write(LOG_ENGINE, "Set Entity: %d Torque: %f\n", entity, t);
 }
 
 void set_angular_velocity(Entity entity, AngularVelocity v) {
     set_dynamic(entity);
     angular_velocities[entity] = v;
+    console_debug_write(LOG_ENGINE, "Set Entity: %d Angular Velocity: %f\n", entity, v);
 }
 
 void print_alive_entities() {
@@ -167,9 +176,11 @@ void print_alive_entities() {
 void set_hitbox(Entity entity, Shape hitbox) {
     entity_mask[entity] |= COLLISION | HIT_BOX;
     hit_boxes[entity] = hitbox;
+  console_debug_write(LOG_ENGINE, "Set Entity: %d to have a hit box\n", entity);
 }
 void set_orientation(Entity entity, Orientation angle) {
   orientations[entity] = angle;
+  console_debug_write(LOG_ENGINE, "Set Entity: %d Orientation: %f\n", entity, angle);
 }
 
 Shape get_global_hit_box(Entity entity) {
@@ -187,12 +198,15 @@ Shape get_global_hit_box(Entity entity) {
  void set_restitution(Entity entity, Restitution restitution) {
      if(restitution < 0) {
         restitutions[entity] = 0;
+        console_debug_write(LOG_ENGINE, "Set Entity: %d Restitution: %f\n", entity, 0);
      }
      else if(restitution > 1) {
         restitutions[entity] = 1;
+        console_debug_write(LOG_ENGINE, "Set Entity: %d Restitution: %f\n", entity, 1);
      }
      else {
         restitutions[entity] = restitution;
+        console_debug_write(LOG_ENGINE, "Set Entity: %d Restitution: %f\n", entity, restitution);
      }
-     entity_mask[entity] |= COLLISION;
+     add_components(entity, COLLISION);
  }

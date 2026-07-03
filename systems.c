@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <time.h>
 
+int collision_count = 0;
 
 void system_update_positions(double dt) {
     CMask filter = DYNAMIC;
@@ -437,6 +438,8 @@ void apply_collisions() {
             if(collision.overlap == true) {
                 resolve_collision(i, j, collision);
                 separate_entities(i, j, collision);
+                collision_count += 1;
+                //console_write(LOG_ENGINE, "Entity %d and Entity %d Colided\n", j, i);
             }
         }
     }

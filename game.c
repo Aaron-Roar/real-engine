@@ -23,6 +23,7 @@ int random_range(int min, int max) {
 
 int main() {
     console_init();
+    console_set_debug(CONSOLE_DEBUG_OFF);
     engine_init();
     SDL_Renderer *renderer = NULL;
     SDL_Window *window = NULL;
@@ -44,7 +45,7 @@ int main() {
     set_mass(plate, 5000);
     set_velocity(plate, (Velocity){0, 0});
     set_restitution(plate, 0.9);
-    Shape shape1 = create_square(10000, 50);
+    Shape shape1 = create_square(1000, 50);
     set_hitbox(plate, shape1);
     set_static(plate);
 
@@ -94,6 +95,7 @@ int main() {
         draw_background(renderer, background_color);
         draw_hit_boxes(renderer);
         apply_collisions();
+        console_write(LOG_APP, "Collision Count: %d\n", collision_count);
 
         show_graphics(renderer);
     }

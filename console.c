@@ -19,6 +19,8 @@
 #define CURSOR_HOME_COL 3
 #define CONSOLE_SYMBOL_OFFSET 3
 
+bool console_debug = false;
+
 typedef struct TermWindow {
     int cols;
     int rows;
@@ -270,4 +272,36 @@ void console_write(LogSourceType source, const char *fmt, ...)
     va_end(args);
 
     log_input(str_buff);
+}
+
+void console_debug_write(LogSourceType source, const char *fmt, ...)
+{
+    if(console_debug) {
+      ConsoleLogString str_buff = {0};
+
+      str_buff.string[0] = '[';
+      str_buff.string[1] = source_symbol(source);
+      str_buff.string[2] = ']';
+
+      va_list args;
+      va_start(args, fmt);
+
+      vsnprintf(
+          &str_buff.string[3],
+          sizeof(str_buff.string) - 3,
+          fmt,
+          args
+      );
+
+      va_end(args);
+
+      log_input(str_buff);
+    }
+}
+
+void console_set_debug(bool state) {
+  if(state) {
+    console_debug = true;
+  }
+  console_debug = false;
 }
