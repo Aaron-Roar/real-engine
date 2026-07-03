@@ -40,7 +40,7 @@ void system_update_angular_velocities(double dt) {
     for (int i = 0; i < MAX_ENTITIES; i++) {
         if(entity_alive[i]) {
             if( (entity_mask[i] & filter) == filter) {
-                angular_velocities[i] += (AngularVelocity)angular_accelerations[i]*dt;
+                angular_velocities[i] += (angular_accelerations[i] + torque_angular_accelerations[i]) * dt;
             }
         }
     }
@@ -52,8 +52,8 @@ void system_update_velocities(double dt) {
         if(entity_alive[i]) {
             if( (entity_mask[i] & filter) == filter) {
                 velocities[i] = (Velocity){
-                    .x = velocities[i].x + (accelerations[i].x)*dt,
-                    .y = velocities[i].y + (accelerations[i].y)*dt
+                    .x = velocities[i].x + (accelerations[i].x + force_accelerations[i].x)*dt,
+                    .y = velocities[i].y + (accelerations[i].y + force_accelerations[i].y)*dt
                 };
             }
         }
@@ -71,8 +71,8 @@ void system_apply_forces() {
             if( entity_alive[targets[i]] ) { //Check if the target to the force exists
                 if( (entity_mask[targets[i]] & target_filter) == target_filter ) { //Check if the target is moveable
                     if(mass[targets[i]] != 0) {
-                        accelerations[targets[i]].x += forces[i].x/mass[targets[i]];
-                        accelerations[targets[i]].y += forces[i].y/mass[targets[i]];
+                        force_accelerations[targets[i]].x += forces[i].x/mass[targets[i]];
+                        force_accelerations[targets[i]].y += forces[i].y/mass[targets[i]];
                     } else {
                         //Force on massless entity
                         error.code |= ACCELERATING_MASSLESS_ENTITY | FAILED_UPDATE_ACCELERATION;
@@ -107,7 +107,7 @@ void system_apply_torques() {
             if( entity_alive[targets[i]] ) { //Check if the target to the force exists
                 if( (entity_mask[targets[i]] & target_filter) == target_filter ) { //Check if the target is moveable
                     if(mass[targets[i]] != 0) {
-                        angular_accelerations[targets[i]] += torques[i]/polygon_moment_of_inertia(hit_boxes[targets[i]], mass[targets[i]]);
+                        torque_angular_accelerations[targets[i]] += torques[i]/polygon_moment_of_inertia(hit_boxes[targets[i]], mass[targets[i]]);
                     } else {
                         //Force on massless entity
                         error.code |= ACCELERATING_MASSLESS_ENTITY | FAILED_UPDATE_ACCELERATION;
@@ -130,11 +130,11 @@ void system_apply_torques() {
   error_print(error);
 }
 
-void system_clear_accelerations() {
+void system_clear_force_torque_accelerations() {
     for(int i = 0; i < MAX_ENTITIES; i++) {
-        accelerations[i].x = 0;
-        accelerations[i].y = 0;
-        angular_accelerations[i] = 0;
+        force_accelerations[i].x = 0;
+        force_accelerations[i].y = 0;
+        torque_angular_accelerations[i] = 0;
     }
 }
 
@@ -446,7 +446,7 @@ void apply_collisions() {
 }
 
 void system_update_physics(double dt) {
-    //system_clear_accelerations();
+    system_clear_force_torque_accelerations();
 
     system_apply_forces();
     system_apply_torques();

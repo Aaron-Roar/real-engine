@@ -19,19 +19,20 @@ typedef uint32_t CMask; //The bit mask for an entities components
 extern CMask entity_mask[MAX_ENTITIES]; //Bit map of the components each entity has
 //Enum for the component mask
 typedef enum {
-    NONE        = 0,
-    POSITION    = 1 << 0,
-    VELOCITY    = 1 << 1,
-    ACCELERATION= 1 << 2,
-    FORCE       = 1 << 3,
-    MASS        = 1 << 4,
-    TIMEWINDOW  = 1 << 5,
-    TARGETABLE  = 1 << 6,
-    COLLISION   = 1 << 7,
-    TORQUE      = 1 << 8,
-    HIT_BOX     = 1 << 9,
-    STATIC      = 1 << 10,
-    DYNAMIC     = 1 << 11,
+    NONE                    = 0,
+    STATIC                  = 1 << 0,
+    DYNAMIC                 = 1 << 1,
+    COLLISION               = 1 << 2,
+    HIT_BOX                 = 1 << 3,
+    AXIS_LOCK               = 1 << 4,
+    ANGLE_LOCK              = 1 << 5,
+
+    FORCE                   = 1 << 6,
+    TORQUE                  = 1 << 7,
+    TARGETABLE              = 1 << 8,
+
+    MASS                    = 1 << 9,
+    TIMEWINDOW              = 1 << 10,
 } Component;
 static const char* component_names[] = {
     "NONE",
@@ -54,7 +55,15 @@ typedef struct {
     TimeWindow time_window;
 } TimedForce;
 extern const int component_count;
-//Disasters
+typedef struct AxisLock {
+    Axis axis;
+    Position point_on_axis;
+} AxisLock;
+
+typedef struct AngleLock {
+    Orientation min;
+    Orientation max;
+} AngleLock;
 
 extern Position positions[MAX_ENTITIES];
 extern Velocity velocities[MAX_ENTITIES];
@@ -62,14 +71,18 @@ extern Acceleration accelerations[MAX_ENTITIES];
 extern float mass[MAX_ENTITIES];
 extern Entity targets[MAX_ENTITIES];
 extern Force forces[MAX_ENTITIES];
+extern Acceleration force_accelerations[MAX_ENTITIES];
 extern TimeWindow time_windows[MAX_ENTITIES];
 extern Shape hit_boxes[MAX_ENTITIES];
 extern Orientation orientations[MAX_ENTITIES];
 extern AngularVelocity angular_velocities[MAX_ENTITIES];
 extern AngularAcceleration angular_accelerations[MAX_ENTITIES];
 extern Torque torques[MAX_ENTITIES];
+extern AngularVelocity torque_angular_accelerations[MAX_ENTITIES];
 extern Friction frictions[MAX_ENTITIES];
 extern Restitution restitutions[MAX_ENTITIES];
+extern AngleLock angle_locks[MAX_ENTITIES];
+extern AxisLock axis_locks[MAX_ENTITIES];
 //Target Capable Effects
 
 Entity add_entity();
@@ -92,4 +105,7 @@ Shape get_global_hit_box(Entity entity);
 void set_restitution(Entity entity, Restitution restitution);
 void set_dynamic(Entity entity);
 void set_static(Entity entity);
+void set_angle_lock(Entity entity, Orientation min, Orientation max);
+void set_axis_lock(Entity entity, Axis axis, Position axis_point);
+
 #endif

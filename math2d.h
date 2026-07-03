@@ -48,6 +48,7 @@ typedef Vec2D Force;
 typedef float Mass;
 typedef Orientation Torque;
 
+
 Vec2DList create_normals(Shape shape);
 Vec2D normalize_vector(Vec2D vector);
 Vec2DList normalize_vectors(Vec2DList vectors);

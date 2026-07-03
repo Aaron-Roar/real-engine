@@ -4,10 +4,11 @@
 
 extern int collision_count;
 
+
 void system_update_positions(double dt);
 void system_update_velocities(double dt);
 void system_apply_forces();
-void system_clear_accelerations();
+void system_clear_force_torque_accelerations();
 void print_entity_movement(Entity entity);
 void system_update_orientations(double dt);
 void system_update_physics(double dt);

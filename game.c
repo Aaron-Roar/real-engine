@@ -58,6 +58,7 @@ int main() {
     set_restitution(plate2, 0.6);
     Shape shape2 = create_circle(50, 10);
     set_hitbox(plate2, shape2);
+    set_dynamic(plate2);
 
     time_t seed = 1003463;
     srand(seed);
@@ -73,11 +74,11 @@ int main() {
         //set_torque(ball, 2000);
         Shape shape3 = create_circle(30, random_range(3, 10));
         set_hitbox(ball, shape3);
+        set_dynamic(ball);
     }
 
     //Game Loop
     while (console_is_active()) {
-
         //Console
         ConsoleLogString console_line = {0};
         if(read_console(&console_line)) {
@@ -88,16 +89,17 @@ int main() {
         prev_time = current_time;
         current_time = tools_get_time() - start_time;
         double dt = current_time - prev_time;
+        apply_collisions();
         system_update_physics(dt);
 
         //render
         graphics_poll_events(&event);
         draw_background(renderer, background_color);
         draw_hit_boxes(renderer);
-        apply_collisions();
-        console_write(LOG_APP, "Collision Count: %d\n", collision_count);
-
         show_graphics(renderer);
+
+        //App 
+        console_write(LOG_APP, "Collision Count: %d\n", collision_count);
     }
     graphics_end(renderer, window);
     engine_shutdown();
