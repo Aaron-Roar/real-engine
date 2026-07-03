@@ -688,6 +688,57 @@ void system_apply_axis_locks() {
     }
 }
 
+void system_apply_transform_locks()
+{
+    for(Entity driven = 0; driven < MAX_ENTITIES; driven += 1) {
+        if(!entity_alive[driven]) {
+            continue;
+        }
+
+        if((entity_mask[driven] & TRANSFORM_LOCK) != TRANSFORM_LOCK) {
+            continue;
+        }
+
+        Entity driver = transform_locks[driven].driver;
+
+        if(!entity_alive[driver]) {
+            remove_transform_lock(driven);
+            continue;
+        }
+
+        Vec2D world_offset = rotate_vector(
+            transform_locks[driven].local_offset,
+            orientations[driver]
+        );
+
+        if(transform_locks[driven].lock_position) {
+            positions[driven].x = positions[driver].x + world_offset.x;
+            positions[driven].y = positions[driver].y + world_offset.y;
+        }
+
+        if(transform_locks[driven].lock_orientation) {
+            orientations[driven] =
+                orientations[driver] + transform_locks[driven].local_angle;
+        }
+
+        if(transform_locks[driven].inherit_velocity) {
+            velocities[driven] = velocities[driver];
+
+            Vec2D rotational_velocity = angular_velocity_cross_vec(
+                angular_velocities[driver],
+                world_offset
+            );
+
+            velocities[driven].x += rotational_velocity.x;
+            velocities[driven].y += rotational_velocity.y;
+
+            if(transform_locks[driven].lock_orientation) {
+                angular_velocities[driven] = angular_velocities[driver];
+            }
+        }
+    }
+}
+
 void system_update_physics(double dt) {
     system_clear_force_torque_accelerations();
 
@@ -700,6 +751,17 @@ void system_update_physics(double dt) {
     apply_collisions();
     system_apply_axis_locks();
     system_apply_angle_locks();
+    system_apply_transform_locks();
+}
+
+void clean_entities_past_lifetime() {
+    for(int i = 0; i < MAX_ENTITIES; i += 1) {
+        if( (entity_mask[i] & LIFETIME) == LIFETIME ) {
+            if( (life_times[i].expirey_time < engine_get_time()) && (life_times[i].expirey_tick < engine_get_tick())) {
+                delete_entity(i);
+            }
+        }
+    }
 }
 
 void print_entity_movement(Entity entity) {

@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "math2d.h"
+#include <time.h>
+#include "engine.h"
 
 
 //Entities
@@ -36,6 +38,8 @@ typedef enum {
     HAS_PARENT                  = 1 << 11,
     HAS_CHILDREN                = 1 << 12,
     TRANSFORM_LOCK              = 1 << 13,
+    JOINT                       = 1 << 14,
+    LIFETIME                    = 1 << 15,
 } Component;
 static const char* component_names[] = {
     "NONE",
@@ -49,14 +53,6 @@ static const char* component_names[] = {
     "TARGETABLE",
     "COLLISION",
 };
-typedef struct {
-    float start;
-    float end;
-} TimeWindow;
-typedef struct {
-    Force force;
-    TimeWindow time_window;
-} TimedForce;
 extern const int component_count;
 typedef struct AxisLock {
     Axis axis;
@@ -84,6 +80,36 @@ typedef struct TransformLock {
     bool inherit_velocity;
 } TransformLock;
 
+typedef enum JointType {
+    JOINT_DISTANCE,
+    JOINT_WELD,
+    JOINT_PIN
+} JointType;
+
+typedef struct Joint {
+    JointType type;
+
+    Entity a;
+    Entity b;
+
+    Vec2D local_anchor_a;
+    Vec2D local_anchor_b;
+
+    float rest_length;
+
+    float stiffness;
+    float damping;
+
+    bool lock_angle;
+    Orientation rest_angle;
+    float angular_stiffness;
+    float angular_damping;
+} Joint;
+typedef struct LifeTime {
+    Time expirey_time;
+    Tick expirey_tick;
+} LifeTime;
+
 extern Position positions[MAX_ENTITIES];
 extern Velocity velocities[MAX_ENTITIES];
 extern Acceleration accelerations[MAX_ENTITIES];
@@ -91,7 +117,6 @@ extern float mass[MAX_ENTITIES];
 extern Entity targets[MAX_ENTITIES];
 extern Force forces[MAX_ENTITIES];
 extern Acceleration force_accelerations[MAX_ENTITIES];
-extern TimeWindow time_windows[MAX_ENTITIES];
 extern Shape hit_boxes[MAX_ENTITIES];
 extern Orientation orientations[MAX_ENTITIES];
 extern AngularVelocity angular_velocities[MAX_ENTITIES];
@@ -105,6 +130,8 @@ extern AxisLock axis_locks[MAX_ENTITIES];
 extern Parent parents[MAX_ENTITIES];
 extern Children children[MAX_ENTITIES];
 extern TransformLock transform_locks[MAX_ENTITIES];
+extern Joint joints[MAX_ENTITIES];
+extern LifeTime life_times[MAX_ENTITIES];
 //Target Capable Effects
 
 Entity add_entity();
@@ -136,7 +163,7 @@ void remove_parent(Entity child);
 void remove_child(Entity parent, Entity child);
 Children get_children(Entity entity);
 Parent get_parent(Entity entity);
-void add_transform_lock(
+void set_transform_lock(
         Entity driven,
         Entity driver, 
         Vec2D local_offset,
@@ -146,4 +173,22 @@ void add_transform_lock(
         bool inherit_velocity
 );
 void remove_transform_lock(Entity entity);
+void set_transform_lock_current_transform(
+        Entity driven,
+        Entity driver,
+        bool lock_position,
+        bool lock_orientation,
+        bool inherit_velocity
+);
+void set_life_time(Entity entity, Time expirey_time, Tick expirey_tick);
+void remove_life_time(Entity entity);
+Entity set_joint(
+    Entity a,
+    Entity b,
+    JointType type,
+    Vec2D local_anchor_a,
+    Vec2D local_anchor_b,
+    float stiffness,
+    float damping
+);
 #endif

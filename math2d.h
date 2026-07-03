@@ -65,4 +65,6 @@ Vec2D angular_velocity_cross_vec(float omega, Vec2D r);
 Position approximate_contact_point(Position p1, Position p2);
 Vec2D project_onto_axis(Vec2D v, Axis axis);
 float axis_magnitude(Axis axis);
+Vec2D rotate_vector(Vec2D vector, Orientation angle);
+float vector_magnitude(Vec2D vector);
 #endif

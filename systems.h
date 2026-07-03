@@ -16,4 +16,7 @@ Collision system_get_entity_collision(Entity entity_1, Entity entity_2);
 void separate_entities(Entity entity_1, Entity entity_2, Collision collision);
 void resolve_collision(Entity entity_1, Entity entity_2, Collision collision);
 void apply_collisions();
+void system_apply_transform_locks();
+void clean_entities_past_lifetime();
+void system_apply_joints();
 #endif

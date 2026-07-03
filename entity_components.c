@@ -19,7 +19,6 @@ Acceleration force_accelerations[MAX_ENTITIES] = {0};
 float mass[MAX_ENTITIES] = {0};
 Entity targets[MAX_ENTITIES] = {0};
 Force forces[MAX_ENTITIES] = {0};
-TimeWindow time_windows[MAX_ENTITIES] = {0};
 Shape hit_boxes[MAX_ENTITIES] = {0};
 AngularVelocity angular_velocities[MAX_ENTITIES] = {0};
 AngularAcceleration angular_accelerations[MAX_ENTITIES] = {0};
@@ -32,6 +31,8 @@ AxisLock axis_locks[MAX_ENTITIES] = {0};
 Parent parents[MAX_ENTITIES] = {0};
 Children children[MAX_ENTITIES] = {0};
 TransformLock transform_locks[MAX_ENTITIES] = {0};
+Joint joints[MAX_ENTITIES] = {0};
+LifeTime life_times[MAX_ENTITIES] = {0};
 
 uint32_t entity_counter = 1; //Temporary solution. Leaks memory on entity deletion
 Entity add_entity() {
@@ -48,6 +49,33 @@ Entity add_entity() {
     return entity_counter - 1;
 }
 
+void clear_entity(Entity entity) {
+    entity_alive[entity] = 0;
+    entity_mask[entity] = 0;
+    positions[entity] = (Position){0};
+    orientations[entity] = (Orientation){0};
+    velocities[entity] = (Velocity){0};
+    accelerations[entity] = (Acceleration){0};
+    force_accelerations[entity] = (Acceleration){0};
+    mass[entity] = (Mass){0};
+    targets[entity] = (Entity){0};
+    forces[entity] = (Force){0};
+    hit_boxes[entity] = (Shape){0};
+    angular_velocities[entity] = (AngularVelocity){0};
+    angular_accelerations[entity] = (AngularAcceleration){0};
+    torque_angular_accelerations[entity] = (AngularAcceleration){0};
+    torques[entity] = (Torque){0};
+    frictions[entity] = (Friction){0};
+    restitutions[entity] = (Restitution){0};
+    angle_locks[entity] = (AngleLock){0};
+    axis_locks[entity] = (AxisLock){0};
+    parents[entity] = (Parent){0};
+    children[entity] = (Children){0};
+    transform_locks[entity] = (TransformLock){0};
+    joints[entity] = (Joint){0};
+    life_times[entity] = (LifeTime){0};
+}
+
 void delete_entity(Entity entity) {
     Error error = {0};
 
@@ -56,8 +84,7 @@ void delete_entity(Entity entity) {
         error_add_entity(&error, entity);
         error_print(error);
     }
-    entity_alive[entity] = 0;
-    entity_mask[entity] = 0;
+    clear_entity(entity);
 }
 
 void add_components(Entity entity, CMask mask) {
@@ -356,11 +383,11 @@ Children get_children(Entity entity) {
     }
     return children[entity];
 }
-Entity get_parent(Entity entity) {
+Parent get_parent(Entity entity) {
     return parents[entity];
 }
 
-void add_transform_lock(
+void set_transform_lock(
         Entity driven,
         Entity driver, 
         Vec2D local_offset,
@@ -373,6 +400,7 @@ void add_transform_lock(
         //Error
         return;
     }
+    add_components(driven, TRANSFORM_LOCK);
     transform_locks[driven] = (TransformLock) {
         .driver = driver,
         .local_offset = local_offset,
@@ -388,5 +416,109 @@ void remove_transform_lock(Entity entity) {
         //Error
         return;
     }
+    delete_components(entity, TRANSFORM_LOCK);
     transform_locks[entity] = (TransformLock){0};
+}
+
+void set_transform_lock_current_transform(
+        Entity driven,
+        Entity driver,
+        bool lock_position,
+        bool lock_orientation,
+        bool inherit_velocity
+        ) {
+    if(!entity_alive[driven] || !entity_alive[driver]) {
+        return;
+    }
+
+    Vec2D world_offset = {
+        .x = positions[driven].x - positions[driver].x,
+        .y = positions[driven].y - positions[driver].y
+    };
+
+    Vec2D local_offset = rotate_vector(
+        world_offset,
+        -orientations[driver]
+    );
+
+    Orientation local_angle =
+        orientations[driven] - orientations[driver];
+
+    set_transform_lock(
+        driven,
+        driver,
+        local_offset,
+        local_angle,
+        lock_position,
+        lock_orientation,
+        inherit_velocity
+    );
+}
+
+Entity set_joint(
+    Entity a,
+    Entity b,
+    JointType type,
+    Vec2D local_anchor_a,
+    Vec2D local_anchor_b,
+    float stiffness,
+    float damping
+) {
+    if(!entity_alive[a] || !entity_alive[b]) {
+        return 0;
+    }
+
+    Entity joint = add_entity();
+
+    add_components(joint, JOINT);
+
+    Vec2D world_anchor_a = {
+        .x = positions[a].x + rotate_vector(local_anchor_a, orientations[a]).x,
+        .y = positions[a].y + rotate_vector(local_anchor_a, orientations[a]).y
+    };
+
+    Vec2D world_anchor_b = {
+        .x = positions[b].x + rotate_vector(local_anchor_b, orientations[b]).x,
+        .y = positions[b].y + rotate_vector(local_anchor_b, orientations[b]).y
+    };
+
+    Vec2D delta = {
+        .x = world_anchor_b.x - world_anchor_a.x,
+        .y = world_anchor_b.y - world_anchor_a.y
+    };
+
+    joints[joint] = (Joint){
+        .type = type,
+        .a = a,
+        .b = b,
+        .local_anchor_a = local_anchor_a,
+        .local_anchor_b = local_anchor_b,
+        .rest_length = vector_magnitude(delta),
+        .stiffness = stiffness,
+        .damping = damping,
+        .lock_angle = false,
+        .rest_angle = orientations[b] - orientations[a],
+        .angular_stiffness = 0.0f,
+        .angular_damping = 0.0f
+    };
+
+    return joint;
+}
+
+void set_life_time(Entity entity, Time expirey_time, Tick expirey_tick) {
+    if(!entity_alive[entity]) {
+        //Error
+        return;
+    }
+
+    add_components(entity, LIFETIME);
+    life_times[entity] = (LifeTime){
+        .expirey_time = expirey_time,
+        .expirey_tick = expirey_tick
+    };
+}
+
+void remove_life_time(Entity entity) {
+    delete_components(entity, LIFETIME);
+    life_times[entity] = (LifeTime){0};
 }

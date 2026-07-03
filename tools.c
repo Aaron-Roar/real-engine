@@ -4,10 +4,6 @@
 #include <SDL3/SDL.h>
 
 //Depends on time being activated
-double tools_get_time() {
-  //Cant use time_t directlt because time_t is platform specific. Need to minimize its use in app.
-    return (double)SDL_GetPerformanceCounter()/(double)SDL_GetPerformanceFrequency();
-}
 
 void delay(int number_of_seconds)
 {

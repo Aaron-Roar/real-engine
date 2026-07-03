@@ -347,6 +347,20 @@ Vec2D project_onto_axis(Vec2D v, Axis axis) {
     };
 }
 
+float vector_magnitude(Vec2D vector) {
+    return sqrtf(vector.x * vector.x + vector.y * vector.y);
+}
+
 float axis_magnitude(Axis axis) {
     return sqrtf(axis.x * axis.x + axis.y * axis.y);
+}
+
+Vec2D rotate_vector(Vec2D vector, Orientation angle) {
+    float c = cosf(angle);
+    float s = sinf(angle);
+
+    return (Vec2D){
+        .x = vector.x * c - vector.y * s,
+        .y = vector.x * s + vector.y * c
+    };
 }

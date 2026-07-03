@@ -33,11 +33,6 @@ int main() {
         return 1;
     }
 
-    //Game setup
-    time_t start_time = tools_get_time();
-    double prev_time = 0;
-    double current_time = 0;
-
     //Initializing entity plate
     Entity plate = add_entity();
     set_position(plate, (Position){.x = 100, .y = 500});
@@ -61,8 +56,9 @@ int main() {
     set_hitbox(plate2, shape2);
     set_friction(plate2, 0);
     set_dynamic(plate2);
-    set_axis_lock(plate2,(Position){0,5}, positions[plate2]);
-    set_angle_lock(plate2,0,0.1);
+    set_life_time(plate2,0.2,0);
+    //set_axis_lock(plate2,(Position){0,5}, positions[plate2]);
+    //set_angle_lock(plate2,0,0.1);
 
     time_t seed = 1003463;
     srand(seed);
@@ -80,10 +76,12 @@ int main() {
         set_hitbox(ball, shape3);
         set_friction(ball, 0.5);
         set_dynamic(ball);
+        set_transform_lock(ball, plate2, (Vec2D){random_range(100, 400), random_range(100, 400)}, random_range(0, 10), true, true, false);
     }
 
     //Game Loop
     while (console_is_active()) {
+        clean_entities_past_lifetime();
         //Console
         ConsoleLogString console_line = {0};
         if(read_console(&console_line)) {
@@ -91,11 +89,10 @@ int main() {
         }
 
         //physics
-        prev_time = current_time;
-        current_time = tools_get_time() - start_time;
-        double dt = current_time - prev_time;
+        engine_update_time();
+        engine_update_tick();
         apply_collisions();
-        system_update_physics(dt);
+        system_update_physics(engine_get_dt());
 
         //render
         graphics_poll_events(&event);
