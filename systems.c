@@ -146,8 +146,23 @@ Collision system_get_entity_collision(Entity entity_1, Entity entity_2) {
 
 void separate_entities(Entity entity_1, Entity entity_2, Collision collision)
 {
-    if ((mass[entity_1] + mass[entity_2]) <= 0.0f) {
-        //Then no mass!
+    bool entity_1_dynamic = (entity_mask[entity_1] & DYNAMIC) == DYNAMIC;
+    bool entity_2_dynamic = (entity_mask[entity_2] & DYNAMIC) == DYNAMIC;
+
+    float inv_mass_1 = 0.0f;
+    float inv_mass_2 = 0.0f;
+
+    if(entity_1_dynamic && mass[entity_1] > 0.0f) {
+        inv_mass_1 = 1.0f / mass[entity_1];
+    }
+
+    if(entity_2_dynamic && mass[entity_2] > 0.0f) {
+        inv_mass_2 = 1.0f / mass[entity_2];
+    }
+
+    float inv_mass_sum = inv_mass_1 + inv_mass_2;
+
+    if(inv_mass_sum <= 0.0f) {
         return;
     }
 
@@ -156,26 +171,11 @@ void separate_entities(Entity entity_1, Entity entity_2, Collision collision)
         .y = collision.normal.y * collision.depth
     };
 
-    bool entity_1_dynamic = (entity_mask[entity_1] & DYNAMIC) == DYNAMIC;
-    bool entity_2_dynamic = (entity_mask[entity_2] & DYNAMIC) == DYNAMIC;
-    if(entity_1_dynamic && entity_2_dynamic) {
-        positions[entity_1].x -= correction.x * mass[entity_2]/(mass[entity_1] + mass[entity_2]);
-        positions[entity_1].y -= correction.y * mass[entity_2]/(mass[entity_1] + mass[entity_2]);
+    positions[entity_1].x -= correction.x * (inv_mass_1 / inv_mass_sum);
+    positions[entity_1].y -= correction.y * (inv_mass_1 / inv_mass_sum);
 
-        positions[entity_2].x += correction.x * mass[entity_1]/(mass[entity_1] + mass[entity_2]);
-        positions[entity_2].y += correction.y * mass[entity_1]/(mass[entity_1] + mass[entity_2]);
-    }
-    else if(entity_1_dynamic && !entity_2_dynamic) {
-        //Only entity 1 can move
-        positions[entity_1].x += correction.x;
-        positions[entity_1].y += correction.y;
-    }
-    else if(!entity_1_dynamic && entity_2_dynamic) {
-        //Only entity 2 can move
-        positions[entity_2].x += correction.x;
-        positions[entity_2].y += correction.y;
-    }
-    //Nothing can move all is static
+    positions[entity_2].x += correction.x * (inv_mass_2 / inv_mass_sum);
+    positions[entity_2].y += correction.y * (inv_mass_2 / inv_mass_sum);
 }
 
 Position support_point_average(Shape shape, Vec2D direction)
@@ -210,8 +210,16 @@ Position support_point_average(Shape shape, Vec2D direction)
     return sum;
 }
 
-Position approximate_contact_point_from_normal(Shape shape_1, Shape shape_2, Vec2D normal)
+Position collision_contact_point(Entity entity_1, Entity entity_2, Collision collision)
 {
+    Shape shape_1 = get_global_hit_box(entity_1);
+    Shape shape_2 = get_global_hit_box(entity_2);
+
+    bool entity_1_dynamic = (entity_mask[entity_1] & DYNAMIC) == DYNAMIC;
+    bool entity_2_dynamic = (entity_mask[entity_2] & DYNAMIC) == DYNAMIC;
+
+    Vec2D normal = collision.normal;
+
     Vec2D opposite_normal = {
         .x = -normal.x,
         .y = -normal.y
@@ -220,6 +228,25 @@ Position approximate_contact_point_from_normal(Shape shape_1, Shape shape_2, Vec
     Position point_1 = support_point_average(shape_1, normal);
     Position point_2 = support_point_average(shape_2, opposite_normal);
 
+    /*
+        If one object is static and one is dynamic,
+        use the dynamic object's contact point.
+
+        This prevents a huge static floor from producing
+        a fake contact point at the middle of the entire floor.
+    */
+    if(entity_1_dynamic && !entity_2_dynamic) {
+        return point_1;
+    }
+
+    if(!entity_1_dynamic && entity_2_dynamic) {
+        return point_2;
+    }
+
+    /*
+        Both dynamic, or both static.
+        Midpoint is okay as a temporary approximation.
+    */
     return (Position){
         .x = (point_1.x + point_2.x) * 0.5f,
         .y = (point_1.y + point_2.y) * 0.5f
@@ -259,14 +286,7 @@ void resolve_collision(Entity entity_1, Entity entity_2, Collision collision) {
     }
 
     //Position contact = approximate_contact_point(positions[entity_1], positions[entity_2]);
-    Shape world_shape_1 = get_global_hit_box(entity_1);
-    Shape world_shape_2 = get_global_hit_box(entity_2);
-
-    Position contact = approximate_contact_point_from_normal(
-        world_shape_1,
-        world_shape_2,
-        collision.normal
-    );
+    Position contact = collision_contact_point(entity_1, entity_2, collision);
 
     Vec2D r1 = {
         .x = contact.x - positions[entity_1].x,
@@ -320,6 +340,10 @@ void resolve_collision(Entity entity_1, Entity entity_2, Collision collision) {
     }
 
     float restitution = fminf(restitutions[entity_1], restitutions[entity_2]);
+
+    if(fabsf(v_normal) < 1.0f) {
+      restitution = 0.0f;
+    }
 
     // ================================
     // CHANGED: local inverse inertia
@@ -411,8 +435,8 @@ void apply_collisions() {
 
             Collision collision = system_get_entity_collision(i, j);
             if(collision.overlap == true) {
-                separate_entities(i, j, collision);
                 resolve_collision(i, j, collision);
+                separate_entities(i, j, collision);
             }
         }
     }
