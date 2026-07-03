@@ -29,5 +29,6 @@ void show_graphics(SDL_Renderer *renderer);
 bool draw_shape_outline(SDL_Renderer *renderer, Shape shape, Color color);
 bool draw_shape_filled(SDL_Renderer *renderer, Shape shape, Color color);
 void draw_hit_box(SDL_Renderer *renderer, Entity entity, Fill fill_type);
+void draw_hit_boxes(SDL_Renderer *renderer);
 
 #endif

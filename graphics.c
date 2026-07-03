@@ -177,3 +177,13 @@ void draw_hit_box(SDL_Renderer *renderer, Entity entity, Fill fill_type) {
         draw_shape_outline(renderer, shape, hit_box_color);
     }
 }
+
+void draw_hit_boxes(SDL_Renderer *renderer) {
+  for(int i = 0; i < MAX_ENTITIES; i += 1) {
+    if(entity_alive[i]) {
+        if( (entity_mask[i] & HIT_BOX) == HIT_BOX) {
+            draw_hit_box(renderer, i, GRAPHICS_OUTLINE);
+        }
+    }
+  }
+}
