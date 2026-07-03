@@ -98,17 +98,17 @@ void print_entity_components(Entity entity) {
         if(entity_mask[entity] & TIMEWINDOW) {
             console_write(LOG_ENGINE, "TIMEWINDOW\n");
         }
-        if(entity_mask[entity] & MOVEABLE) {
-            console_write(LOG_ENGINE, "MOVEABLE\n");
+        if(entity_mask[entity] & DYNAMIC) {
+            console_write(LOG_ENGINE, "DYNAMIC\n");
         }
 }
 
 void set_acceleration(Entity entity, Acceleration a) {
-    entity_mask[entity] |= MOVEABLE;
+    entity_mask[entity] |= DYNAMIC;
     accelerations[entity] = a;
 }
 void set_velocity(Entity entity, Velocity v) {
-    entity_mask[entity] |= MOVEABLE;
+    entity_mask[entity] |= DYNAMIC;
     velocities[entity] = v;
 }
 void set_position(Entity entity, Position p) {
@@ -128,7 +128,7 @@ void set_force(Entity entity, Force f) {
     targets[force_entity] = entity;
     entity_mask[force_entity] |= TARGETABLE | FORCE;
 
-    entity_mask[entity] |= MOVEABLE;
+    entity_mask[entity] |= DYNAMIC;
 }
 
 void set_torque(Entity entity, Torque t) {
@@ -137,11 +137,11 @@ void set_torque(Entity entity, Torque t) {
     targets[torque_entity] = entity;
     entity_mask[torque_entity] |= TARGETABLE | TORQUE;
 
-    entity_mask[entity] |= MOVEABLE;
+    entity_mask[entity] |= DYNAMIC;
 }
 
 void set_angular_velocity(Entity entity, AngularVelocity v) {
-    entity_mask[entity] |= MOVEABLE;
+    entity_mask[entity] |= DYNAMIC;
     angular_velocities[entity] = v;
 }
 

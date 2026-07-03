@@ -3,12 +3,13 @@
 #include "error.h"
 #include "console.h"
 #include <math.h>
+#include <float.h>
 #include <stdio.h>
 #include <time.h>
 
 
 void system_update_positions(double dt) {
-    CMask filter = MOVEABLE;
+    CMask filter = DYNAMIC;
     for (int i = 0; i < MAX_ENTITIES; i++) {
         if(entity_alive[i]) {
             if( (entity_mask[i] & filter) == filter ) {
@@ -22,7 +23,7 @@ void system_update_positions(double dt) {
 }
 
 void system_update_orientations(double dt) {
-    CMask filter = MOVEABLE;
+    CMask filter = DYNAMIC;
     for (int i = 0; i < MAX_ENTITIES; i++) {
         if(entity_alive[i]) {
             if( (entity_mask[i] & filter) == filter ) {
@@ -34,7 +35,7 @@ void system_update_orientations(double dt) {
 
 
 void system_update_angular_velocities(double dt) {
-    CMask filter = MOVEABLE;
+    CMask filter = DYNAMIC;
     for (int i = 0; i < MAX_ENTITIES; i++) {
         if(entity_alive[i]) {
             if( (entity_mask[i] & filter) == filter) {
@@ -45,7 +46,7 @@ void system_update_angular_velocities(double dt) {
 }
 
 void system_update_velocities(double dt) {
-    CMask filter = MOVEABLE;
+    CMask filter = DYNAMIC;
     for (int i = 0; i < MAX_ENTITIES; i++) {
         if(entity_alive[i]) {
             if( (entity_mask[i] & filter) == filter) {
@@ -61,7 +62,7 @@ void system_update_velocities(double dt) {
 void system_apply_forces() {
   Error error = {0};
   CMask filter = FORCE | TARGETABLE;
-  CMask target_filter = MOVEABLE | MASS;
+  CMask target_filter = DYNAMIC | MASS;
 
   for(int i = 0; i < MAX_ENTITIES; i++) {
     if(entity_alive[i]) { //Check if this entity exists
@@ -97,7 +98,7 @@ void system_apply_torques() {
     //Apply force offset from centroid and torque applied directly
   Error error = {0};
   CMask filter = TORQUE | TARGETABLE;
-  CMask target_filter = MOVEABLE | MASS;
+  CMask target_filter = DYNAMIC | MASS;
 
   for(int i = 0; i < MAX_ENTITIES; i++) {
     if(entity_alive[i]) { //Check if this entity exists
@@ -162,6 +163,54 @@ void separate_entities(Entity entity_1, Entity entity_2, Collision collision)
     positions[entity_2].y += correction.y * mass[entity_1]/(mass[entity_1] + mass[entity_2]);
 }
 
+Position support_point_average(Shape shape, Vec2D direction)
+{
+    float best_projection = -FLT_MAX;
+    Position sum = {0};
+    int count = 0;
+
+    const float epsilon = 0.0001f;
+
+    for(int i = 0; i < shape.amount_of_vertices; i += 1) {
+        Position vertex = shape.vertices[i];
+        float projection = dot_product(vertex, direction);
+
+        if(projection > best_projection + epsilon) {
+            best_projection = projection;
+            sum = vertex;
+            count = 1;
+        }
+        else if(fabsf(projection - best_projection) <= epsilon) {
+            sum.x += vertex.x;
+            sum.y += vertex.y;
+            count += 1;
+        }
+    }
+
+    if(count > 0) {
+        sum.x /= count;
+        sum.y /= count;
+    }
+
+    return sum;
+}
+
+Position approximate_contact_point_from_normal(Shape shape_1, Shape shape_2, Vec2D normal)
+{
+    Vec2D opposite_normal = {
+        .x = -normal.x,
+        .y = -normal.y
+    };
+
+    Position point_1 = support_point_average(shape_1, normal);
+    Position point_2 = support_point_average(shape_2, opposite_normal);
+
+    return (Position){
+        .x = (point_1.x + point_2.x) * 0.5f,
+        .y = (point_1.y + point_2.y) * 0.5f
+    };
+}
+
 void resolve_collision(Entity entity_1, Entity entity_2, Collision collision) {
     // Assume collision.normal points from entity_1 -> entity_2
 
@@ -169,10 +218,10 @@ void resolve_collision(Entity entity_1, Entity entity_2, Collision collision) {
     // CHANGED: use your MOVABLE bitmask
     // ================================
     bool entity_1_movable =
-        ((entity_mask[entity_1] & MOVEABLE) == MOVEABLE);
+        ((entity_mask[entity_1] & DYNAMIC) == DYNAMIC);
 
     bool entity_2_movable =
-        ((entity_mask[entity_2] & MOVEABLE) == MOVEABLE);
+        ((entity_mask[entity_2] & DYNAMIC) == DYNAMIC);
 
     // ================================
     // CHANGED: local inverse mass from your mass[] array
@@ -194,7 +243,15 @@ void resolve_collision(Entity entity_1, Entity entity_2, Collision collision) {
         return;
     }
 
-    Position contact = approximate_contact_point(positions[entity_1], positions[entity_2]);
+    //Position contact = approximate_contact_point(positions[entity_1], positions[entity_2]);
+    Shape world_shape_1 = get_global_hit_box(entity_1);
+    Shape world_shape_2 = get_global_hit_box(entity_2);
+
+    Position contact = approximate_contact_point_from_normal(
+        world_shape_1,
+        world_shape_2,
+        collision.normal
+    );
 
     Vec2D r1 = {
         .x = contact.x - positions[entity_1].x,
@@ -326,7 +383,7 @@ void apply_collisions() {
             continue;
         }
 
-        for(int j = 0; j < MAX_ENTITIES; j += 1) {
+        for(int j = i + 1; j < MAX_ENTITIES; j += 1) {
             if(!entity_alive[j]) {
                 continue;
             }

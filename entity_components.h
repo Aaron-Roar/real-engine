@@ -26,11 +26,12 @@ typedef enum {
     FORCE       = 1 << 3,
     MASS        = 1 << 4,
     TIMEWINDOW  = 1 << 5,
-    MOVEABLE    = 1 << 6,
-    TARGETABLE  = 1 << 7,
-    COLLISION   = 1 << 8,
-    TORQUE      = 1 << 9,
-    HIT_BOX     = 1 << 10,
+    TARGETABLE  = 1 << 6,
+    COLLISION   = 1 << 7,
+    TORQUE      = 1 << 8,
+    HIT_BOX     = 1 << 9,
+    STATIC      = 1 << 10,
+    DYNAMIC     = 1 << 11,
 } Component;
 static const char* component_names[] = {
     "NONE",
