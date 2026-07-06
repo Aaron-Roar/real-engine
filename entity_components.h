@@ -118,6 +118,7 @@ extern Entity targets[MAX_ENTITIES];
 extern Force forces[MAX_ENTITIES];
 extern Acceleration force_accelerations[MAX_ENTITIES];
 extern Shape hit_boxes[MAX_ENTITIES];
+extern Shape world_hit_boxes[MAX_ENTITIES];
 extern Orientation orientations[MAX_ENTITIES];
 extern AngularVelocity angular_velocities[MAX_ENTITIES];
 extern AngularAcceleration angular_accelerations[MAX_ENTITIES];

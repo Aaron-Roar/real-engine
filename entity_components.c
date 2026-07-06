@@ -20,6 +20,7 @@ float mass[MAX_ENTITIES] = {0};
 Entity targets[MAX_ENTITIES] = {0};
 Force forces[MAX_ENTITIES] = {0};
 Shape hit_boxes[MAX_ENTITIES] = {0};
+Shape world_hit_boxes[MAX_ENTITIES] = {0};
 AngularVelocity angular_velocities[MAX_ENTITIES] = {0};
 AngularAcceleration angular_accelerations[MAX_ENTITIES] = {0};
 AngularVelocity torque_angular_accelerations[MAX_ENTITIES] = {0};
@@ -246,10 +247,7 @@ Shape get_global_hit_box(Entity entity) {
     CMask filter = HIT_BOX;
     if(entity_alive[entity]) {
         if( (entity_mask[entity] & filter) == filter ) {
-            Position pos = positions[entity];
-            Orientation ort = orientations[entity];
-            Shape hit_box = hit_boxes[entity];
-            return shape_world_translate(hit_box, pos, ort);
+            return world_hit_boxes[entity];
         }
     }
     return (Shape){0};

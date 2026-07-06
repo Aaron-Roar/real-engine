@@ -9,6 +9,36 @@
 
 int collision_count = 0;
 
+void system_generate_global_hitboxes() {
+    CMask filter = HIT_BOX;
+
+    for(int i = 0; i < MAX_ENTITIES; i += 1) {
+        if(entity_alive[i]) {
+            if( (entity_mask[i] & filter) == filter ) {
+                Position pos = positions[i];
+                Orientation ort = orientations[i];
+                Shape hit_box = hit_boxes[i];
+                world_hit_boxes[i] = shape_world_translate(hit_box, pos, ort);
+            }
+        }
+
+    }
+}
+
+Shape system_generate_global_hitbox(Entity entity) {
+    CMask filter = HIT_BOX;
+        if(entity_alive[entity]) {
+            if( (entity_mask[entity] & filter) == filter ) {
+                Position pos = positions[entity];
+                Orientation ort = orientations[entity];
+                Shape hit_box = hit_boxes[entity];
+                world_hit_boxes[entity] = shape_world_translate(hit_box, pos, ort);
+                return world_hit_boxes[entity];
+            }
+        }
+        return (Shape){0};
+}
+
 void system_update_positions(double dt) {
     CMask filter = DYNAMIC;
     for (int i = 0; i < MAX_ENTITIES; i++) {
@@ -528,6 +558,8 @@ void apply_collisions() {
             if(collision.overlap == true) {
                 resolve_collision(i, j, collision);
                 separate_entities(i, j, collision);
+                system_generate_global_hitbox(i);
+                system_generate_global_hitbox(j);
                 collision_count += 1;
                 //console_write(LOG_ENGINE, "Entity %d and Entity %d Colided\n", j, i);
             }
@@ -1001,6 +1033,10 @@ void system_apply_joints()
     }
 }
 
+void system_gen_world_hitboxes() {
+
+}
+
 void system_update_physics(double dt) {
     system_clear_force_torque_accelerations();
     system_apply_joints();
@@ -1011,6 +1047,7 @@ void system_update_physics(double dt) {
     system_update_angular_velocities(dt);
     system_update_orientations(dt);
     system_update_positions(dt);
+    system_generate_global_hitboxes();
     apply_collisions();
     system_apply_axis_locks();
     system_apply_angle_locks();
