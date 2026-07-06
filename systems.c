@@ -79,11 +79,6 @@ void system_apply_forces() {
                         error_add_entity(&error, i);
                         error_add_entity(&error, targets[i]);
                     }
-                } else {
-                    //Force trying to move entity
-                    error.code |= INCOMPATABLE_COMPONENTS | FAILED_UPDATE_ACCELERATION;
-                        error_add_entity(&error, i);
-                        error_add_entity(&error, targets[i]);
                 }
             }
             else {
@@ -114,11 +109,6 @@ void system_apply_torques() {
                         error_add_entity(&error, i);
                         error_add_entity(&error, targets[i]);
                     }
-                } else {
-                    //Force trying to move entity
-                    error.code |= INCOMPATABLE_COMPONENTS | FAILED_UPDATE_ACCELERATION;
-                        error_add_entity(&error, i);
-                        error_add_entity(&error, targets[i]);
                 }
             }
             else {
@@ -794,30 +784,115 @@ static void add_joint_torque_for_one_tick(Entity target, Torque torque)
     );
 }
 
-void system_apply_joints()
+static void add_joint_force_at_point_for_one_tick(
+    Entity target,
+    Position world_point,
+    Force force
+) {
+    if(!entity_alive[target]) {
+        return;
+    }
+
+    if((entity_mask[target] & DYNAMIC) != DYNAMIC) {
+        return;
+    }
+
+    Entity force_entity = set_force(target, force);
+
+    if(force_entity != 0) {
+        set_life_time(force_entity, 0.0, engine_get_tick() + 1);
+    }
+
+    Vec2D r = {
+        .x = world_point.x - positions[target].x,
+        .y = world_point.y - positions[target].y
+    };
+
+    Torque torque = cross_2d(r, force);
+
+    Entity torque_entity = set_torque(target, torque);
+
+    if(torque_entity != 0) {
+        set_life_time(torque_entity, 0.0, engine_get_tick() + 1);
+    }
+}
+
+static void apply_pin_joint(Entity joint_entity)
 {
-    for(Entity joint_entity = 1; joint_entity < MAX_ENTITIES; joint_entity += 1) {
-        if(!entity_alive[joint_entity]) {
-            continue;
-        }
+    Joint joint = joints[joint_entity];
 
-        if((entity_mask[joint_entity] & JOINT) != JOINT) {
-            continue;
-        }
+    Entity a = joint.a;
+    Entity b = joint.b;
 
+    if(!entity_alive[a] || !entity_alive[b]) {
+        delete_entity(joint_entity);
+        return;
+    }
+
+    Vec2D offset_a = rotate_vector(
+        joint.local_anchor_a,
+        orientations[a]
+    );
+
+    Vec2D offset_b = rotate_vector(
+        joint.local_anchor_b,
+        orientations[b]
+    );
+
+    Position world_anchor_a = {
+        .x = positions[a].x + offset_a.x,
+        .y = positions[a].y + offset_a.y
+    };
+
+    Position world_anchor_b = {
+        .x = positions[b].x + offset_b.x,
+        .y = positions[b].y + offset_b.y
+    };
+
+    Vec2D error = {
+        .x = world_anchor_b.x - world_anchor_a.x,
+        .y = world_anchor_b.y - world_anchor_a.y
+    };
+
+    Velocity velocity_a = point_velocity(a, offset_a);
+    Velocity velocity_b = point_velocity(b, offset_b);
+
+    Vec2D relative_velocity = {
+        .x = velocity_b.x - velocity_a.x,
+        .y = velocity_b.y - velocity_a.y
+    };
+
+    Force force_on_a = {
+        .x = joint.stiffness * error.x + joint.damping * relative_velocity.x,
+        .y = joint.stiffness * error.y + joint.damping * relative_velocity.y
+    };
+
+    Force force_on_b = {
+        .x = -force_on_a.x,
+        .y = -force_on_a.y
+    };
+
+    add_joint_force_at_point_for_one_tick(
+        a,
+        world_anchor_a,
+        force_on_a
+    );
+
+    add_joint_force_at_point_for_one_tick(
+        b,
+        world_anchor_b,
+        force_on_b
+    );
+}
+
+void apply_distance_joint(Entity joint_entity) {
         Joint joint = joints[joint_entity];
+        if(joint.type != JOINT_DISTANCE) {
+            return;
+        }
 
         Entity a = joint.a;
         Entity b = joint.b;
-
-        if(!entity_alive[a] || !entity_alive[b]) {
-            delete_entity(joint_entity);
-            continue;
-        }
-
-        if(joint.type != JOINT_DISTANCE) {
-            continue;
-        }
 
         Vec2D offset_a = rotate_vector(
             joint.local_anchor_a,
@@ -847,7 +922,7 @@ void system_apply_joints()
         float length = vector_magnitude(delta);
 
         if(length <= 0.00001f) {
-            continue;
+            return;
         }
 
         Vec2D normal = {
@@ -899,6 +974,30 @@ void system_apply_joints()
 
         add_joint_torque_for_one_tick(a, torque_on_a);
         add_joint_torque_for_one_tick(b, torque_on_b);
+
+}
+void system_apply_joints()
+{
+    for(Entity joint_entity = 1; joint_entity < MAX_ENTITIES; joint_entity += 1) {
+        if(!entity_alive[joint_entity]) {
+            continue;
+        }
+        Joint joint = joints[joint_entity];
+        switch(joint.type) {
+            case JOINT_PIN:
+                apply_pin_joint(joint_entity);
+                break;
+            case JOINT_DISTANCE:
+                apply_distance_joint(joint_entity);
+                break;
+            case JOINT_WELD:
+                //Not implemented
+                break;
+            default:
+                //Not implemented
+                break;
+        }
+
     }
 }
 

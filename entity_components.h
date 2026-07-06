@@ -10,7 +10,7 @@
 
 //Entities
 typedef uint32_t Entity; //An id for an entity
-#define MAX_ENTITIES 100
+#define MAX_ENTITIES 10000
 #define MAX_COMPONENTS 100
 extern bool entity_alive[MAX_ENTITIES]; //What entities are active
 typedef struct EntityList {

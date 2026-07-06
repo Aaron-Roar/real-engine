@@ -183,7 +183,6 @@ Entity set_force(Entity entity, Force f) {
         //Error
         return 0;
     }
-    set_dynamic(entity);
     Entity force_entity = add_entity();
     forces[force_entity] = f;
     targets[force_entity] = entity;
@@ -197,7 +196,6 @@ Entity set_torque(Entity entity, Torque t) {
         //Error
         return 0;
     }
-    set_dynamic(entity);
     Entity torque_entity = add_entity();
     torques[torque_entity] = t;
     targets[torque_entity] = entity;

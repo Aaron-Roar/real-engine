@@ -2,6 +2,7 @@
 #include "stdint.h"
 #include <stdio.h>
 #include <SDL3/SDL.h>
+#include <stdlib.h>
 
 //Depends on time being activated
 
@@ -55,4 +56,8 @@ uint32_t tool_sizeof_string(char* str, char delimiter) {
         i += 1;
     }
     return i;
+}
+
+int tools_random_range(int min, int max) {
+    return (rand() % (max - min + 1)) + min;
 }

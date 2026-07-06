@@ -9,17 +9,10 @@
 #include <time.h>
 #include <stdlib.h>
 
-#include <SDL3/SDL.h>
-#include <SDL3/SDL_main.h>
+#include "examples.h"
 
 
-float pi = 3.14;
 const Color background_color = (Color){0,0,255,255};
-const Color shape_color = (Color){255,0,0,255};
-
-int random_range(int min, int max) {
-    return (rand() % (max - min + 1)) + min;
-}
 
 int main() {
     console_init();
@@ -33,51 +26,60 @@ int main() {
         return 1;
     }
 
-    //Initializing entity plate
-    Entity plate = add_entity();
-    set_position(plate, (Position){.x = 100, .y = 500});
-    set_orientation(plate, 0);
-    set_mass(plate, 5000);
-    set_velocity(plate, (Velocity){0, 0});
-    set_restitution(plate, 0.9);
-    Shape shape1 = create_square(1000, 50);
-    set_hitbox(plate, shape1);
-    set_friction(plate, 0.5);
-    set_static(plate);
+    //Entity smash = magnetic_sim_init();
+    Entity wall_1 = add_entity();
+    set_static(wall_1);
+    set_position(wall_1, (Position){80, 390});
+    set_orientation(wall_1, 0*(pi/180));
+    set_restitution(wall_1, 1);
+    set_friction(wall_1, 0.5);
+    Shape shape_1 = create_square(40, 150);
+    set_hitbox(wall_1, shape_1);
 
-    Entity plate2 = add_entity();
-    set_position(plate2, (Position){.x = 100, .y = -10});
-    set_orientation(plate2, 0);
-    set_mass(plate2, 5000);
-    set_velocity(plate2, (Velocity){0, 200});
-    set_acceleration(plate2, (Acceleration){0, 50});
-    set_restitution(plate2, 0.6);
-    Shape shape2 = create_circle(50, 10);
-    set_hitbox(plate2, shape2);
-    set_friction(plate2, 0);
-    set_static(plate2);
-    set_life_time(plate2,10,0);
-    //set_axis_lock(plate2,(Position){0,5}, positions[plate2]);
-    //set_angle_lock(plate2,0,0.1);
+    Entity wall_2 = add_entity();
+    set_static(wall_2);
+    set_position(wall_2, (Position){520, 390});
+    set_orientation(wall_2, 0*(pi/180));
+    set_restitution(wall_2, 1);
+    set_friction(wall_2, 0);
+    set_hitbox(wall_2, shape_1);
+
+    Entity wall_3 = add_entity();
+    set_static(wall_3);
+    set_position(wall_3, (Position){300, 450});
+    set_orientation(wall_3, 0*(pi/180));
+    set_restitution(wall_3, 1);
+    set_friction(wall_3, 0.1);
+    Shape shape_2 = create_square(400, 40);
+    set_hitbox(wall_3, shape_2);
+
+    Entity smash = add_entity();
+    set_position(smash, (Position){.x = 200, .y = -300});
+    set_orientation(smash, 0);
+    set_mass(smash, 50);
+    set_velocity(smash, (Velocity){0, 0});
+    set_acceleration(smash, (Acceleration){0, 30});
+    set_restitution(smash, 1);
+    Shape shape4 = create_circle(50, 10);
+    set_hitbox(smash, shape4);
+    set_friction(smash, 0.4);
+    set_dynamic(smash);
+    //set_axis_lock(smash, (Axis){0,1}, positions[smash]);
 
     time_t seed = 1003463;
     srand(seed);
-    for(int i = 0; i < 3; i += 1) {
+    for(int i = 0; i < 250; i += 1) {
         Entity ball = add_entity();
-        set_position(ball, (Position){.x = random_range(0, 400), .y = random_range(0, 300)});
-        set_orientation(ball, random_range(0, 2*pi));
-        set_mass(ball, 10);
-        //set_velocity(ball, (Velocity){.x = 0, .y = -90});
-        set_velocity(ball, (Velocity){.x = random_range(-10, 10), .y = random_range(0, 100)});
-        set_acceleration(ball, (Acceleration){random_range(0,10), 50});
-        set_restitution(ball, (float)rand()/(float)(RAND_MAX/1));
-        //set_torque(ball, 2000);
-        Shape shape3 = create_circle(30, random_range(3, 10));
+        set_position(ball, (Position){.x = tools_random_range(100, 400), .y = tools_random_range(0, 300)});
+        set_orientation(ball, tools_random_range(0, 2*pi));
+        set_mass(ball, 2);
+        set_velocity(ball, (Velocity){.x = tools_random_range(-10, 10), .y = tools_random_range(0, 100)});
+        set_acceleration(ball, (Acceleration){tools_random_range(0,10), 50});
+        set_restitution(ball, 0.1);
+        Shape shape3 = create_circle(7, 10);
         set_hitbox(ball, shape3);
-        set_friction(ball, 0.5);
+        set_friction(ball, 0.1);
         set_dynamic(ball);
-        //set_transform_lock(ball, plate2, (Vec2D){random_range(100, 400), random_range(100, 400)}, random_range(0, 10), true, true, false);
-        set_joint(ball, plate2, JOINT_DISTANCE, (Vec2D){0}, (Vec2D){0}, 10, 0);
     }
 
     //Game Loop
@@ -89,6 +91,7 @@ int main() {
             console_write(LOG_CONSOLE, "%s", console_line.string);
         }
 
+        //magnetic_sim_tick(smash);
         //physics
         engine_update_time();
         engine_update_tick();
@@ -101,7 +104,7 @@ int main() {
         draw_hit_boxes(renderer);
         show_graphics(renderer);
 
-        //App 
+        //App
         console_write(LOG_APP, "Collision Count: %d\n", collision_count);
     }
     graphics_end(renderer, window);
