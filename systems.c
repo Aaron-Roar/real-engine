@@ -533,6 +533,73 @@ void resolve_collision(Entity entity_1, Entity entity_2, Collision collision) {
     );
 }
 
+//Test function
+void separate_overlapped_entities() {
+    CMask filter = COLLISION;
+    for(int i = 0; i < MAX_ENTITIES; i += 1) {
+        if(!entity_alive[i]) {
+            continue;
+        }
+        if( (entity_mask[i] & filter) != filter) {
+            continue;
+        }
+
+        for(int j = i + 1; j < MAX_ENTITIES; j += 1) {
+            if(!entity_alive[j]) {
+                continue;
+            }
+            if( (entity_mask[j] & filter) != filter) {
+                continue;
+            }
+            if(i == j) {
+                continue;
+            }
+
+            Collision collision = system_get_entity_collision(i, j);
+            if(collision.overlap == true) {
+                separate_entities(i, j, collision);
+                system_generate_global_hitbox(i);
+                system_generate_global_hitbox(j);
+            }
+        }
+    }
+    
+}
+
+//Test function
+void separate_static_entities() {
+    CMask filter = COLLISION | STATIC;
+    CMask filter2 = COLLISION;
+    for(int i = 0; i < MAX_ENTITIES; i += 1) {
+        if(!entity_alive[i]) {
+            continue;
+        }
+        if( (entity_mask[i] & filter) != filter) {
+            continue;
+        }
+
+        for(int j = i + 1; j < MAX_ENTITIES; j += 1) {
+            if(!entity_alive[j]) {
+                continue;
+            }
+            if( (entity_mask[j] & filter2) != filter2) {
+                continue;
+            }
+            if(i == j) {
+                continue;
+            }
+
+            Collision collision = system_get_entity_collision(i, j);
+            if(collision.overlap == true) {
+                separate_entities(i, j, collision);
+                system_generate_global_hitbox(i);
+                system_generate_global_hitbox(j);
+            }
+        }
+    }
+
+}
+
 void apply_collisions() {
     CMask filter = COLLISION;
     for(int i = 0; i < MAX_ENTITIES; i += 1) {
@@ -556,8 +623,8 @@ void apply_collisions() {
 
             Collision collision = system_get_entity_collision(i, j);
             if(collision.overlap == true) {
-                resolve_collision(i, j, collision);
                 separate_entities(i, j, collision);
+                resolve_collision(i, j, collision);
                 system_generate_global_hitbox(i);
                 system_generate_global_hitbox(j);
                 collision_count += 1;
@@ -1047,11 +1114,16 @@ void system_update_physics(double dt) {
     system_update_angular_velocities(dt);
     system_update_orientations(dt);
     system_update_positions(dt);
-    system_generate_global_hitboxes();
-    apply_collisions();
     system_apply_axis_locks();
     system_apply_angle_locks();
     system_apply_transform_locks();
+    system_generate_global_hitboxes();
+
+    for(int i = 0; i < 10; i += 1) {
+        separate_static_entities();
+    }
+    apply_collisions();
+    system_generate_global_hitboxes();
 }
 
 void print_entity_movement(Entity entity) {
