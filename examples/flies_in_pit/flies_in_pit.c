@@ -77,7 +77,7 @@ int main() {
         set_acceleration(ball, (Acceleration){tools_random_range(0,10), 50});
         set_restitution(ball, 0.3);
         float size = tools_random_range_float(10, 20);
-        Shape shape3 = create_circle(20, 5);
+        Shape shape3 = create_circle(size, 5);
         set_hitbox(ball, shape3);
         set_friction(ball, 0);
         set_dynamic(ball);
