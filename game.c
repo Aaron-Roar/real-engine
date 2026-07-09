@@ -14,6 +14,8 @@
 
 const Color background_color = (Color){0,0,255,255};
 
+
+
 int main() {
     console_init();
     console_set_debug(CONSOLE_DEBUG_OFF);
@@ -27,9 +29,6 @@ int main() {
     }
 
     water_sim_init();
-
-    //Entity smash = magnetic_sim_init();
-//water_sim_init();
     //Game Loop
     while (console_is_active()) {
         clean_entities_past_lifetime();
@@ -39,7 +38,7 @@ int main() {
             console_write(LOG_CONSOLE, "%s", console_line.string);
         }
 
-        //magnetic_sim_tick(smash);
+
         //physics
         engine_update_time();
         engine_update_tick();
@@ -52,8 +51,6 @@ int main() {
         draw_hit_boxes(renderer);
         show_graphics(renderer);
 
-        //App
-        console_write(LOG_APP, "Collision Count: %d\n", collision_count);
     }
     graphics_end(renderer, window);
     engine_shutdown();

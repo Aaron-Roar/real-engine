@@ -7,7 +7,6 @@
 #include <stdio.h>
 #include <time.h>
 
-int collision_count = 0;
 
 void system_generate_global_hitboxes() {
     CMask filter = HIT_BOX;
@@ -158,10 +157,14 @@ void system_clear_force_torque_accelerations() {
     }
 }
 
+//HERE
 
 Collision system_get_entity_collision(Entity entity_1, Entity entity_2) {
     Shape shape1 = get_global_hit_box(entity_1);
     Shape shape2 = get_global_hit_box(entity_2);
+    if(has_components(entity_1, PARTICLE) && has_components(entity_2, PARTICLE)) {
+        return particle_collision(shape1, shape1);
+    }
     return sat_collision(shape1, shape2);
 }
 
@@ -231,6 +234,13 @@ Position support_point_average(Shape shape, Vec2D direction)
     return sum;
 }
 
+//PARTICLE
+Position system_get_particle_edge(Entity entity, Vec2D normal, Vec1D radius) {
+    return (Position) {
+        .x = positions[entity].x + normal.x*radius,
+        .y = positions[entity].y + normal.y*radius,
+    };
+}
 Position collision_contact_point(Entity entity_1, Entity entity_2, Collision collision)
 {
     Shape shape_1 = get_global_hit_box(entity_1);
@@ -246,8 +256,21 @@ Position collision_contact_point(Entity entity_1, Entity entity_2, Collision col
         .y = -normal.y
     };
 
-    Position point_1 = support_point_average(shape_1, normal);
-    Position point_2 = support_point_average(shape_2, opposite_normal);
+    Position point_1 = {0};
+    Position point_2 = {0};
+    //PARTICLE
+    if(has_components(entity_1, PARTICLE) && has_components(entity_2, PARTICLE)){
+        Vec1D r1 = circle_radius(shape_1, polygon_centroid(shape_1));
+        Vec1D r2 = circle_radius(shape_2, polygon_centroid(shape_2));
+        point_1 = system_get_particle_edge(entity_1, normal, r1);
+        point_2 = system_get_particle_edge(entity_2, opposite_normal, r2);
+    }
+    else {
+        point_1 = support_point_average(shape_1, normal);
+        point_2 = support_point_average(shape_2, opposite_normal);
+
+    }
+
 
     /*
         If one object is static and one is dynamic,
@@ -461,18 +484,28 @@ void resolve_collision(Entity entity_1, Entity entity_2, Collision collision) {
     float inv_inertia_2 = 0.0f;
 
     if (entity_1_movable) {
-        float inertia_1 =
+        float inertia_1 = 0;
+        if(has_components(entity_1, PARTICLE)) {
+            inertia_1 = circle_moment_of_inertia(hit_boxes[entity_1], mass[entity_1]);
+        } else {
+            inertia_1 =
             polygon_moment_of_inertia(hit_boxes[entity_1], mass[entity_1]);
 
+        }
         if (inertia_1 > 0.0f) {
             inv_inertia_1 = 1.0f / inertia_1;
         }
     }
 
     if (entity_2_movable) {
-        float inertia_2 =
+        float inertia_2 = 0;
+        if(has_components(entity_2, PARTICLE)) {
+            inertia_2 = circle_moment_of_inertia(hit_boxes[entity_1], mass[entity_1]);
+        } else {
+            inertia_2 =
             polygon_moment_of_inertia(hit_boxes[entity_2], mass[entity_2]);
 
+        }
         if (inertia_2 > 0.0f) {
             inv_inertia_2 = 1.0f / inertia_2;
         }
@@ -563,7 +596,7 @@ void separate_overlapped_entities() {
             }
         }
     }
-    
+
 }
 
 //Test function
@@ -578,7 +611,7 @@ void separate_static_entities() {
             continue;
         }
 
-        for(int j = i + 1; j < MAX_ENTITIES; j += 1) {
+        for(int j = 0; j < MAX_ENTITIES; j += 1) {
             if(!entity_alive[j]) {
                 continue;
             }
@@ -623,11 +656,10 @@ void apply_collisions() {
 
             Collision collision = system_get_entity_collision(i, j);
             if(collision.overlap == true) {
-                separate_entities(i, j, collision);
                 resolve_collision(i, j, collision);
+                //separate_entities(i, j, collision);
                 system_generate_global_hitbox(i);
                 system_generate_global_hitbox(j);
-                collision_count += 1;
                 //console_write(LOG_ENGINE, "Entity %d and Entity %d Colided\n", j, i);
             }
         }
@@ -1100,9 +1132,6 @@ void system_apply_joints()
     }
 }
 
-void system_gen_world_hitboxes() {
-
-}
 
 void system_update_physics(double dt) {
     system_clear_force_torque_accelerations();
@@ -1117,13 +1146,10 @@ void system_update_physics(double dt) {
     system_apply_axis_locks();
     system_apply_angle_locks();
     system_apply_transform_locks();
-    system_generate_global_hitboxes();
 
-    for(int i = 0; i < 10; i += 1) {
-        separate_static_entities();
-    }
-    apply_collisions();
     system_generate_global_hitboxes();
+    apply_collisions();
+    separate_overlapped_entities();
 }
 
 void print_entity_movement(Entity entity) {

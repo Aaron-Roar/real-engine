@@ -119,6 +119,13 @@ void delete_components(Entity entity, CMask mask) {
     entity_mask[entity] &= ~mask;
 }
 
+bool has_components(Entity entity, Component components) {
+  if( (entity_mask[entity] & components) == components) {
+    return true;
+  }
+  return false;
+}
+
 void print_entity_components(Entity entity) {
 }
 
@@ -529,3 +536,4 @@ void remove_life_time(Entity entity) {
     delete_components(entity, LIFETIME);
     life_times[entity] = (LifeTime){0};
 }
+

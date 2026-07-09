@@ -40,7 +40,10 @@ typedef enum {
     TRANSFORM_LOCK              = 1 << 13,
     JOINT                       = 1 << 14,
     LIFETIME                    = 1 << 15,
+    PARTICLE                    = 1 << 16,
 } Component;
+
+
 static const char* component_names[] = {
     "NONE",
     "POSITION",
@@ -138,6 +141,7 @@ extern LifeTime life_times[MAX_ENTITIES];
 Entity add_entity();
 void delete_entity(Entity entity);
 void add_components(Entity entity, CMask mask);
+bool has_components(Entity entity, Component components);
 void delete_components(Entity entity, CMask mask);
 void print_entity_components(Entity entity);
 void set_acceleration(Entity entity, Acceleration a);
@@ -192,4 +196,5 @@ Entity set_joint(
     float stiffness,
     float damping
 );
+Collision particle_collision(Shape shape_1, Shape shape_2);
 #endif

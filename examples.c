@@ -30,7 +30,7 @@ Entity magnetic_sim_init() {
 
     time_t seed = 1003463;
     srand(seed);
-    for(int i = 0; i < 50; i += 1) {
+    for(int i = 0; i < 400; i += 1) {
         Entity ball = add_entity();
         set_position(ball, (Position){.x = tools_random_range(100, 400), .y = tools_random_range(0, 300)});
         set_orientation(ball, tools_random_range(0, 2*pi));
@@ -45,7 +45,8 @@ Entity magnetic_sim_init() {
         set_friction(ball, 0.4);
         set_dynamic(ball);
         //set_transform_lock(ball, smash, (Vec2D){tools_random_range(100, 400), tools_random_range(100, 400)}, tools_random_range(0, 10), true, true, false);
-        set_joint(ball, smash, JOINT_DISTANCE, (Vec2D){0}, (Vec2D){0}, 10, 0);
+        //set_joint(ball, smash, JOINT_DISTANCE, (Vec2D){0}, (Vec2D){0}, 10, 0);
+        add_components(ball, PARTICLE);
     }
     return smash;
 }
@@ -111,17 +112,17 @@ void water_sim_init() {
 
     time_t seed = 1003463;
     srand(seed);
-    for(int i = 0; i < 400; i += 1) {
+    for(int i = 0; i < 300; i += 1) {
         Entity ball = add_entity();
         set_position(ball, (Position){.x = tools_random_range(100, 400), .y = tools_random_range(0, 300)});
         set_orientation(ball, tools_random_range(0, 2*pi));
-        set_mass(ball, 1);
+        set_mass(ball, 0.001);
         set_velocity(ball, (Velocity){.x = tools_random_range(-10, 10), .y = tools_random_range(0, 100)});
         set_acceleration(ball, (Acceleration){tools_random_range(0,10), 50});
         set_restitution(ball, 0.1);
-        Shape shape3 = create_circle(7, 4);
+        Shape shape3 = create_circle(7, 5);
         set_hitbox(ball, shape3);
-        set_friction(ball, 0.1);
+        set_friction(ball, 0);
         set_dynamic(ball);
         //set_axis_lock(ball, (Axis){1, 0}, positions[ball]);
     }

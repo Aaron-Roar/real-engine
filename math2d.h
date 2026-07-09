@@ -67,4 +67,9 @@ Vec2D project_onto_axis(Vec2D v, Axis axis);
 float axis_magnitude(Axis axis);
 Vec2D rotate_vector(Vec2D vector, Orientation angle);
 float vector_magnitude(Vec2D vector);
+Vec1D circle_radius(Shape circle, Vec2D centroid);
+Position polygon_centroid(Shape shape);
+Vec2D vector_subtract(Vec2D vector_a, Vec2D vector_b);
+Vec1D circle_overlap_depth(Vec2D centroid_1, Vec1D radius_1, Vec2D centroid_2, Vec1D radius_2);
+Vec1D circle_moment_of_inertia(Shape circle, Mass mass);
 #endif

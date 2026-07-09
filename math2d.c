@@ -254,6 +254,15 @@ float polygon_moment_of_inertia(Shape shape, Mass mass)
     return inertia;
 }
 
+Vec1D circle_moment_of_inertia(Shape circle, Mass mass) {
+  Vec1D radius = circle_radius(circle, polygon_centroid(circle));
+  Vec1D area = PI_F*radius*radius;
+  Vec1D density = mass/fabsf(area);
+  Vec1D area_moment = 0.5f * area * radius * radius;
+  return density * area_moment;
+
+}
+
 
 Collision sat_collision_on_axes(Shape shape_1, Shape shape_2, Vec2DList axes, Collision collision) {
     for (int i = 0; i < axes.amount_of_vectors; i += 1) {
@@ -274,6 +283,36 @@ Collision sat_collision_on_axes(Shape shape_1, Shape shape_2, Vec2DList axes, Co
         }
     }
 
+    return collision;
+}
+
+Collision particle_collision(Shape shape_1, Shape shape_2) {
+    Collision collision = {
+        .overlap = true,
+        .normal = {0},
+        .depth = FLT_MAX
+    };
+
+
+    Vec2D centroid_1 = polygon_centroid(shape_1);
+    Vec2D centroid_2 = polygon_centroid(shape_2);
+    Vec1D radius_1 = circle_radius(shape_1, centroid_1);
+    Vec1D radius_2 = circle_radius(shape_2, centroid_2);
+    Vec2D normal = (Vec2D) {
+      .x = centroid_2.x - centroid_1.x,
+      .y = centroid_2.y - centroid_1.y
+    };
+    Vec2D normalized_normal = normalize_vector(normal);
+    Vec1D depth = (radius_1 + radius_2) - sqrt( (normal.x)*(normal.x) + (normal.y)*(normal.y) );
+
+    if(depth > 0) {
+      collision.overlap = true;
+    } else {
+      collision.overlap = false;
+    }
+
+    collision.normal = normalized_normal;
+    collision.depth = depth;
     return collision;
 }
 
@@ -363,4 +402,23 @@ Vec2D rotate_vector(Vec2D vector, Orientation angle) {
         .x = vector.x * c - vector.y * s,
         .y = vector.x * s + vector.y * c
     };
+}
+
+//Circles
+Vec1D circle_radius(Shape circle, Vec2D centroid) {
+  return sqrt(
+      (circle.vertices[0].x - centroid.x)*(circle.vertices[0].x - centroid.x)
+      + (circle.vertices[0].y - centroid.y)*(circle.vertices[0].y - centroid.y)
+      );
+}
+
+Vec2D vector_subtract(Vec2D vector_a, Vec2D vector_b) {
+  return (Position){.x = (vector_a.x - vector_b.x), .y = (vector_a.y - vector_b.y)};
+}
+
+Vec1D circle_overlap_depth(Vec2D centroid_1, Vec1D radius_1, Vec2D centroid_2, Vec1D radius_2) {
+  return (radius_1 + radius_2) - sqrt(
+      (centroid_1.x - centroid_2.x)*(centroid_1.x - centroid_2.x) 
+      +(centroid_1.y - centroid_2.y)*(centroid_1.y - centroid_2.y)
+      );
 }
