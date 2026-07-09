@@ -223,7 +223,7 @@ AnimationAsset load_animation(SDL_Renderer *renderer, AnimationDescriptor anim_d
     return asset;
 }
 
-AnimatedSprite create_animated_sprite(AnimationAsset *asset_ptr, float scale) {
+AnimatedSprite create_animated_sprite(AnimationAsset asset_ptr, float scale) {
     AnimatedSprite sprite = {0};
     sprite.animation = asset_ptr;
     sprite.animation_frame = 0;
@@ -236,11 +236,11 @@ AnimatedSprite create_animated_sprite(AnimationAsset *asset_ptr, float scale) {
 }
 
 void update_sprite_frame(AnimatedSprite *sprite, Tick current_tick, Time current_time) {
-    bool frame_need_update_tick = (sprite->animation->ticks_per_frame <= (current_tick - sprite->last_update_tick)) && (sprite->animation->ticks_per_frame != 0);
-    bool frame_need_update_time = (sprite->animation->time_per_frame <= (current_time - sprite->last_update_time) && (sprite->animation->time_per_frame != 0));
+    bool frame_need_update_tick = (sprite->animation.ticks_per_frame <= (current_tick - sprite->last_update_tick)) && (sprite->animation.ticks_per_frame != 0);
+    bool frame_need_update_time = (sprite->animation.time_per_frame <= (current_time - sprite->last_update_time) && (sprite->animation.time_per_frame != 0));
 
     if(frame_need_update_tick || frame_need_update_time) {
-        sprite->animation_frame = (sprite->animation_frame + 1)%sprite->animation->texture_list.amount;
+        sprite->animation_frame = (sprite->animation_frame + 1)%sprite->animation.texture_list.amount;
         sprite->last_update_tick = current_tick;
         sprite->last_update_time = current_time;
     }
@@ -258,7 +258,7 @@ void draw_texture(SDL_Renderer *renderer, TextureAsset texture_asset, Position p
 
 void draw_sprite(SDL_Renderer *renderer, AnimatedSprite sprite, Position pos) {
     TextureAsset asset = {0};
-    asset = sprite.animation->texture_list.textures[sprite.animation_frame];
+    asset = sprite.animation.texture_list.textures[sprite.animation_frame];
     asset.size.width = asset.size.width * sprite.scale;
     asset.size.height = asset.size.height * sprite.scale;
 

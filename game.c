@@ -48,7 +48,7 @@ int main() {
         //render
         graphics_poll_events(&event);
         draw_background(renderer, background_color);
-        draw_hit_boxes(renderer);
+        //draw_hit_boxes(renderer);
         update_sprite_frames(engine_get_tick(), engine_get_time());
         draw_animated_sprites(renderer);
         water_sim_tick(renderer);

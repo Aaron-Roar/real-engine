@@ -22,7 +22,7 @@ AnimatedSprite sprite = {0};
 Entity magnet_smash = 0;
 void magnetic_sim_init(SDL_Renderer *renderer) {
     animation = load_animation(renderer, elderfly_fly_files);
-    sprite = create_animated_sprite(&animation, 3);
+    sprite = create_animated_sprite(animation, 3);
 
     magnet_smash = add_entity();
     set_position(magnet_smash, (Position){.x = 400, .y = 200});
@@ -88,8 +88,6 @@ Entity water_wall_2 = 0;
 Entity water_wall_3 = 0;
 Entity water_smash = 0;
 void water_sim_init(SDL_Renderer *renderer) {
-    animation = load_animation(renderer, elderfly_fly_files);
-    sprite = create_animated_sprite(&animation, 3);
 
     water_wall_1 = add_entity();
     set_static(water_wall_1);
@@ -140,10 +138,14 @@ void water_sim_init(SDL_Renderer *renderer) {
         set_velocity(ball, (Velocity){.x = tools_random_range(-10, 10), .y = tools_random_range(0, 100)});
         set_acceleration(ball, (Acceleration){tools_random_range(0,10), 50});
         set_restitution(ball, 0.3);
+        float size = tools_random_range_float(10, 20);
         Shape shape3 = create_circle(20, 5);
         set_hitbox(ball, shape3);
         set_friction(ball, 0);
         set_dynamic(ball);
+        animation = load_animation(renderer, elderfly_fly_files);
+        sprite = create_animated_sprite(animation, size/10);
+        sprite.animation.time_per_frame = tools_random_range_float(0.005, 0.5);
         add_animated_sprite(ball, sprite);
         //set_axis_lock(ball, (Axis){1, 0}, positions[ball]);
     }
