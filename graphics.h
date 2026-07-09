@@ -5,6 +5,7 @@
 #include <SDL3/SDL_surface.h>
 #include <SDL3/SDL_main.h>
 #include "entity_components.h"
+#include "engine.h"
 #define WINDOW_WIDTH 640
 #define WINDOW_HEIGHT 480
 #define MAX_TEXTURES 50
@@ -23,7 +24,8 @@ typedef struct {
 typedef struct {
   TextureDescriptor texture_descriptors[MAX_ANIMATIONS_FRAMES];
   uint8_t amount_of_descriptors;
-  int ticks_per_frame;
+  Tick ticks_per_frame;
+  Time time_per_frame;
 } AnimationDescriptor;
 
 typedef SDL_Texture* Texture;
@@ -40,7 +42,8 @@ typedef struct {
 
 typedef struct {
     TextureList texture_list;
-    int ticks_per_frame;
+    Tick ticks_per_frame;
+    Time time_per_frame;
 } AnimationAsset;
 
 typedef enum {DIRECTION_LEFT, DIRECTION_RIGHT} Direction;
@@ -48,7 +51,8 @@ typedef enum {DIRECTION_LEFT, DIRECTION_RIGHT} Direction;
 typedef struct {
     AnimationAsset *animation;
     int animation_frame;
-    uint64_t last_update_tick;
+    Tick last_update_tick;
+    Time last_update_time;
     Direction direction;
     float scale;
 } AnimatedSprite;
@@ -79,8 +83,11 @@ void draw_hit_boxes(SDL_Renderer *renderer);
 TextureAsset load_texture(SDL_Renderer *renderer, TextureDescriptor text_desc);
 AnimationAsset load_animation(SDL_Renderer *renderer, AnimationDescriptor anim_desc);
 AnimatedSprite create_animated_sprite(AnimationAsset *asset_ptr, float scale);
-void update_sprite_frame(AnimatedSprite *sprite, int current_tick);
+void update_sprite_frame(AnimatedSprite *sprite, Tick current_tick, Time current_time);
 void draw_texture(SDL_Renderer *renderer, TextureAsset texture_asset, Position pos);
 void draw_sprite(SDL_Renderer *renderer, AnimatedSprite sprite, Position pos);
+void add_animated_sprite(Entity entity, AnimatedSprite sprite);
+void draw_animated_sprites(SDL_Renderer *renderer);
+void update_sprite_frames(Tick current_tick, Time current_time);
 
 #endif

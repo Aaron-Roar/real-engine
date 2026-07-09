@@ -14,7 +14,7 @@
 #include "test-assets/elder-fly/elderfly_descriptors.h"
 float pi = 3.14;
 
-#define amount_of_entities 10
+#define amount_of_entities 20
 AnimationAsset animation = {0};
 AnimatedSprite sprite = {0};
 
@@ -58,6 +58,7 @@ void magnetic_sim_init(SDL_Renderer *renderer) {
         set_dynamic(ball);
         //set_transform_lock(ball, water_smash, (Vec2D){tools_random_range(100, 400), tools_random_range(100, 400)}, tools_random_range(0, 10), true, true, false);
         set_joint(ball, magnet_smash, JOINT_DISTANCE, (Vec2D){0}, (Vec2D){0}, 10, 0);
+        add_animated_sprite(ball, sprite);
         //add_components(ball, PARTICLE);
     }
 }
@@ -79,13 +80,6 @@ void magnetic_sim_tick(SDL_Renderer *renderer) {
                     }
                 }
             }
-        }
-
-
-
-        update_sprite_frame(&sprite, engine_get_tick());
-        for(int i = 0; i < amount_of_entities; i += 1) {
-            draw_sprite(renderer, sprite, (Position){positions[i+1].x - 75, positions[i+1].y -75});
         }
 }
 
@@ -150,17 +144,14 @@ void water_sim_init(SDL_Renderer *renderer) {
         set_hitbox(ball, shape3);
         set_friction(ball, 0);
         set_dynamic(ball);
+        add_animated_sprite(ball, sprite);
         //set_axis_lock(ball, (Axis){1, 0}, positions[ball]);
     }
 }
 
 void water_sim_tick(SDL_Renderer *renderer) {
-        update_sprite_frame(&sprite, engine_get_tick());
         draw_hit_box(renderer, water_wall_1, GRAPHICS_FILLED);
         draw_hit_box(renderer, water_wall_2,GRAPHICS_FILLED);
         draw_hit_box(renderer, water_wall_3,GRAPHICS_FILLED);
         draw_hit_box(renderer, water_smash,GRAPHICS_FILLED);
-        for(int i = 0; i < amount_of_entities; i += 1) {
-            draw_sprite(renderer, sprite, (Position){positions[i+4].x - 75, positions[i+4].y -75});
-        }
 }

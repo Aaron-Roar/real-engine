@@ -39,7 +39,6 @@ int main() {
             console_write(LOG_CONSOLE, "%s", console_line.string);
         }
 
-
         //physics
         engine_update_time();
         engine_update_tick();
@@ -50,6 +49,8 @@ int main() {
         graphics_poll_events(&event);
         draw_background(renderer, background_color);
         draw_hit_boxes(renderer);
+        update_sprite_frames(engine_get_tick(), engine_get_time());
+        draw_animated_sprites(renderer);
         water_sim_tick(renderer);
         //magnetic_sim_tick(renderer);
         show_graphics(renderer);

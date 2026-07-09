@@ -1,8 +1,10 @@
 #include "graphics.h"
 #include "console.h"
+#include "engine.h"
 #include "systems.h"
 #include <stdio.h>
 
+AnimatedSprite animated_sprites[MAX_ENTITIES] = {0};
 const Color hit_box_color = (Color){255,0,0,255};
 
 Color creat_color_hex(uint32_t hex_color_code) {
@@ -211,6 +213,7 @@ AnimationAsset load_animation(SDL_Renderer *renderer, AnimationDescriptor anim_d
     AnimationAsset asset = {0};
     asset.texture_list.amount = anim_desc.amount_of_descriptors;
     asset.ticks_per_frame = anim_desc.ticks_per_frame;
+    asset.time_per_frame = anim_desc.time_per_frame;
 
     for(int i = 0; i < anim_desc.amount_of_descriptors; i += 1) {
         TextureAsset texture = load_texture(renderer, anim_desc.texture_descriptors[i]);
@@ -227,14 +230,19 @@ AnimatedSprite create_animated_sprite(AnimationAsset *asset_ptr, float scale) {
     sprite.direction = DIRECTION_RIGHT;
     sprite.scale = scale;
     sprite.last_update_tick = 0;
+    sprite.last_update_time = 0;
 
     return sprite;
 }
 
-void update_sprite_frame(AnimatedSprite *sprite, int current_tick) {
-    if(sprite->animation->ticks_per_frame <= (current_tick - sprite->last_update_tick)) {
+void update_sprite_frame(AnimatedSprite *sprite, Tick current_tick, Time current_time) {
+    bool frame_need_update_tick = (sprite->animation->ticks_per_frame <= (current_tick - sprite->last_update_tick)) && (sprite->animation->ticks_per_frame != 0);
+    bool frame_need_update_time = (sprite->animation->time_per_frame <= (current_time - sprite->last_update_time) && (sprite->animation->time_per_frame != 0));
+
+    if(frame_need_update_tick || frame_need_update_time) {
         sprite->animation_frame = (sprite->animation_frame + 1)%sprite->animation->texture_list.amount;
         sprite->last_update_tick = current_tick;
+        sprite->last_update_time = current_time;
     }
 }
 
@@ -242,8 +250,8 @@ void draw_texture(SDL_Renderer *renderer, TextureAsset texture_asset, Position p
     SDL_FRect dst_rect = {0};
     dst_rect.w = texture_asset.size.width;//(float) texture_width;
     dst_rect.h = texture_asset.size.height;//(float) texture_width;
-    dst_rect.x = pos.x;//(float) texture_width;
-    dst_rect.y = pos.y;//(float) texture_height;
+    dst_rect.x = pos.x - dst_rect.w * 0.5f;//(float) texture_width;
+    dst_rect.y = pos.y - dst_rect.h * 0.5f;//(float) texture_height;
 
     SDL_RenderTexture(renderer, texture_asset.texture, NULL, &dst_rect);
 }
@@ -255,4 +263,27 @@ void draw_sprite(SDL_Renderer *renderer, AnimatedSprite sprite, Position pos) {
     asset.size.height = asset.size.height * sprite.scale;
 
     draw_texture(renderer, asset, pos);
+}
+
+void add_animated_sprite(Entity entity, AnimatedSprite sprite) {
+    animated_sprites[entity] = sprite;
+    entity_mask[entity] |= ANIMATED_SPRITE;
+}
+
+void draw_animated_sprites(SDL_Renderer *renderer) {
+    CMask filter = ANIMATED_SPRITE;
+    for(int i = 0; i < MAX_ENTITIES; i += 1) {
+        if(has_components(i, filter)) {
+            draw_sprite(renderer, animated_sprites[i], positions[i]);
+        }
+    }
+}
+
+void update_sprite_frames(Tick current_tick, Time current_time) {
+    CMask filter = ANIMATED_SPRITE;
+    for(int i = 0; i < MAX_ENTITIES; i += 1) {
+        if(has_components(i, filter)) {
+            update_sprite_frame(&animated_sprites[i], current_tick, current_time);
+        }
+    }
 }

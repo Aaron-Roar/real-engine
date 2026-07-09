@@ -41,6 +41,7 @@ typedef enum {
     JOINT                       = 1 << 14,
     LIFETIME                    = 1 << 15,
     PARTICLE                    = 1 << 16,
+    ANIMATED_SPRITE             = 1 << 17,
 } Component;
 
 

@@ -51,7 +51,8 @@ AnimationDescriptor elderfly_fly_files = (AnimationDescriptor) {
     },
   },
   .amount_of_descriptors = 12,
-  .ticks_per_frame = 200,
+  .ticks_per_frame = 0,
+  .time_per_frame = 0.05,
 };
 
 
