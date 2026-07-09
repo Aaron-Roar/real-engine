@@ -37,13 +37,6 @@ engine/
 ---
 ## Building
 
-### NixOS / Nix
-
-If you have Nix installed, enter the development environment:
-
-```bash
-nix develop
-```
 
 Build the examples:
 
@@ -57,6 +50,13 @@ Run an example:
 make run-pit
 ```
 
+### NixOS / Nix
+
+If you have Nix installed, enter the development environment:
+
+```bash
+nix develop
+```
 ---
 
 ## Design Goals
