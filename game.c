@@ -11,8 +11,7 @@
 #include "test-assets/elder-fly/elderfly_descriptors.h"
 #include "examples.h"
 
-const Color background_color = (Color){0,0,255,255};
-
+const Color background_color = (Color){255,255,255,255};
 
 int main() {
     console_init();
@@ -31,6 +30,7 @@ int main() {
     water_sim_init(renderer);
     //magnetic_sim_init(renderer);
     //Game Loop
+    Time dt = engine_get_dt();
     while (console_is_active()) {
         clean_entities_past_lifetime();
         //Console
@@ -44,9 +44,19 @@ int main() {
         engine_update_tick();
         apply_collisions();
         system_update_physics(engine_get_dt());
+        SDL_Event event = engine_poll_event();
+
+        if (event.type == SDL_EVENT_KEY_UP && event.key.scancode == SDL_SCANCODE_SPACE) {
+            // move up
+            //engine_pause();
+            engine_set_dt(-dt);
+            for(int i = 0; i < MAX_ENTITIES; i += 1) {
+                accelerations[i].x = -accelerations[i].x;
+                accelerations[i].y = -accelerations[i].y;
+            }
+        }
 
         //render
-        graphics_poll_events(&event);
         draw_background(renderer, background_color);
         //draw_hit_boxes(renderer);
         update_sprite_frames(engine_get_tick(), engine_get_time());
