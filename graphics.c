@@ -246,23 +246,36 @@ void update_sprite_frame(AnimatedSprite *sprite, Tick current_tick, Time current
     }
 }
 
-void draw_texture(SDL_Renderer *renderer, TextureAsset texture_asset, Position pos) {
+void draw_texture(SDL_Renderer *renderer, TextureAsset texture_asset, Position pos, Orientation ort) {
     SDL_FRect dst_rect = {0};
     dst_rect.w = texture_asset.size.width;//(float) texture_width;
     dst_rect.h = texture_asset.size.height;//(float) texture_width;
     dst_rect.x = pos.x - dst_rect.w * 0.5f;//(float) texture_width;
     dst_rect.y = pos.y - dst_rect.h * 0.5f;//(float) texture_height;
 
-    SDL_RenderTexture(renderer, texture_asset.texture, NULL, &dst_rect);
+    SDL_FPoint center = {
+        .x = dst_rect.w * 0.5f,
+        .y = dst_rect.h * 0.5f
+    };
+    //SDL_RenderTexture(renderer, texture_asset.texture, NULL, &dst_rect);
+    SDL_RenderTextureRotated(
+        renderer,
+    texture_asset.texture,
+    NULL,
+    &dst_rect,
+    ort,
+    &center,
+    SDL_FLIP_NONE
+    );
 }
 
-void draw_sprite(SDL_Renderer *renderer, AnimatedSprite sprite, Position pos) {
+void draw_sprite(SDL_Renderer *renderer, AnimatedSprite sprite, Position pos, Orientation ort) {
     TextureAsset asset = {0};
     asset = sprite.animation.texture_list.textures[sprite.animation_frame];
     asset.size.width = asset.size.width * sprite.scale;
     asset.size.height = asset.size.height * sprite.scale;
 
-    draw_texture(renderer, asset, pos);
+    draw_texture(renderer, asset, pos, ort);
 }
 
 void add_animated_sprite(Entity entity, AnimatedSprite sprite) {
@@ -274,7 +287,7 @@ void draw_animated_sprites(SDL_Renderer *renderer) {
     CMask filter = ANIMATED_SPRITE;
     for(int i = 0; i < MAX_ENTITIES; i += 1) {
         if(has_components(i, filter)) {
-            draw_sprite(renderer, animated_sprites[i], positions[i]);
+            draw_sprite(renderer, animated_sprites[i], positions[i], orientations[i]);
         }
     }
 }
