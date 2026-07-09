@@ -888,31 +888,34 @@ static Velocity point_velocity(Entity entity, Vec2D world_offset)
 }
 static void add_joint_force_for_one_tick(Entity target, Force force)
 {
-    Entity force_entity = set_force(target, force);
+    //Entity force_entity = set_force(target, force);
+    force_accelerations[target].x += force.x/mass[target];
+    force_accelerations[target].y += force.y/mass[target];
 
-    if(force_entity == 0) {
-        return;
-    }
+    //if(force_entity == 0) {
+    //    return;
+    //}
 
-    set_life_time(
-        force_entity,
-        0.0,
-        engine_get_tick() + 1
-    );
+    //set_life_time(
+    //    force_entity,
+    //    0.0,
+    //    engine_get_tick() + 1
+    //);
 }
 static void add_joint_torque_for_one_tick(Entity target, Torque torque)
 {
-    Entity torque_entity = set_torque(target, torque);
+    torque_angular_accelerations[target] += torque/polygon_moment_of_inertia(hit_boxes[target], mass[target]);
+    //Entity torque_entity = set_torque(target, torque);
 
-    if(torque_entity == 0) {
-        return;
-    }
+    //if(torque_entity == 0) {
+    //    return;
+    //}
 
-    set_life_time(
-        torque_entity,
-        0.0,
-        engine_get_tick() + 1
-    );
+    //set_life_time(
+    //    torque_entity,
+    //    0.0,
+    //    engine_get_tick() + 1
+    //);
 }
 
 static void add_joint_force_at_point_for_one_tick(

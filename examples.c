@@ -11,26 +11,38 @@
 
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
+#include "test-assets/elder-fly/elderfly_descriptors.h"
 float pi = 3.14;
 
-Entity magnetic_sim_init() {
-    Entity smash = add_entity();
-    set_position(smash, (Position){.x = 200, .y = 100});
-    set_orientation(smash, 1);
-    set_mass(smash, 5000);
-    set_velocity(smash, (Velocity){0, 0});
-    //set_angular_velocity(smash, 3);
-    set_acceleration(smash, (Acceleration){0, 0});
-    set_restitution(smash, 0.7);
+#define amount_of_entities 10
+AnimationAsset animation = {0};
+AnimatedSprite sprite = {0};
+
+
+Entity magnet_smash = 0;
+void magnetic_sim_init(SDL_Renderer *renderer) {
+    animation = load_animation(renderer, elderfly_fly_files);
+    sprite = create_animated_sprite(&animation, 3);
+
+    magnet_smash = add_entity();
+    set_position(magnet_smash, (Position){.x = 400, .y = 200});
+    set_orientation(magnet_smash, 1);
+    set_mass(magnet_smash, 5000);
+    set_velocity(magnet_smash, (Velocity){0, 0});
+    //set_angular_velocity(water_smash, 3);
+    set_acceleration(magnet_smash, (Acceleration){0, 0});
+    set_restitution(magnet_smash, 0.7);
     Shape shape4 = create_circle(50, 4);
-    set_hitbox(smash, shape4);
-    set_friction(smash, 0.4);
-    set_dynamic(smash);
-    set_axis_lock(smash, (Axis){1,0}, positions[smash]);
+    set_hitbox(magnet_smash, shape4);
+    set_friction(magnet_smash, 0.4);
+    set_dynamic(magnet_smash);
+    set_axis_lock(magnet_smash, (Axis){1,0}, positions[magnet_smash]);
+    //set_angle_lock(magnet_smash, 0, 0);
 
     time_t seed = 1003463;
     srand(seed);
-    for(int i = 0; i < 400; i += 1) {
+    for(int i = 0; i < amount_of_entities; i += 1) {
+        //sprites[i] = create_animated_sprite(&animation, 3);
         Entity ball = add_entity();
         set_position(ball, (Position){.x = tools_random_range(100, 400), .y = tools_random_range(0, 300)});
         set_orientation(ball, tools_random_range(0, 2*pi));
@@ -40,87 +52,101 @@ Entity magnetic_sim_init() {
         set_acceleration(ball, (Acceleration){tools_random_range(0,10), 50});
         set_restitution(ball, 0.1);
         //set_torque(ball, 2000);
-        Shape shape3 = create_circle(8, 10);
+        Shape shape3 = create_circle(20, 10);
         set_hitbox(ball, shape3);
         set_friction(ball, 0.4);
         set_dynamic(ball);
-        //set_transform_lock(ball, smash, (Vec2D){tools_random_range(100, 400), tools_random_range(100, 400)}, tools_random_range(0, 10), true, true, false);
-        //set_joint(ball, smash, JOINT_DISTANCE, (Vec2D){0}, (Vec2D){0}, 10, 0);
-        add_components(ball, PARTICLE);
+        //set_transform_lock(ball, water_smash, (Vec2D){tools_random_range(100, 400), tools_random_range(100, 400)}, tools_random_range(0, 10), true, true, false);
+        set_joint(ball, magnet_smash, JOINT_DISTANCE, (Vec2D){0}, (Vec2D){0}, 10, 0);
+        //add_components(ball, PARTICLE);
     }
-    return smash;
 }
 
-void magnetic_sim_tick(Entity smash) {
-        if(engine_get_tick() % 1000 == 0) {
+void magnetic_sim_tick(SDL_Renderer *renderer) {
+        if(engine_get_tick() % 10000 == 0) {
             for(int i = 0; i < MAX_ENTITIES; i += 1) {
                 if( (entity_mask[i] & JOINT) == JOINT) {
                     if(joints[i].type == JOINT_PIN) {
                         joints[i].type = JOINT_DISTANCE;
-                        velocities[smash].x = -50;
-                        set_velocity(smash, (Velocity){50,0});
-                        set_angular_velocity(smash, 3);
+                        velocities[magnet_smash].x = -50;
+                        set_velocity(magnet_smash, (Velocity){50,0});
+                        set_angular_velocity(magnet_smash, 3);
                     } else {
                         joints[i].type = JOINT_PIN;
-                        velocities[smash].x = 50;
-                        set_velocity(smash, (Velocity){-50, 0});
-                        set_angular_velocity(smash, -3);
+                        velocities[magnet_smash].x = 50;
+                        set_velocity(magnet_smash, (Velocity){-50, 0});
+                        set_angular_velocity(magnet_smash, -3);
                     }
                 }
             }
         }
+
+
+
+        update_sprite_frame(&sprite, engine_get_tick());
+        for(int i = 0; i < amount_of_entities; i += 1) {
+            draw_sprite(renderer, sprite, (Position){positions[i+1].x - 75, positions[i+1].y -75});
+        }
 }
-void water_sim_init() {
-    Entity wall_1 = add_entity();
-    set_static(wall_1);
-    set_position(wall_1, (Position){80, 390});
-    set_orientation(wall_1, 0*(pi/180));
-    set_restitution(wall_1, 1);
-    set_friction(wall_1, 0.5);
+
+Entity water_wall_1 = 0;
+Entity water_wall_2 = 0;
+Entity water_wall_3 = 0;
+Entity water_smash = 0;
+void water_sim_init(SDL_Renderer *renderer) {
+    animation = load_animation(renderer, elderfly_fly_files);
+    sprite = create_animated_sprite(&animation, 3);
+
+    water_wall_1 = add_entity();
+    set_static(water_wall_1);
+    set_position(water_wall_1, (Position){80, 390});
+    set_orientation(water_wall_1, 0*(pi/180));
+    set_restitution(water_wall_1, 0.5);
+    set_friction(water_wall_1, 0.5);
     Shape shape_1 = create_square(40, 150);
-    set_hitbox(wall_1, shape_1);
+    set_hitbox(water_wall_1, shape_1);
 
-    Entity wall_2 = add_entity();
-    set_static(wall_2);
-    set_position(wall_2, (Position){520, 390});
-    set_orientation(wall_2, 0*(pi/180));
-    set_restitution(wall_2, 1);
-    set_friction(wall_2, 0);
-    set_hitbox(wall_2, shape_1);
+    water_wall_2 = add_entity();
+    set_static(water_wall_2);
+    set_position(water_wall_2, (Position){520, 390});
+    set_orientation(water_wall_2, 0*(pi/180));
+    set_restitution(water_wall_2, 0.5);
+    set_friction(water_wall_2, 0);
+    set_hitbox(water_wall_2, shape_1);
 
-    Entity wall_3 = add_entity();
-    set_static(wall_3);
-    set_position(wall_3, (Position){300, 450});
-    set_orientation(wall_3, 0*(pi/180));
-    set_restitution(wall_3, 1);
-    set_friction(wall_3, 0.1);
+    water_wall_3 = add_entity();
+    set_static(water_wall_3);
+    set_position(water_wall_3, (Position){300, 450});
+    set_orientation(water_wall_3, 0*(pi/180));
+    set_restitution(water_wall_3, 0.5);
+    set_friction(water_wall_3, 0.1);
     Shape shape_2 = create_square(400, 40);
-    set_hitbox(wall_3, shape_2);
+    set_hitbox(water_wall_3, shape_2);
 
-    Entity smash = add_entity();
-    set_position(smash, (Position){.x = 200, .y = -300});
-    set_orientation(smash, 0);
-    set_mass(smash, 500);
-    set_velocity(smash, (Velocity){0, 0});
-    set_acceleration(smash, (Acceleration){0, 30});
-    set_restitution(smash, 1);
+    water_smash = add_entity();
+    set_position(water_smash, (Position){.x = 200, .y = -300});
+    set_orientation(water_smash, 3);
+    set_mass(water_smash, 500);
+    set_velocity(water_smash, (Velocity){0, 0});
+    set_acceleration(water_smash, (Acceleration){0, 30});
+    set_restitution(water_smash, 0.7);
     Shape shape4 = create_circle(50, 10);
-    set_hitbox(smash, shape4);
-    set_friction(smash, 0.4);
-    set_dynamic(smash);
-    //set_axis_lock(smash, (Axis){0,1}, positions[smash]);
+    set_hitbox(water_smash, shape4);
+    set_friction(water_smash, 0.4);
+    set_dynamic(water_smash);
+    //set_axis_lock(water_smash, (Axis){0,1}, positions[smash]);
 
     time_t seed = 1003463;
     srand(seed);
-    for(int i = 0; i < 300; i += 1) {
+    for(int i = 0; i < amount_of_entities; i += 1) {
         Entity ball = add_entity();
         set_position(ball, (Position){.x = tools_random_range(100, 400), .y = tools_random_range(0, 300)});
         set_orientation(ball, tools_random_range(0, 2*pi));
         set_mass(ball, 0.001);
         set_velocity(ball, (Velocity){.x = tools_random_range(-10, 10), .y = tools_random_range(0, 100)});
         set_acceleration(ball, (Acceleration){tools_random_range(0,10), 50});
-        set_restitution(ball, 0.1);
-        Shape shape3 = create_circle(7, 5);
+        set_restitution(ball, 0.3);
+        Shape shape3 = create_circle(20, 5);
         set_hitbox(ball, shape3);
         set_friction(ball, 0);
         set_dynamic(ball);
@@ -128,3 +154,13 @@ void water_sim_init() {
     }
 }
 
+void water_sim_tick(SDL_Renderer *renderer) {
+        update_sprite_frame(&sprite, engine_get_tick());
+        draw_hit_box(renderer, water_wall_1, GRAPHICS_FILLED);
+        draw_hit_box(renderer, water_wall_2,GRAPHICS_FILLED);
+        draw_hit_box(renderer, water_wall_3,GRAPHICS_FILLED);
+        draw_hit_box(renderer, water_smash,GRAPHICS_FILLED);
+        for(int i = 0; i < amount_of_entities; i += 1) {
+            draw_sprite(renderer, sprite, (Position){positions[i+4].x - 75, positions[i+4].y -75});
+        }
+}

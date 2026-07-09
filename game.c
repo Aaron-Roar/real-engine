@@ -8,12 +8,10 @@
 #include <stdio.h>
 #include <time.h>
 #include <stdlib.h>
-
+#include "test-assets/elder-fly/elderfly_descriptors.h"
 #include "examples.h"
 
-
 const Color background_color = (Color){0,0,255,255};
-
 
 
 int main() {
@@ -28,7 +26,10 @@ int main() {
         return 1;
     }
 
-    water_sim_init();
+
+
+    water_sim_init(renderer);
+    //magnetic_sim_init(renderer);
     //Game Loop
     while (console_is_active()) {
         clean_entities_past_lifetime();
@@ -49,6 +50,8 @@ int main() {
         graphics_poll_events(&event);
         draw_background(renderer, background_color);
         draw_hit_boxes(renderer);
+        water_sim_tick(renderer);
+        //magnetic_sim_tick(renderer);
         show_graphics(renderer);
 
     }

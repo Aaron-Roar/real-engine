@@ -2,10 +2,56 @@
 #define GRAPHICS_H
 
 #include <SDL3/SDL.h>
+#include <SDL3/SDL_surface.h>
+#include <SDL3/SDL_main.h>
 #include "entity_components.h"
 #define WINDOW_WIDTH 640
 #define WINDOW_HEIGHT 480
+#define MAX_TEXTURES 50
+#define MAX_ANIMATIONS_FRAMES 20
 
+typedef struct {
+  float width;
+  float height;
+} Size;
+
+typedef struct {
+  const char *file;
+  Size size;
+} TextureDescriptor;
+
+typedef struct {
+  TextureDescriptor texture_descriptors[MAX_ANIMATIONS_FRAMES];
+  uint8_t amount_of_descriptors;
+  int ticks_per_frame;
+} AnimationDescriptor;
+
+typedef SDL_Texture* Texture;
+
+typedef struct {
+    Texture texture;
+    Size size;
+} TextureAsset;
+
+typedef struct {
+    TextureAsset textures[MAX_TEXTURES];
+    int amount;
+} TextureList;
+
+typedef struct {
+    TextureList texture_list;
+    int ticks_per_frame;
+} AnimationAsset;
+
+typedef enum {DIRECTION_LEFT, DIRECTION_RIGHT} Direction;
+
+typedef struct {
+    AnimationAsset *animation;
+    int animation_frame;
+    uint64_t last_update_tick;
+    Direction direction;
+    float scale;
+} AnimatedSprite;
 
 typedef enum Fill {
     GRAPHICS_OUTLINE,
@@ -30,5 +76,11 @@ bool draw_shape_outline(SDL_Renderer *renderer, Shape shape, Color color);
 bool draw_shape_filled(SDL_Renderer *renderer, Shape shape, Color color);
 void draw_hit_box(SDL_Renderer *renderer, Entity entity, Fill fill_type);
 void draw_hit_boxes(SDL_Renderer *renderer);
+TextureAsset load_texture(SDL_Renderer *renderer, TextureDescriptor text_desc);
+AnimationAsset load_animation(SDL_Renderer *renderer, AnimationDescriptor anim_desc);
+AnimatedSprite create_animated_sprite(AnimationAsset *asset_ptr, float scale);
+void update_sprite_frame(AnimatedSprite *sprite, int current_tick);
+void draw_texture(SDL_Renderer *renderer, TextureAsset texture_asset, Position pos);
+void draw_sprite(SDL_Renderer *renderer, AnimatedSprite sprite, Position pos);
 
 #endif

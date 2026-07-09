@@ -187,3 +187,72 @@ void draw_hit_boxes(SDL_Renderer *renderer) {
     }
   }
 }
+
+TextureAsset load_texture(SDL_Renderer *renderer, TextureDescriptor text_desc) {
+        SDL_Surface *surface = NULL;
+        char *png_path = NULL;
+        TextureAsset asset = {0};
+        asset.size = (Size){
+            .width = text_desc.size.width,
+            .height = text_desc.size.height,
+        };
+
+        SDL_asprintf(&png_path, "%s", text_desc.file);  /* allocate a string of the full file path */
+        surface = SDL_LoadPNG(png_path);
+        SDL_free(png_path);  /* done with this, the file is loaded. */
+
+        asset.texture = SDL_CreateTextureFromSurface(renderer, surface);
+        SDL_DestroySurface(surface);  /* done with this, the texture has a copy of the pixels now. */
+
+        return asset;
+}
+
+AnimationAsset load_animation(SDL_Renderer *renderer, AnimationDescriptor anim_desc) {
+    AnimationAsset asset = {0};
+    asset.texture_list.amount = anim_desc.amount_of_descriptors;
+    asset.ticks_per_frame = anim_desc.ticks_per_frame;
+
+    for(int i = 0; i < anim_desc.amount_of_descriptors; i += 1) {
+        TextureAsset texture = load_texture(renderer, anim_desc.texture_descriptors[i]);
+        asset.texture_list.textures[i] = texture;
+    }
+
+    return asset;
+}
+
+AnimatedSprite create_animated_sprite(AnimationAsset *asset_ptr, float scale) {
+    AnimatedSprite sprite = {0};
+    sprite.animation = asset_ptr;
+    sprite.animation_frame = 0;
+    sprite.direction = DIRECTION_RIGHT;
+    sprite.scale = scale;
+    sprite.last_update_tick = 0;
+
+    return sprite;
+}
+
+void update_sprite_frame(AnimatedSprite *sprite, int current_tick) {
+    if(sprite->animation->ticks_per_frame <= (current_tick - sprite->last_update_tick)) {
+        sprite->animation_frame = (sprite->animation_frame + 1)%sprite->animation->texture_list.amount;
+        sprite->last_update_tick = current_tick;
+    }
+}
+
+void draw_texture(SDL_Renderer *renderer, TextureAsset texture_asset, Position pos) {
+    SDL_FRect dst_rect = {0};
+    dst_rect.w = texture_asset.size.width;//(float) texture_width;
+    dst_rect.h = texture_asset.size.height;//(float) texture_width;
+    dst_rect.x = pos.x;//(float) texture_width;
+    dst_rect.y = pos.y;//(float) texture_height;
+
+    SDL_RenderTexture(renderer, texture_asset.texture, NULL, &dst_rect);
+}
+
+void draw_sprite(SDL_Renderer *renderer, AnimatedSprite sprite, Position pos) {
+    TextureAsset asset = {0};
+    asset = sprite.animation->texture_list.textures[sprite.animation_frame];
+    asset.size.width = asset.size.width * sprite.scale;
+    asset.size.height = asset.size.height * sprite.scale;
+
+    draw_texture(renderer, asset, pos);
+}
