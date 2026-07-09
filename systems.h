@@ -1,6 +1,7 @@
 #ifndef SYSTEMS_H
 #define SYSTEMS_H
 #include "entity_components.h"
+#include "physics.h"
 
 
 void system_update_positions(double dt);

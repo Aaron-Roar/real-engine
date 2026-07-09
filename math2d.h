@@ -7,6 +7,7 @@
 #define MAX_VERTICIES 50
 #define MIN_VERTICIES 4
 
+#define PI_F 3.14159265358979323846f
 typedef float Vec1D;
 typedef struct {
     float x;
@@ -30,23 +31,6 @@ typedef struct Projection {
     float min;
     float max;
 } Projection;
-typedef struct Collision {
-    bool overlap;
-    Axis normal;
-    Vec1D depth;
-} Collision;
-typedef Vec1D Friction;
-typedef Vec1D Restitution;
-
-typedef Vec1D Orientation;
-typedef Vec2D Position;
-typedef Vec2D Velocity;
-typedef Orientation AngularVelocity;
-typedef Orientation AngularAcceleration;
-typedef Vec2D Acceleration;
-typedef Vec2D Force;
-typedef float Mass;
-typedef Orientation Torque;
 
 
 Vec2DList create_normals(Shape shape);
@@ -56,20 +40,15 @@ float dot_product(Vec2D vector_1, Vec2D vector_2);
 Shape create_square(float width, float height);
 Shape create_circle(float radius, uint8_t verticies);
 Projection project_shape_on_axis(Shape shape, Axis axis);
-Shape shape_world_translate(Shape shape, Position position, Orientation angle);
 bool shape_overlap(Shape shape_1, Shape shape_2);
-float polygon_moment_of_inertia(Shape shape, Mass mass);
-Collision sat_collision(Shape shape_1, Shape shape_2);
 float cross_2d(Vec2D a, Vec2D b);
 Vec2D angular_velocity_cross_vec(float omega, Vec2D r);
-Position approximate_contact_point(Position p1, Position p2);
 Vec2D project_onto_axis(Vec2D v, Axis axis);
 float axis_magnitude(Axis axis);
-Vec2D rotate_vector(Vec2D vector, Orientation angle);
 float vector_magnitude(Vec2D vector);
+Vec2D rotate_vector(Vec2D vector, float angle);
 Vec1D circle_radius(Shape circle, Vec2D centroid);
-Position polygon_centroid(Shape shape);
 Vec2D vector_subtract(Vec2D vector_a, Vec2D vector_b);
 Vec1D circle_overlap_depth(Vec2D centroid_1, Vec1D radius_1, Vec2D centroid_2, Vec1D radius_2);
-Vec1D circle_moment_of_inertia(Shape circle, Mass mass);
+float projection_overlap(Projection projection_1, Projection projection_2);
 #endif

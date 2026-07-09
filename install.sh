@@ -14,6 +14,7 @@ clang \
   engine.c \
   math2d.c \
   examples.c \
+  physics.c\
   test-assets/elder-fly/elderfly_descriptors.c \
   -I. \
   -Iinclude \

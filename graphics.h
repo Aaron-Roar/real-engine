@@ -6,6 +6,8 @@
 #include <SDL3/SDL_main.h>
 #include "entity_components.h"
 #include "engine.h"
+#include "physics.h"
+#include "math2d.h"
 #define WINDOW_WIDTH 640
 #define WINDOW_HEIGHT 480
 #define MAX_TEXTURES 50

@@ -1,0 +1,522 @@
+#include "physics.h"
+#include "float.h"
+#include <math.h>
+#include "console.h"
+
+Position positions[MAX_ENTITIES] = {0};
+Orientation orientations[MAX_ENTITIES] = {0};
+Velocity velocities[MAX_ENTITIES] = {0};
+Acceleration accelerations[MAX_ENTITIES] = {0};
+Acceleration force_accelerations[MAX_ENTITIES] = {0};
+float mass[MAX_ENTITIES] = {0};
+Force forces[MAX_ENTITIES] = {0};
+Shape hit_boxes[MAX_ENTITIES] = {0};
+Shape world_hit_boxes[MAX_ENTITIES] = {0};
+AngularVelocity angular_velocities[MAX_ENTITIES] = {0};
+AngularAcceleration angular_accelerations[MAX_ENTITIES] = {0};
+AngularVelocity torque_angular_accelerations[MAX_ENTITIES] = {0};
+Torque torques[MAX_ENTITIES] = {0};
+Friction frictions[MAX_ENTITIES] = {0};
+Restitution restitutions[MAX_ENTITIES] = {0};
+AngleLock angle_locks[MAX_ENTITIES] = {0};
+AxisLock axis_locks[MAX_ENTITIES] = {0};
+TransformLock transform_locks[MAX_ENTITIES] = {0};
+Joint joints[MAX_ENTITIES] = {0};
+Shape shape_world_translate(Shape shape, Position position, Orientation angle) {
+    Shape world_shape = {0};
+    world_shape.amount_of_vertices = shape.amount_of_vertices;
+
+    Position center = polygon_centroid(shape);
+
+    float cos_a = cosf(angle);
+    float sin_a = sinf(angle);
+
+    for (int i = 0; i < shape.amount_of_vertices; i++) {
+        float x = shape.vertices[i].x - center.x;
+        float y = shape.vertices[i].y - center.y;
+
+        float rotated_x = x*cos_a - y*sin_a;
+        float rotated_y = x*sin_a + y*cos_a;
+
+        world_shape.vertices[i].x = position.x + rotated_x;
+        world_shape.vertices[i].y = position.y + rotated_y;
+    }
+
+    return world_shape;
+}
+float polygon_moment_of_inertia(Shape shape, Mass mass)
+{
+    Position c = polygon_centroid(shape);
+
+    float area_sum = 0.0f;
+    float inertia_sum = 0.0f;
+
+    for (int i = 0; i < shape.amount_of_vertices; i++) {
+        int j = (i + 1) % shape.amount_of_vertices;
+
+        float xi = shape.vertices[i].x - c.x;
+        float yi = shape.vertices[i].y - c.y;
+
+        float xj = shape.vertices[j].x - c.x;
+        float yj = shape.vertices[j].y - c.y;
+
+        float cross = xi * yj - xj * yi;
+
+        float q =
+            xi*xi + xi*xj + xj*xj +
+            yi*yi + yi*yj + yj*yj;
+
+        area_sum += cross;
+        inertia_sum += cross * q;
+    }
+
+    float area = 0.5f * area_sum;
+    float area_moment = inertia_sum / 12.0f;
+
+    if (fabsf(area) < 1e-8f) {
+        return 0.0f; // invalid/degenerate polygon
+    }
+
+    float density = mass / fabsf(area);
+    float inertia = density * fabsf(area_moment);
+
+    return inertia;
+}
+Collision sat_collision_on_axes(Shape shape_1, Shape shape_2, Vec2DList axes, Collision collision) {
+    for (int i = 0; i < axes.amount_of_vectors; i += 1) {
+        Axis axis = axes.vectors[i];
+
+        Projection p1 = project_shape_on_axis(shape_1, axis);
+        Projection p2 = project_shape_on_axis(shape_2, axis);
+
+        float overlap = projection_overlap(p1, p2);
+
+        if (overlap <= 0.0f) {
+            return (Collision){ .overlap = false };
+        }
+
+        if (overlap < collision.depth) {
+            collision.depth = overlap;
+            collision.normal = axis;
+        }
+    }
+
+    return collision;
+}
+
+Collision particle_collision(Shape shape_1, Shape shape_2) {
+    Collision collision = {
+        .overlap = true,
+        .normal = {0},
+        .depth = FLT_MAX
+    };
+
+
+    Vec2D centroid_1 = polygon_centroid(shape_1);
+    Vec2D centroid_2 = polygon_centroid(shape_2);
+    Vec1D radius_1 = circle_radius(shape_1, centroid_1);
+    Vec1D radius_2 = circle_radius(shape_2, centroid_2);
+    Vec2D normal = (Vec2D) {
+      .x = centroid_2.x - centroid_1.x,
+      .y = centroid_2.y - centroid_1.y
+    };
+    Vec2D normalized_normal = normalize_vector(normal);
+    Vec1D depth = (radius_1 + radius_2) - sqrt( (normal.x)*(normal.x) + (normal.y)*(normal.y) );
+
+    if(depth > 0) {
+      collision.overlap = true;
+    } else {
+      collision.overlap = false;
+    }
+
+    collision.normal = normalized_normal;
+    collision.depth = depth;
+    return collision;
+}
+
+Collision sat_collision(Shape shape_1, Shape shape_2)
+{
+    Collision collision = {
+        .overlap = true,
+        .normal = {0},
+        .depth = FLT_MAX
+    };
+
+    Vec2DList shape1_axes = normalize_vectors(create_normals(shape_1));
+    Vec2DList shape2_axes = normalize_vectors(create_normals(shape_2));
+
+    collision = sat_collision_on_axes(shape_1, shape_2, shape1_axes, collision);
+
+    if (!collision.overlap) {
+        return collision;
+    }
+
+    collision = sat_collision_on_axes(shape_1, shape_2, shape2_axes, collision);
+
+    if (!collision.overlap) {
+        return collision;
+    }
+
+    Position c1 = polygon_centroid(shape_1);
+    Position c2 = polygon_centroid(shape_2);
+
+    Vec2D center_delta = {
+        .x = c2.x - c1.x,
+        .y = c2.y - c1.y
+    };
+
+    if (dot_product(center_delta, collision.normal) < 0.0f) {
+        collision.normal.x *= -1.0f;
+        collision.normal.y *= -1.0f;
+    }
+
+    return collision;
+}
+Position approximate_contact_point(Position p1, Position p2)
+{
+    return (Position){
+        .x = (p1.x + p2.x) * 0.5f,
+        .y = (p1.y + p2.y) * 0.5f
+    };
+}
+Position polygon_centroid(Shape shape)
+{
+    double area_sum = 0.0;
+    double cx_sum = 0.0;
+    double cy_sum = 0.0;
+
+    for (int i = 0; i < shape.amount_of_vertices; i++) {
+        int j = (i + 1) % shape.amount_of_vertices;
+
+        double xi = shape.vertices[i].x;
+        double yi = shape.vertices[i].y;
+        double xj = shape.vertices[j].x;
+        double yj = shape.vertices[j].y;
+
+        double cross = xi * yj - xj * yi;
+
+        area_sum += cross;
+        cx_sum += (xi + xj) * cross;
+        cy_sum += (yi + yj) * cross;
+    }
+
+    double area = area_sum * 0.5;
+
+    if (fabs(area) < 1e-8) {
+        // Degenerate polygon fallback: average vertices
+        Position avg = {0};
+
+        for (int i = 0; i < shape.amount_of_vertices; i++) {
+            avg.x += shape.vertices[i].x;
+            avg.y += shape.vertices[i].y;
+        }
+
+        avg.x /= shape.amount_of_vertices;
+        avg.y /= shape.amount_of_vertices;
+
+        return avg;
+    }
+
+    Position centroid = {
+        .x = cx_sum / (6.0 * area),
+        .y = cy_sum / (6.0 * area),
+    };
+
+    return centroid;
+}
+Vec1D circle_moment_of_inertia(Shape circle, Mass mass) {
+  Vec1D radius = circle_radius(circle, polygon_centroid(circle));
+  Vec1D area = PI_F*radius*radius;
+  Vec1D density = mass/fabsf(area);
+  Vec1D area_moment = 0.5f * area * radius * radius;
+  return density * area_moment;
+
+}
+
+
+//Entity
+void set_acceleration(Entity entity, Acceleration a) {
+    if(!entity_alive[entity]) {
+        //Error
+        return;
+    }
+    accelerations[entity] = a;
+    console_debug_write(LOG_ENGINE, "Set Entity: %d Acceleration: {x: %f, y: %f}\n", entity, a.x, a.y);
+}
+void set_velocity(Entity entity, Velocity v) {
+    if(!entity_alive[entity]) {
+        //Error
+        return;
+    }
+    velocities[entity] = v;
+    console_debug_write(LOG_ENGINE, "Set Entity: %d Velocity: {x: %f, y: %f}\n", entity, v.x, v.y);
+}
+void set_position(Entity entity, Position p) {
+    if(!entity_alive[entity]) {
+        //Error
+        return;
+    }
+    positions[entity] = p;
+    console_debug_write(LOG_ENGINE, "Set Entity: %d Position: {x: %f, y: %f}\n", entity, p.x, p.y);
+}
+
+void set_mass(Entity entity, Mass m) {
+    if(!entity_alive[entity]) {
+        //Error
+        return;
+    }
+    entity_mask[entity] |= MASS;
+    mass[entity] = m;
+    console_debug_write(LOG_ENGINE, "Set Entity: %d Mass: %f\n", entity, m);
+}
+Entity set_force(Entity entity, Force f) {
+    if(!entity_alive[entity]) {
+        //Error
+        return 0;
+    }
+    Entity force_entity = add_entity();
+    forces[force_entity] = f;
+    targets[force_entity] = entity;
+    entity_mask[force_entity] |= TARGETABLE | FORCE;
+    console_debug_write(LOG_ENGINE, "Set Entity: %d Force: {x: %f, y: %f}\n", entity, f.x, f.y);
+    return force_entity;
+}
+Entity set_torque(Entity entity, Torque t) {
+    if(!entity_alive[entity]) {
+        //Error
+        return 0;
+    }
+    Entity torque_entity = add_entity();
+    torques[torque_entity] = t;
+    targets[torque_entity] = entity;
+    entity_mask[torque_entity] |= TARGETABLE | TORQUE;
+    console_debug_write(LOG_ENGINE, "Set Entity: %d Torque: %f\n", entity, t);
+    return torque_entity;
+}
+void set_hitbox(Entity entity, Shape hitbox) {
+    if(!entity_alive[entity]) {
+        //Error
+        return;
+    }
+    entity_mask[entity] |= COLLISION | HIT_BOX;
+    hit_boxes[entity] = hitbox;
+  console_debug_write(LOG_ENGINE, "Set Entity: %d to have a hit box\n", entity);
+}
+void set_orientation(Entity entity, Orientation angle) {
+    if(!entity_alive[entity]) {
+        //Error
+        return;
+    }
+  orientations[entity] = angle;
+  console_debug_write(LOG_ENGINE, "Set Entity: %d Orientation: %f\n", entity, angle);
+}
+void set_angular_velocity(Entity entity, AngularVelocity v) {
+    if(!entity_alive[entity]) {
+        //Error
+        return;
+    }
+    set_dynamic(entity);
+    angular_velocities[entity] = v;
+    console_debug_write(LOG_ENGINE, "Set Entity: %d Angular Velocity: %f\n", entity, v);
+}
+Shape get_global_hit_box(Entity entity) {
+    CMask filter = HIT_BOX;
+    if(entity_alive[entity]) {
+        if( (entity_mask[entity] & filter) == filter ) {
+            return world_hit_boxes[entity];
+        }
+    }
+    return (Shape){0};
+}
+ void set_restitution(Entity entity, Restitution restitution) {
+    if(!entity_alive[entity]) {
+        //Error
+        return;
+    }
+     if(restitution < 0) {
+        restitutions[entity] = 0;
+        console_debug_write(LOG_ENGINE, "Set Entity: %d Restitution: %f\n", entity, 0);
+     }
+     else if(restitution > 1) {
+        restitutions[entity] = 1;
+        console_debug_write(LOG_ENGINE, "Set Entity: %d Restitution: %f\n", entity, 1);
+     }
+     else {
+        restitutions[entity] = restitution;
+        console_debug_write(LOG_ENGINE, "Set Entity: %d Restitution: %f\n", entity, restitution);
+     }
+     add_components(entity, COLLISION);
+ }
+void set_dynamic(Entity entity) {
+    if(!entity_alive[entity]) {
+        //Error
+        return;
+    }
+    add_components(entity, DYNAMIC);
+    delete_components(entity, STATIC);
+    console_debug_write(LOG_ENGINE, "Set Entity: %d to STATIC\n", entity);
+}
+void set_static(Entity entity) {
+    if(!entity_alive[entity]) {
+        //Error
+        return;
+    }
+    add_components(entity, STATIC);
+    delete_components(entity, DYNAMIC);
+    console_debug_write(LOG_ENGINE, "Set Entity: %d to DYNAMIC\n", entity);
+}
+void set_angle_lock(Entity entity, Orientation min, Orientation max) {
+    if(!entity_alive[entity]) {
+        //Error
+        return;
+    }
+    add_components(entity, ANGLE_LOCK);
+    angle_locks[entity] = (AngleLock){
+        .min = min,
+        .max = max
+    };
+}
+void set_axis_lock(Entity entity, Axis axis, Position axis_point) {
+    if(!entity_alive[entity]) {
+        //Error
+        return;
+    }
+    add_components(entity, AXIS_LOCK);
+    Axis normalized_axis = normalize_vector(axis);
+    axis_locks[entity] = (AxisLock){
+        .axis = (Axis){
+            .x = normalized_axis.x,
+            .y = normalized_axis.y
+        },
+        .point_on_axis = (Position){
+            .x = axis_point.x,
+            .y = axis_point.y
+        }
+    };
+}
+void set_friction(Entity entity, float friction) {
+    if(!entity_alive[entity]) {
+        //Error
+        return;
+    }
+    if(friction < 0) {
+        frictions[entity] = 0;
+    }
+    else if(friction >= 0) {
+        frictions[entity] = friction;
+    }
+}
+void set_transform_lock(
+        Entity driven,
+        Entity driver, 
+        Vec2D local_offset,
+        Orientation local_angle,
+        bool lock_position,
+        bool lock_orientation,
+        bool inherit_velocity
+        ) {
+    if(!entity_alive[driven] || !entity_alive[driver]) {
+        //Error
+        return;
+    }
+    add_components(driven, TRANSFORM_LOCK);
+    transform_locks[driven] = (TransformLock) {
+        .driver = driver,
+        .local_offset = local_offset,
+        .local_angle = local_angle,
+        .lock_position = lock_position,
+        .lock_orientation = lock_orientation,
+        .inherit_velocity = inherit_velocity
+    };
+}
+void remove_transform_lock(Entity entity) {
+    if(!entity_alive[entity]) {
+        //Error
+        return;
+    }
+    delete_components(entity, TRANSFORM_LOCK);
+    transform_locks[entity] = (TransformLock){0};
+}
+void set_transform_lock_current_transform(
+        Entity driven,
+        Entity driver,
+        bool lock_position,
+        bool lock_orientation,
+        bool inherit_velocity
+        ) {
+    if(!entity_alive[driven] || !entity_alive[driver]) {
+        return;
+    }
+
+    Vec2D world_offset = {
+        .x = positions[driven].x - positions[driver].x,
+        .y = positions[driven].y - positions[driver].y
+    };
+
+    Vec2D local_offset = rotate_vector(
+        world_offset,
+        -orientations[driver]
+    );
+
+    Orientation local_angle =
+        orientations[driven] - orientations[driver];
+
+    set_transform_lock(
+        driven,
+        driver,
+        local_offset,
+        local_angle,
+        lock_position,
+        lock_orientation,
+        inherit_velocity
+    );
+}
+Entity set_joint(
+    Entity a,
+    Entity b,
+    JointType type,
+    Vec2D local_anchor_a,
+    Vec2D local_anchor_b,
+    float stiffness,
+    float damping
+) {
+    if(!entity_alive[a] || !entity_alive[b]) {
+        return 0;
+    }
+
+    Entity joint = add_entity();
+
+    add_components(joint, JOINT);
+
+    Vec2D world_anchor_a = {
+        .x = positions[a].x + rotate_vector(local_anchor_a, orientations[a]).x,
+        .y = positions[a].y + rotate_vector(local_anchor_a, orientations[a]).y
+    };
+
+    Vec2D world_anchor_b = {
+        .x = positions[b].x + rotate_vector(local_anchor_b, orientations[b]).x,
+        .y = positions[b].y + rotate_vector(local_anchor_b, orientations[b]).y
+    };
+
+    Vec2D delta = {
+        .x = world_anchor_b.x - world_anchor_a.x,
+        .y = world_anchor_b.y - world_anchor_a.y
+    };
+
+    joints[joint] = (Joint){
+        .type = type,
+        .a = a,
+        .b = b,
+        .local_anchor_a = local_anchor_a,
+        .local_anchor_b = local_anchor_b,
+        .rest_length = vector_magnitude(delta),
+        .stiffness = stiffness,
+        .damping = damping,
+        .lock_angle = false,
+        .rest_angle = orientations[b] - orientations[a],
+        .angular_stiffness = 0.0f,
+        .angular_damping = 0.0f
+    };
+
+    return joint;
+}
