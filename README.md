@@ -37,6 +37,15 @@ engine/
 ---
 ## Building
 
+### Dependencies
+- C compiler: `clang` or `gcc`
+- C standard library
+- `make`
+- `pkg-config`
+- `sdl3`
+- `sdl3-image`
+- `ncurses`
+- Math library: `libm` / `-lm`
 
 Build the examples:
 
