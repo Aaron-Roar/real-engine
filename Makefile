@@ -28,33 +28,33 @@ help:
 		"Build targets:" \
 		"" \
 		"  build" \
-		"  		Builds all examples (flies_in_pit and flies_around_ball)." \
-		"  		Example source code is located in the examples/ directory." \
-		"  		Compiled binaries are output to build/examples/." \
+		"		  Builds all examples (flies_in_pit and flies_around_ball)." \
+		"		  Example source code is located in the examples/ directory." \
+		"		  Compiled binaries are output to build/examples/." \
 		"" \
 		"  all" \
-		"  		Equivalent to make build." \
+		"		  Equivalent to make build." \
 		"" \
 		"  build-example-pit" \
-		"  		Builds examples/flies_in_pit/flies_in_pit.c." \
-		"  		Outputs build/examples/flies_in_pit." \
+		"		  Builds examples/flies_in_pit/flies_in_pit.c." \
+		"		  Outputs build/examples/flies_in_pit." \
 		"" \
 		"  build-example-ball" \
-		"  		Builds examples/flies_around_ball/flies_around_ball.c." \
-		"  		Outputs build/examples/flies_around_ball." \
+		"		  Builds examples/flies_around_ball/flies_around_ball.c." \
+		"		  Outputs build/examples/flies_around_ball." \
 		"" \
 		"  run-pit" \
-		"  		Builds and runs the flies_in_pit example." \
+		"		  Builds and runs the flies_in_pit example." \
 		"" \
 		"  run-ball" \
-		"  		Builds and runs the flies_around_ball example." \
+		"		  Builds and runs the flies_around_ball example." \
 		"" \
 		"  clean" \
-		"  		Removes the build directory."
+		"		  Removes the build directory."
 
 all: build
 
-build: build-example-pit build-example-ball
+build: clean build-example-pit build-example-ball
 
 build-example-pit: $(PIT_BINARY)
 

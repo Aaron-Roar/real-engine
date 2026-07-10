@@ -1,5 +1,31 @@
+#{
+#  description = "2D Game Engine dev shell";
+#
+#  inputs = {
+#    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+#  };
+#
+#  outputs = { self, nixpkgs }:
+#    let
+#      system = "x86_64-linux";
+#      pkgs = import nixpkgs {
+#        inherit system;
+#      };
+#    in {
+#      devShells.${system}.default = pkgs.mkShell {
+#        packages = with pkgs; [
+#          clang
+#          pkg-config
+#          sdl3
+#          sdl3-image
+#          ncurses
+#        ];
+#      };
+#    };
+#}
+
 {
-  description = "2D Game Engine dev shell";
+  description = "Real Engine";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -8,14 +34,75 @@
   outputs = { self, nixpkgs }:
     let
       system = "x86_64-linux";
+
       pkgs = import nixpkgs {
         inherit system;
       };
-    in {
-      devShells.${system}.default = pkgs.mkShell {
-        packages = with pkgs; [
+
+      buildExamples = pkgs.writeShellApplication {
+        name = "build-examples";
+
+        runtimeInputs = with pkgs; [
           clang
+          gnumake
           pkg-config
+          coreutils
+        ];
+
+        text = ''
+          if [[ ! -f Makefile ]]; then
+            echo "Error: run this command from the project root."
+            echo "No Makefile was found in: $PWD"
+            exit 1
+          fi
+
+          export PKG_CONFIG_PATH="${
+            pkgs.lib.makeSearchPath "lib/pkgconfig" [
+              pkgs.sdl3
+              pkgs.sdl3-image
+              pkgs.ncurses
+            ]
+          }:${
+            pkgs.lib.makeSearchPath "share/pkgconfig" [
+              pkgs.sdl3
+              pkgs.sdl3-image
+              pkgs.ncurses
+            ]
+          }''${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}"
+
+          echo "Clearing build/examples..."
+          rm -rf build/examples
+          mkdir -p build/examples
+
+          echo "Building examples..."
+          make build
+
+          echo
+          echo "Built binaries:"
+          find build/examples -maxdepth 1 -type f -executable -print
+        '';
+      };
+    in {
+      apps.${system} = {
+        default = {
+          type = "app";
+          program = "${buildExamples}/bin/build-examples";
+        };
+
+        build-examples = {
+          type = "app";
+          program = "${buildExamples}/bin/build-examples";
+        };
+      };
+
+      devShells.${system}.default = pkgs.mkShell {
+        nativeBuildInputs = with pkgs; [
+          clang
+          gnumake
+          pkg-config
+        ];
+
+        buildInputs = with pkgs; [
           sdl3
           sdl3-image
           ncurses
