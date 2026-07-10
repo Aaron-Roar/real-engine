@@ -56,7 +56,7 @@ int main() {
         set_acceleration(ball, (Acceleration){tools_random_range(0,10), 50});
         set_restitution(ball, 0.1);
         float size = tools_random_range_float(10, 20);
-        Shape shape3 = create_circle(size, 10);
+        Shape shape3 = create_circle(size, 5);
         set_hitbox(ball, shape3);
         set_friction(ball, 0.4);
         set_dynamic(ball);
@@ -65,7 +65,7 @@ int main() {
         sprite = create_animated_sprite(animation, size/10);
         sprite.animation.time_per_frame = tools_random_range_float(0.005, 0.5);
         add_animated_sprite(ball, sprite);
-        //add_components(ball, PARTICLE);
+        add_components(ball, PARTICLE);
     }
 
 

@@ -163,7 +163,7 @@ Collision system_get_entity_collision(Entity entity_1, Entity entity_2) {
     Shape shape1 = get_global_hit_box(entity_1);
     Shape shape2 = get_global_hit_box(entity_2);
     if(has_components(entity_1, PARTICLE) && has_components(entity_2, PARTICLE)) {
-        return particle_collision(shape1, shape1);
+        return particle_collision(shape1, shape2);
     }
     return sat_collision(shape1, shape2);
 }

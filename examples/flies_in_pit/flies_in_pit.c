@@ -85,7 +85,6 @@ int main() {
         sprite = create_animated_sprite(animation, size/10);
         sprite.animation.time_per_frame = tools_random_range_float(0.005, 0.5);
         add_animated_sprite(ball, sprite);
-        //set_axis_lock(ball, (Axis){1, 0}, positions[ball]);
     }
 
     Time dt = engine_get_dt();
