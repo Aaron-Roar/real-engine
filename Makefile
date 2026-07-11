@@ -13,7 +13,9 @@ ENGINE_SRC := \
 	math2d.c \
 	physics.c \
 	systems.c \
-	tools.c
+	tools.c \
+	level_editor.c
+
 
 ASSET_SRC := \
 	examples/test-assets/elder-fly/elderfly_descriptors.c

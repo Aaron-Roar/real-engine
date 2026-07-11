@@ -14,13 +14,13 @@
 #define MAX_ANIMATIONS_FRAMES 20
 
 typedef struct {
-  float width;
-  float height;
-} Size;
+    float x;
+    float y;
+} Scale;
 
 typedef struct {
   const char *file;
-  Size size;
+  Scale size;
 } TextureDescriptor;
 
 typedef struct {
@@ -34,7 +34,7 @@ typedef SDL_Texture* Texture;
 
 typedef struct {
     Texture texture;
-    Size size;
+    Scale size;
 } TextureAsset;
 
 typedef struct {
@@ -50,13 +50,14 @@ typedef struct {
 
 typedef enum {DIRECTION_LEFT, DIRECTION_RIGHT} Direction;
 
+
 typedef struct {
     AnimationAsset animation;
     int animation_frame;
     Tick last_update_tick;
     Time last_update_time;
     Direction direction;
-    float scale;
+    Scale scale;
 } AnimatedSprite;
 
 typedef enum Fill {
@@ -84,12 +85,13 @@ void draw_hit_box(SDL_Renderer *renderer, Entity entity, Fill fill_type);
 void draw_hit_boxes(SDL_Renderer *renderer);
 TextureAsset load_texture(SDL_Renderer *renderer, TextureDescriptor text_desc);
 AnimationAsset load_animation(SDL_Renderer *renderer, AnimationDescriptor anim_desc);
-AnimatedSprite create_animated_sprite(AnimationAsset asset_ptr, float scale);
+AnimatedSprite create_animated_sprite(AnimationAsset asset_ptr, Scale scale);
 void update_sprite_frame(AnimatedSprite *sprite, Tick current_tick, Time current_time);
 void draw_texture(SDL_Renderer *renderer, TextureAsset texture_asset, Position pos, Orientation ort);
 void draw_sprite(SDL_Renderer *renderer, AnimatedSprite sprite, Position pos, Orientation ort);
 void add_animated_sprite(Entity entity, AnimatedSprite sprite);
 void draw_animated_sprites(SDL_Renderer *renderer);
 void update_sprite_frames(Tick current_tick, Time current_time);
+void scale_textures(Entity entity, Scale scale);
 
 #endif

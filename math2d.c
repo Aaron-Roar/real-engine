@@ -211,3 +211,35 @@ Vec1D circle_overlap_depth(Vec2D centroid_1, Vec1D radius_1, Vec2D centroid_2, V
       +(centroid_1.y - centroid_2.y)*(centroid_1.y - centroid_2.y)
       );
 }
+
+Shape scale_shape_x(Shape shape, float scale)
+{
+    Shape scaled_shape = shape;
+
+    for (uint16_t i = 0; i < scaled_shape.amount_of_vertices; i++) {
+        scaled_shape.vertices[i].x *= scale;
+    }
+
+    return scaled_shape;
+}
+Shape scale_shape_y(Shape shape, float scale)
+{
+    Shape scaled_shape = shape;
+
+    for (uint16_t i = 0; i < scaled_shape.amount_of_vertices; i++) {
+        scaled_shape.vertices[i].y *= scale;
+    }
+
+    return scaled_shape;
+}
+Shape scale_shape(Shape shape, float scale)
+{
+    Shape scaled_shape = shape;
+
+    for (uint16_t i = 0; i < scaled_shape.amount_of_vertices; i++) {
+        scaled_shape.vertices[i].x *= scale;
+        scaled_shape.vertices[i].y *= scale;
+    }
+
+    return scaled_shape;
+}

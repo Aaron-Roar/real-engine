@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <time.h>
 #include <stdlib.h>
+#include "level_editor.h"
 #include "examples/test-assets/elder-fly/elderfly_descriptors.h"
 
 const Color background_color = (Color){255,255,255,255};
@@ -19,6 +20,7 @@ int main() {
     console_init();
     console_set_debug(CONSOLE_DEBUG_OFF);
     engine_init();
+    level_editor_init();
     SDL_Renderer *renderer = NULL;
     SDL_Window *window = NULL;
     if (!graphics_start(&renderer, &window)) {
@@ -81,7 +83,7 @@ int main() {
         set_friction(ball, 0);
         set_dynamic(ball);
         animation = load_animation(renderer, elderfly_fly_files);
-        sprite = create_animated_sprite(animation, size/10);
+        sprite = create_animated_sprite(animation, (Scale){size/10,size/10});
         sprite.animation.time_per_frame = tools_random_range_float(0.005, 0.5);
         add_animated_sprite(ball, sprite);
     }
@@ -96,6 +98,7 @@ int main() {
         if(read_console(&console_line)) {
             console_write(LOG_CONSOLE, "%s", console_line.string);
         }
+        level_editor_update(renderer);
 
 
         SDL_Event event = engine_poll_event();

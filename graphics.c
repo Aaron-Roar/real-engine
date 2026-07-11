@@ -7,6 +7,13 @@
 AnimatedSprite animated_sprites[MAX_ENTITIES] = {0};
 const Color hit_box_color = (Color){255,0,0,255};
 
+void scale_textures(Entity entity, Scale scale) {
+    for(int i = 0; i < MAX_TEXTURES; i += 1) {
+        animated_sprites[entity].animation.texture_list.textures[i].size.x *= scale.x;
+        animated_sprites[entity].animation.texture_list.textures[i].size.y *= scale.y;
+    }
+}
+
 Color creat_color_hex(uint32_t hex_color_code) {
   return (Color) {
     .red = (hex_color_code >> 16) & 0xFF,
@@ -194,9 +201,9 @@ TextureAsset load_texture(SDL_Renderer *renderer, TextureDescriptor text_desc) {
         SDL_Surface *surface = NULL;
         char *png_path = NULL;
         TextureAsset asset = {0};
-        asset.size = (Size){
-            .width = text_desc.size.width,
-            .height = text_desc.size.height,
+        asset.size = (Scale){
+            .x = text_desc.size.x,
+            .y = text_desc.size.y,
         };
 
         SDL_asprintf(&png_path, "%s", text_desc.file);  /* allocate a string of the full file path */
@@ -223,7 +230,7 @@ AnimationAsset load_animation(SDL_Renderer *renderer, AnimationDescriptor anim_d
     return asset;
 }
 
-AnimatedSprite create_animated_sprite(AnimationAsset asset_ptr, float scale) {
+AnimatedSprite create_animated_sprite(AnimationAsset asset_ptr, Scale scale) {
     AnimatedSprite sprite = {0};
     sprite.animation = asset_ptr;
     sprite.animation_frame = 0;
@@ -248,8 +255,8 @@ void update_sprite_frame(AnimatedSprite *sprite, Tick current_tick, Time current
 
 void draw_texture(SDL_Renderer *renderer, TextureAsset texture_asset, Position pos, Orientation ort) {
     SDL_FRect dst_rect = {0};
-    dst_rect.w = texture_asset.size.width;//(float) texture_width;
-    dst_rect.h = texture_asset.size.height;//(float) texture_width;
+    dst_rect.w = texture_asset.size.x;//(float) texture_width;
+    dst_rect.h = texture_asset.size.y;//(float) texture_width;
     dst_rect.x = pos.x - dst_rect.w * 0.5f;//(float) texture_width;
     dst_rect.y = pos.y - dst_rect.h * 0.5f;//(float) texture_height;
 
@@ -258,12 +265,13 @@ void draw_texture(SDL_Renderer *renderer, TextureAsset texture_asset, Position p
         .y = dst_rect.h * 0.5f
     };
     //SDL_RenderTexture(renderer, texture_asset.texture, NULL, &dst_rect);
+    double degrees = (double)ort * 180.0 / (double)PI_F;
     SDL_RenderTextureRotated(
         renderer,
     texture_asset.texture,
     NULL,
     &dst_rect,
-    ort,
+    degrees,
     &center,
     SDL_FLIP_NONE
     );
@@ -272,8 +280,8 @@ void draw_texture(SDL_Renderer *renderer, TextureAsset texture_asset, Position p
 void draw_sprite(SDL_Renderer *renderer, AnimatedSprite sprite, Position pos, Orientation ort) {
     TextureAsset asset = {0};
     asset = sprite.animation.texture_list.textures[sprite.animation_frame];
-    asset.size.width = asset.size.width * sprite.scale;
-    asset.size.height = asset.size.height * sprite.scale;
+    asset.size.x = asset.size.x * sprite.scale.x;
+    asset.size.y = asset.size.y * sprite.scale.y;
 
     draw_texture(renderer, asset, pos, ort);
 }

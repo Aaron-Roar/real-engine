@@ -51,4 +51,7 @@ Vec1D circle_radius(Shape circle, Vec2D centroid);
 Vec2D vector_subtract(Vec2D vector_a, Vec2D vector_b);
 Vec1D circle_overlap_depth(Vec2D centroid_1, Vec1D radius_1, Vec2D centroid_2, Vec1D radius_2);
 float projection_overlap(Projection projection_1, Projection projection_2);
+Shape scale_shape(Shape shape, float scale);
+Shape scale_shape_y(Shape shape, float scale);
+Shape scale_shape_x(Shape shape, float scale);
 #endif

@@ -28,7 +28,7 @@ int main() {
     }
 
     animation = load_animation(renderer, elderfly_fly_files);
-    sprite = create_animated_sprite(animation, 3);
+    sprite = create_animated_sprite(animation, (Scale){3,3});
 
     Entity magnet_smash = add_entity();
     set_position(magnet_smash, (Position){.x = 400, .y = 200});
@@ -62,7 +62,7 @@ int main() {
         set_dynamic(ball);
         //set_transform_lock(ball, water_smash, (Vec2D){tools_random_range(100, 400), tools_random_range(100, 400)}, tools_random_range(0, 10), true, true, false);
         set_joint(ball, magnet_smash, JOINT_DISTANCE, (Vec2D){0}, (Vec2D){0}, 10, 0);
-        sprite = create_animated_sprite(animation, size/10);
+        sprite = create_animated_sprite(animation, (Scale){size/10, size/10});
         sprite.animation.time_per_frame = tools_random_range_float(0.005, 0.5);
         add_animated_sprite(ball, sprite);
         add_components(ball, PARTICLE);

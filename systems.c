@@ -634,12 +634,8 @@ void separate_static_entities() {
 }
 
 void apply_collisions() {
-    CMask filter = COLLISION;
     for(int i = 0; i < MAX_ENTITIES; i += 1) {
         if(!entity_alive[i]) {
-            continue;
-        }
-        if( (entity_mask[i] & filter) != filter) {
             continue;
         }
 
@@ -647,18 +643,18 @@ void apply_collisions() {
             if(!entity_alive[j]) {
                 continue;
             }
-            if( (entity_mask[j] & filter) != filter) {
-                continue;
-            }
             if(i == j) {
                 continue;
             }
 
+            CMask filter = COLLISION;
             Collision collision = system_get_entity_collision(i, j);
             if(collision.overlap == true) {
                 set_collision_report(i, j, true);
                 set_collision_report(j, i, true);
-                resolve_collision(i, j, collision);
+                if(has_components(i, filter) && has_components(j, filter)) {
+                    resolve_collision(i, j, collision);
+                }
                 //separate_entities(i, j, collision);
                 system_generate_global_hitbox(i);
                 system_generate_global_hitbox(j);
