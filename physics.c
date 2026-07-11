@@ -12,6 +12,7 @@ float mass[MAX_ENTITIES] = {0};
 Force forces[MAX_ENTITIES] = {0};
 Shape hit_boxes[MAX_ENTITIES] = {0};
 Shape world_hit_boxes[MAX_ENTITIES] = {0};
+CollisionReport collision_reports[MAX_ENTITIES] = {0};
 AngularVelocity angular_velocities[MAX_ENTITIES] = {0};
 AngularAcceleration angular_accelerations[MAX_ENTITIES] = {0};
 AngularVelocity torque_angular_accelerations[MAX_ENTITIES] = {0};
@@ -519,4 +520,14 @@ Entity set_joint(
     };
 
     return joint;
+}
+
+void set_collision_report(Entity entity, Entity target, bool state) {
+    collision_reports[entity].collisions[target] = state;
+}
+bool get_collision_report(Entity entity, Entity target) {
+    if(collision_reports[entity].collisions[target] && collision_reports[target].collisions[entity]) {
+        return true;
+    }
+    return false;
 }

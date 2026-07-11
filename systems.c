@@ -656,11 +656,18 @@ void apply_collisions() {
 
             Collision collision = system_get_entity_collision(i, j);
             if(collision.overlap == true) {
+                set_collision_report(i, j, true);
+                set_collision_report(j, i, true);
                 resolve_collision(i, j, collision);
                 //separate_entities(i, j, collision);
                 system_generate_global_hitbox(i);
                 system_generate_global_hitbox(j);
                 //console_write(LOG_ENGINE, "Entity %d and Entity %d Colided\n", j, i);
+            }
+            else {
+                set_collision_report(i, j, false);
+                set_collision_report(j, i, false);
+
             }
         }
     }

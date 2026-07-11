@@ -7,6 +7,9 @@ typedef struct Collision {
     Axis normal;
     Vec1D depth;
 } Collision;
+typedef struct {
+    bool collisions[MAX_ENTITIES];
+} CollisionReport;
 typedef Vec1D Friction;
 typedef Vec1D Restitution;
 
@@ -23,7 +26,6 @@ typedef struct AxisLock {
     Axis axis;
     Position point_on_axis;
 } AxisLock;
-
 typedef struct AngleLock {
     Orientation min;
     Orientation max;
@@ -72,6 +74,7 @@ extern Force forces[MAX_ENTITIES];
 extern Acceleration force_accelerations[MAX_ENTITIES];
 extern Shape hit_boxes[MAX_ENTITIES];
 extern Shape world_hit_boxes[MAX_ENTITIES];
+extern CollisionReport collision_reports[MAX_ENTITIES];
 extern Orientation orientations[MAX_ENTITIES];
 extern AngularVelocity angular_velocities[MAX_ENTITIES];
 extern AngularAcceleration angular_accelerations[MAX_ENTITIES];
@@ -136,4 +139,6 @@ Entity set_joint(
     float damping
 );
 Collision particle_collision(Shape shape_1, Shape shape_2);
+void set_collision_report(Entity entity, Entity target, bool state);
+bool get_collision_report(Entity entity, Entity target);
 #endif

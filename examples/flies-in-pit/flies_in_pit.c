@@ -21,7 +21,6 @@ int main() {
     engine_init();
     SDL_Renderer *renderer = NULL;
     SDL_Window *window = NULL;
-    SDL_Event event = {0};
     if (!graphics_start(&renderer, &window)) {
         engine_shutdown();
         return 1;
@@ -99,6 +98,7 @@ int main() {
         }
 
 
+        SDL_Event event = engine_poll_event();
         if (event.type == SDL_EVENT_KEY_UP && event.key.scancode == SDL_SCANCODE_SPACE) {
             engine_set_dt(-dt);
             for(int i = 0; i < MAX_ENTITIES; i += 1) {
@@ -112,7 +112,6 @@ int main() {
         engine_update_tick();
         apply_collisions();
         system_update_physics(engine_get_dt());
-        SDL_Event event = engine_poll_event();
 
         //render
         draw_background(renderer, background_color);

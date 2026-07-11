@@ -20,6 +20,7 @@ ASSET_SRC := \
 
 PIT_BINARY := build/examples/flies_in_pit
 BALL_BINARY := build/examples/flies_around_ball
+VIEW_BINARY := build/examples/view_port
 
 .PHONY: help all build build-example-pit build-example-ball run-pit run-ball clean
 
@@ -28,43 +29,56 @@ help:
 		"Build targets:" \
 		"" \
 		"  build" \
-		"		  Builds all examples (flies_in_pit and flies_around_ball)." \
-		"		  Example source code is located in the examples/ directory." \
-		"		  Compiled binaries are output to build/examples/." \
+		"		  Builds all examples (flies_in_pit and flies_around_ball)" \
+		"		  Example source code is located in the examples/ directory" \
+		"		  Compiled binaries are output to build/examples/" \
 		"" \
 		"  all" \
-		"		  Equivalent to make build." \
+		"		  Equivalent to make build" \
 		"" \
 		"  build-example-pit" \
-		"		  Builds examples/flies_in_pit/flies_in_pit.c." \
-		"		  Outputs build/examples/flies_in_pit." \
+		"		  Builds examples/flies-in-pit/flies_in_pit.c" \
+		"		  Outputs build/examples/flies_in_pit" \
 		"" \
 		"  build-example-ball" \
-		"		  Builds examples/flies_around_ball/flies_around_ball.c." \
-		"		  Outputs build/examples/flies_around_ball." \
+		"		  Builds examples/flies-around-ball/flies_around_ball.c" \
+		"		  Outputs build/examples/flies_around_ball" \
+		"" \
+		"  build-example-view" \
+		"		  Builds examples/view-port/view_port.c" \
+		"		  Outputs build/examples/view_port" \
 		"" \
 		"  run-pit" \
-		"		  Builds and runs the flies_in_pit example." \
+		"		  Builds and runs the flies_in_pit example" \
 		"" \
 		"  run-ball" \
-		"		  Builds and runs the flies_around_ball example." \
+		"		  Builds and runs the flies_around_ball example" \
+		"" \
+		"  run-view" \
+		"		  Builds and runs the view_port example" \
 		"" \
 		"  clean" \
-		"		  Removes the build directory."
+		"		  Removes the build directory"
 
 all: build
 
-build: clean build-example-pit build-example-ball
+build: build-example-view build-example-pit build-example-ball
 
 build-example-pit: $(PIT_BINARY)
 
 build-example-ball: $(BALL_BINARY)
 
-$(PIT_BINARY): examples/flies_in_pit/flies_in_pit.c $(ENGINE_SRC) $(ASSET_SRC)
+build-example-view: $(VIEW_BINARY)
+
+$(PIT_BINARY): examples/flies-in-pit/flies_in_pit.c $(ENGINE_SRC) $(ASSET_SRC)
 	@mkdir -p build/examples
 	$(CC) $^ $(CFLAGS) -o $@ $(LIBS)
 
-$(BALL_BINARY): examples/flies_around_ball/flies_around_ball.c $(ENGINE_SRC) $(ASSET_SRC)
+$(BALL_BINARY): examples/flies-around-ball/flies_around_ball.c $(ENGINE_SRC) $(ASSET_SRC)
+	@mkdir -p build/examples
+	$(CC) $^ $(CFLAGS) -o $@ $(LIBS)
+
+$(VIEW_BINARY): examples/view-port/view_port.c $(ENGINE_SRC) $(ASSET_SRC)
 	@mkdir -p build/examples
 	$(CC) $^ $(CFLAGS) -o $@ $(LIBS)
 
@@ -74,5 +88,7 @@ run-pit: $(PIT_BINARY)
 run-ball: $(BALL_BINARY)
 	./$(BALL_BINARY)
 
+run-view: $(VIEW_BINARY)
+	./$(VIEW_BINARY)
 clean:
 	rm -rf build
