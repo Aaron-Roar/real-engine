@@ -180,60 +180,13 @@ Position approximate_contact_point(Position p1, Position p2)
         .y = (p1.y + p2.y) * 0.5f
     };
 }
-Position polygon_centroid(Shape shape)
-{
-    double area_sum = 0.0;
-    double cx_sum = 0.0;
-    double cy_sum = 0.0;
-
-    for (int i = 0; i < shape.amount_of_vertices; i++) {
-        int j = (i + 1) % shape.amount_of_vertices;
-
-        double xi = shape.vertices[i].x;
-        double yi = shape.vertices[i].y;
-        double xj = shape.vertices[j].x;
-        double yj = shape.vertices[j].y;
-
-        double cross = xi * yj - xj * yi;
-
-        area_sum += cross;
-        cx_sum += (xi + xj) * cross;
-        cy_sum += (yi + yj) * cross;
-    }
-
-    double area = area_sum * 0.5;
-
-    if (fabs(area) < 1e-8) {
-        // Degenerate polygon fallback: average vertices
-        Position avg = {0};
-
-        for (int i = 0; i < shape.amount_of_vertices; i++) {
-            avg.x += shape.vertices[i].x;
-            avg.y += shape.vertices[i].y;
-        }
-
-        avg.x /= shape.amount_of_vertices;
-        avg.y /= shape.amount_of_vertices;
-
-        return avg;
-    }
-
-    Position centroid = {
-        .x = cx_sum / (6.0 * area),
-        .y = cy_sum / (6.0 * area),
-    };
-
-    return centroid;
-}
 Vec1D circle_moment_of_inertia(Shape circle, Mass mass) {
   Vec1D radius = circle_radius(circle, polygon_centroid(circle));
   Vec1D area = PI_F*radius*radius;
   Vec1D density = mass/fabsf(area);
   Vec1D area_moment = 0.5f * area * radius * radius;
   return density * area_moment;
-
 }
-
 
 //Entity
 void set_acceleration(Entity entity, Acceleration a) {

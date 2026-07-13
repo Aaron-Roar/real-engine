@@ -91,7 +91,6 @@ Shape shape_world_translate(Shape shape, Position position, Orientation angle);
 float polygon_moment_of_inertia(Shape shape, Mass mass);
 Collision sat_collision(Shape shape_1, Shape shape_2);
 Position approximate_contact_point(Position p1, Position p2);
-Position polygon_centroid(Shape shape);
 Vec1D circle_moment_of_inertia(Shape circle, Mass mass);
 
 //Entity

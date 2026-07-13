@@ -14,13 +14,18 @@ Entity selected_entity = 0;
 //Selection Info
 
 #define SCALE_INCREMENT 0.1
+#define MOVE_INCREMENT 5
 typedef enum {
     EDITOR_NONE,
 
     EDITOR_SELECT,
 
     EDITOR_MOVE,
-    EDITOR_MOVE_CENTER,
+    EDITOR_MOVE_MOUSE,
+    EDITOR_MOVE_UP,
+    EDITOR_MOVE_DOWN,
+    EDITOR_MOVE_LEFT,
+    EDITOR_MOVE_RIGHT,
 
     EDITOR_ROTATE,
     EDITOR_ROTATE_CW,
@@ -38,8 +43,19 @@ typedef enum {
     EDITOR_SCALE_Y_UP,
     EDITOR_SCALE_X_DOWN,
     EDITOR_SCALE_Y_DOWN,
+    EDITOR_SCALE_LOCK,
+
+    EDITOR_SHAPE,
+    EDITOR_SHAPE_ADD_VERTEX,
+    EDITOR_SHAPE_REMOVE_VERTEX,
+
+
+    EDITOR_PAUSE_ENGINE,
 } LevelEditorMode;
 
+bool has_selection = false;
+LevelEditorMode prev_mode = EDITOR_NONE;
+LevelEditorMode current_mode = EDITOR_NONE;
 
 typedef enum {
     KEY_NONE,
@@ -178,7 +194,7 @@ EditorInput sdl_event_to_editor_input(SDL_Renderer *renderer, SDL_Event event)
     /*
      * Keyboard input
      */
-    if (event.type == SDL_EVENT_KEY_DOWN ||
+    if (/*event.type == SDL_EVENT_KEY_DOWN ||*/
         event.type == SDL_EVENT_KEY_UP) {
 
         input.pressed = (event.type == SDL_EVENT_KEY_DOWN);
@@ -241,9 +257,6 @@ EditorInput sdl_event_to_editor_input(SDL_Renderer *renderer, SDL_Event event)
                     input.key = KEY_ENTER;
                     break;
 
-                case SDL_SCANCODE_EQUALS:
-                    input.key = KEY_EQUALS;
-                    break;
 
                 case SDL_SCANCODE_ESCAPE:
                     input.key = KEY_ESCAPE;
@@ -287,6 +300,10 @@ EditorInput sdl_event_to_editor_input(SDL_Renderer *renderer, SDL_Event event)
 
                 case SDL_SCANCODE_KP_PLUS:
                     input.key = KEY_PLUS;
+                    break;
+
+                case SDL_SCANCODE_EQUALS:
+                    input.key = KEY_EQUALS;
                     break;
 
                 case SDL_SCANCODE_SPACE:
@@ -475,12 +492,22 @@ LevelEditorMode editor_input_to_mode(LevelEditorMode current_mode, EditorInput i
             return EDITOR_SCALE;
         case KEY_M:
             return EDITOR_MOVE;
+        case KEY_A:
+            return EDITOR_SHAPE;
+        case KEY_SPACE:
+            return EDITOR_PAUSE_ENGINE;
         default:
             break;
     }
 
     //Check MODE dependent keys
     switch(current_mode) {
+        case EDITOR_PAUSE_ENGINE:
+            switch (input.key) {
+                default:
+                    return EDITOR_SELECT;
+            }
+
         case EDITOR_SELECT:
             switch (input.key) {
                 case KEY_M:
@@ -492,6 +519,9 @@ LevelEditorMode editor_input_to_mode(LevelEditorMode current_mode, EditorInput i
                 case KEY_S:
                     return EDITOR_SCALE;
 
+                case KEY_A:
+                    return EDITOR_SHAPE;
+
                 default:
                     return EDITOR_SELECT;
             }
@@ -500,16 +530,54 @@ LevelEditorMode editor_input_to_mode(LevelEditorMode current_mode, EditorInput i
             switch(input.key) {
                 case KEY_ESCAPE:
                     return EDITOR_SELECT;
+                case KEY_UP:
+                    return EDITOR_MOVE_UP;
+                case KEY_DOWN:
+                    return EDITOR_MOVE_DOWN;
+                case KEY_LEFT:
+                    return EDITOR_MOVE_LEFT;
+                case KEY_RIGHT:
+                    return EDITOR_MOVE_RIGHT;
 
-                case KEY_M:
-                    return EDITOR_MOVE;
+                case KEY_MOUSE_LEFT:
+                    return EDITOR_MOVE_MOUSE;
                 case KEY_R:
                     return EDITOR_ROTATE;
                 case KEY_S:
                     return EDITOR_SCALE;
+                case KEY_A:
+                    return EDITOR_SHAPE;
                 default:
                     return EDITOR_MOVE;
             }
+        case EDITOR_MOVE_MOUSE:
+            switch(input.key) {
+                case KEY_ESCAPE:
+                    return EDITOR_MOVE;
+                default:
+                    return EDITOR_MOVE_MOUSE;
+            }
+        case EDITOR_MOVE_UP:
+            switch(input.key) {
+                default:
+                    return EDITOR_MOVE;
+            }
+        case EDITOR_MOVE_DOWN:
+            switch(input.key) {
+                default:
+                    return EDITOR_MOVE;
+            }
+        case EDITOR_MOVE_LEFT:
+            switch(input.key) {
+                default:
+                    return EDITOR_MOVE;
+            }
+        case EDITOR_MOVE_RIGHT:
+            switch(input.key) {
+                default:
+                    return EDITOR_MOVE;
+            }
+
 
         case EDITOR_ROTATE:
             switch(input.key) {
@@ -534,6 +602,8 @@ LevelEditorMode editor_input_to_mode(LevelEditorMode current_mode, EditorInput i
                     return EDITOR_ROTATE;
                 case KEY_S:
                     return EDITOR_SCALE;
+                case KEY_A:
+                    return EDITOR_SHAPE;
 
                 default:
                     return EDITOR_ROTATE;
@@ -573,8 +643,6 @@ LevelEditorMode editor_input_to_mode(LevelEditorMode current_mode, EditorInput i
             switch(input.key) {
                 case KEY_ESCAPE:
                     return EDITOR_SELECT;
-                case KEY_SPACE:
-                    return EDITOR_SCALE_ALL_UP;
                 case KEY_UP:
                     return EDITOR_SCALE_Y_UP;
                 case KEY_DOWN:
@@ -583,8 +651,6 @@ LevelEditorMode editor_input_to_mode(LevelEditorMode current_mode, EditorInput i
                     return EDITOR_SCALE_X_UP;
                 case KEY_RIGHT:
                     return EDITOR_SCALE_X_UP;
-                case KEY_SHIFT_SPACE:
-                    return EDITOR_SCALE_ALL_DOWN;
                 case KEY_SHIFT_UP:
                     return EDITOR_SCALE_Y_DOWN;
                 case KEY_SHIFT_DOWN:
@@ -594,23 +660,18 @@ LevelEditorMode editor_input_to_mode(LevelEditorMode current_mode, EditorInput i
                 case KEY_SHIFT_RIGHT:
                     return EDITOR_SCALE_X_DOWN;
 
+                case KEY_L:
+                    return EDITOR_SCALE_LOCK;
+
                 case KEY_M:
                     return EDITOR_MOVE;
                 case KEY_R:
                     return EDITOR_ROTATE;
                 case KEY_S:
                     return EDITOR_SCALE;
+                case KEY_A:
+                    return EDITOR_SHAPE;
 
-                default:
-                    return EDITOR_SCALE;
-            }
-        case EDITOR_SCALE_ALL_UP:
-            switch(input.key) {
-                default:
-                    return EDITOR_SCALE;
-            }
-        case EDITOR_SCALE_ALL_DOWN:
-            switch(input.key) {
                 default:
                     return EDITOR_SCALE;
             }
@@ -634,6 +695,73 @@ LevelEditorMode editor_input_to_mode(LevelEditorMode current_mode, EditorInput i
                 default:
                     return EDITOR_SCALE;
             }
+        case EDITOR_SCALE_LOCK:
+            switch(input.key) {
+                case KEY_ESCAPE:
+                    return EDITOR_SCALE;
+                case KEY_UP:
+                    return EDITOR_SCALE_ALL_UP;
+                case KEY_DOWN:
+                    return EDITOR_SCALE_ALL_UP;
+                case KEY_LEFT:
+                    return EDITOR_SCALE_ALL_UP;
+                case KEY_RIGHT:
+                    return EDITOR_SCALE_ALL_UP;
+                case KEY_SHIFT_UP:
+                    return EDITOR_SCALE_ALL_DOWN;
+                case KEY_SHIFT_DOWN:
+                    return EDITOR_SCALE_ALL_DOWN;
+                case KEY_SHIFT_LEFT:
+                    return EDITOR_SCALE_ALL_DOWN;
+                case KEY_SHIFT_RIGHT:
+                    return EDITOR_SCALE_ALL_DOWN;
+
+                case KEY_M:
+                    return EDITOR_MOVE;
+                case KEY_R:
+                    return EDITOR_ROTATE;
+                case KEY_S:
+                    return EDITOR_SCALE;
+                case KEY_A:
+                    return EDITOR_SHAPE;
+
+                default:
+                    return EDITOR_SCALE_LOCK;
+
+            }
+        case EDITOR_SCALE_ALL_UP:
+            switch(input.key) {
+                default:
+                    return EDITOR_SCALE_LOCK;
+            }
+        case EDITOR_SCALE_ALL_DOWN:
+            switch(input.key) {
+                default:
+                    return EDITOR_SCALE_LOCK;
+            }
+
+        case EDITOR_SHAPE:
+            switch(input.key) {
+                case KEY_ESCAPE:
+                    return EDITOR_SELECT;
+                case KEY_UP:
+                    return EDITOR_SHAPE_ADD_VERTEX;
+                case KEY_DOWN:
+                    return EDITOR_SHAPE_REMOVE_VERTEX;
+                default:
+                    return EDITOR_SHAPE;
+            }
+        case EDITOR_SHAPE_ADD_VERTEX:
+            switch(input.key) {
+                default:
+                    return EDITOR_SHAPE;
+            }
+        case EDITOR_SHAPE_REMOVE_VERTEX:
+            switch(input.key) {
+                default:
+                    return EDITOR_SHAPE;
+            }
+
 
         default:
             return EDITOR_SELECT;
@@ -659,7 +787,7 @@ void editor_select(EditorInput input) {
     }
 }
 
-void editor_move(EditorInput input) {
+void editor_move_mouse(EditorInput input) {
     positions[selected_entity] = positions[selection];
 }
 
@@ -671,16 +799,16 @@ void editor_rotate_ccw(EditorInput input) {
     set_orientation(selected_entity, orientations[selected_entity] - 1*2*PI_F/360);
 }
 void editor_rotate_up(EditorInput input) {
-    set_orientation(selected_entity, 0*2*PI_F/360);
+    set_orientation(selected_entity, orientations[selected_entity] + 180*2*PI_F/360);
 }
 void editor_rotate_down(EditorInput input) {
-    set_orientation(selected_entity, 180*2*PI_F/360);
+    set_orientation(selected_entity, orientations[selected_entity] - 180*2*PI_F/360);
 }
 void editor_rotate_right(EditorInput input) {
-    set_orientation(selected_entity, 90*2*PI_F/360);
+    set_orientation(selected_entity, orientations[selected_entity] + 90*2*PI_F/360);
 }
 void editor_rotate_left(EditorInput input) {
-    set_orientation(selected_entity, -90*2*PI_F/360);
+    set_orientation(selected_entity, orientations[selected_entity] - 90*2*PI_F/360);
 }
 
 void editor_scale_all_up(EditorInput input) {
@@ -714,15 +842,59 @@ void editor_scale_y_down(EditorInput input) {
     scale_textures(selected_entity, (Scale){1,1 - SCALE_INCREMENT});
 }
 
+void editor_shape_add_vertex(EditorInput input) {
+    Shape new_shape = add_vertex(hit_boxes[selected_entity]);
+    set_hitbox(selected_entity, new_shape);
+}
+void editor_shape_remove_vertex(EditorInput input) {
+    Shape new_shape = delete_vertex(hit_boxes[selected_entity]);
+    set_hitbox(selected_entity, new_shape);
+}
+void editor_move_up(EditorInput input) {
+    positions[selected_entity].y += MOVE_INCREMENT;
+}
+void editor_move_down(EditorInput input) {
+    positions[selected_entity].y -= MOVE_INCREMENT;
+}
+void editor_move_left(EditorInput input) {
+    positions[selected_entity].x -= MOVE_INCREMENT;
+}
+void editor_move_right(EditorInput input) {
+    positions[selected_entity].x += MOVE_INCREMENT;
+}
+
+void editor_pause_engine(EditorInput input) {
+    if(engine_is_paused()) {
+        engine_resume();
+    }
+    else {
+        engine_pause();
+    }
+}
+
 void resolve_mode(LevelEditorMode mode, EditorInput input) {
     switch(mode) {
         case EDITOR_NONE:
             break;
+        case EDITOR_PAUSE_ENGINE:
+            editor_pause_engine(input);
+            break;
         case EDITOR_SELECT:
             editor_select(input);
             break;
-        case EDITOR_MOVE:
-            editor_move(input);
+        case EDITOR_MOVE_MOUSE:
+            editor_move_mouse(input);
+        case EDITOR_MOVE_UP:
+            editor_move_up(input);
+            break;
+        case EDITOR_MOVE_DOWN:
+            editor_move_down(input);
+            break;
+        case EDITOR_MOVE_LEFT:
+            editor_move_left(input);
+            break;
+        case EDITOR_MOVE_RIGHT:
+            editor_move_right(input);
             break;
         case EDITOR_ROTATE_CW:
             editor_rotate_cw(input);
@@ -760,6 +932,12 @@ void resolve_mode(LevelEditorMode mode, EditorInput input) {
         case EDITOR_SCALE_Y_DOWN:
             editor_scale_y_down(input);
             break;
+        case EDITOR_SHAPE_ADD_VERTEX:
+            editor_shape_add_vertex(input);
+            break;
+        case EDITOR_SHAPE_REMOVE_VERTEX:
+            editor_shape_remove_vertex(input);
+            break;
         default:
             break;
     }
@@ -780,8 +958,20 @@ void print_mode(LevelEditorMode mode) {
         case EDITOR_MOVE:
             console_write(LOG_APP, "Mode is MOVE\n");
             break;
-        case EDITOR_MOVE_CENTER:
-            console_write(LOG_APP, "Mode is MOVE_CENTER\n");
+        case EDITOR_MOVE_MOUSE:
+            console_write(LOG_APP, "Mode is MOVE_MOUSE\n");
+            break;
+        case EDITOR_MOVE_UP:
+            console_write(LOG_APP, "Mode is MOVE_UP\n");
+            break;
+        case EDITOR_MOVE_DOWN:
+            console_write(LOG_APP, "Mode is MOVE_DOWN\n");
+            break;
+        case EDITOR_MOVE_LEFT:
+            console_write(LOG_APP, "Mode is MOVE_LEFT\n");
+            break;
+        case EDITOR_MOVE_RIGHT:
+            console_write(LOG_APP, "Mode is MOVE_RIGHT\n");
             break;
         case EDITOR_ROTATE:
             console_write(LOG_APP, "Mode is ROTATE\n");
@@ -807,6 +997,15 @@ void print_mode(LevelEditorMode mode) {
         case EDITOR_SCALE_Y_DOWN:
             console_write(LOG_APP, "Mode is SCALE_Y_DOWN\n");
             break;
+        case EDITOR_SCALE_LOCK:
+            console_write(LOG_APP, "Mode is SCALE_LOCK\n");
+            break;
+        case EDITOR_SCALE_ALL_DOWN:
+            console_write(LOG_APP, "Mode is SCALE_ALL_DOWN\n");
+            break;
+        case EDITOR_SCALE_ALL_UP:
+            console_write(LOG_APP, "Mode is SCALE_ALL_UP\n");
+            break;
         case EDITOR_ROTATE_UP:
             console_write(LOG_APP, "Mode is ROTATE_UP\n");
             break;
@@ -819,6 +1018,18 @@ void print_mode(LevelEditorMode mode) {
         case EDITOR_ROTATE_RIGHT:
             console_write(LOG_APP, "Mode is ROTATE_RIGHT\n");
             break;
+        case EDITOR_PAUSE_ENGINE:
+            console_write(LOG_APP, "Mode is PAUSE_ENGINE\n");
+            break;
+        case EDITOR_SHAPE:
+            console_write(LOG_APP, "Mode is SHAPE\n");
+            break;
+        case EDITOR_SHAPE_ADD_VERTEX:
+            console_write(LOG_APP, "Mode is SHAPE_ADD_VERTEX\n");
+            break;
+        case EDITOR_SHAPE_REMOVE_VERTEX:
+            console_write(LOG_APP, "Mode is SHAPE_REMOVE_VERTEX\n");
+            break;
         default:
             console_write(LOG_APP, "Mode is not working\n");
             break;
@@ -826,10 +1037,72 @@ void print_mode(LevelEditorMode mode) {
     }
 }
 
+void print_editor_controls(void)
+{
+    console_write(LOG_APP,
+        "\n"
+        "========================================\n"
+        "          LEVEL EDITOR CONTROLS\n"
+        "========================================\n"
+        "\n"
+        "GLOBAL MODES\n"
+        "  M                 Move mode\n"
+        "  R                 Rotate mode\n"
+        "  S                 Scale mode\n"
+        "  A                 Shape mode\n"
+        "  Space             Pause / resume engine\n"
+        "  Escape            Return to select mode\n"
+        "\n"
+        "SELECT MODE\n"
+        "  Left Mouse        Select entity under cursor\n"
+        "\n"
+        "MOVE MODE\n"
+        "  Left Mouse        Attach selected entity to mouse\n"
+        "  Up Arrow          Move entity down by %d units\n"
+        "  Down Arrow        Move entity up by %d units\n"
+        "  Left Arrow        Move entity left by %d units\n"
+        "  Right Arrow       Move entity right by %d units\n"
+        "  Escape            Stop mouse movement / return\n"
+        "\n"
+        "ROTATE MODE\n"
+        "  Left Arrow        Rotate counter-clockwise by 1 degree\n"
+        "  Right Arrow       Rotate clockwise by 1 degree\n"
+        "  Shift + Up        Rotate by +180 degrees\n"
+        "  Shift + Down      Rotate by -180 degrees\n"
+        "  Shift + Left      Rotate by -90 degrees\n"
+        "  Shift + Right     Rotate by +90 degrees\n"
+        "\n"
+        "SCALE MODE\n"
+        "  Up / Down         Increase Y scale by %.2f\n"
+        "  Left / Right      Increase X scale by %.2f\n"
+        "  Shift + Up/Down   Decrease Y scale by %.2f\n"
+        "  Shift + Left/Right Decrease X scale by %.2f\n"
+        "  L                 Toggle uniform scale mode\n"
+        "\n"
+        "UNIFORM SCALE MODE\n"
+        "  Any Arrow         Increase total scale by %.2f\n"
+        "  Shift + Arrow     Decrease total scale by %.2f\n"
+        "  Escape            Return to normal scale mode\n"
+        "\n"
+        "SHAPE MODE\n"
+        "  Up Arrow          Add a vertex\n"
+        "  Down Arrow        Remove a vertex\n"
+        "\n"
+        "========================================\n"
+        "\n",
+        MOVE_INCREMENT,
+        MOVE_INCREMENT,
+        MOVE_INCREMENT,
+        MOVE_INCREMENT,
+        SCALE_INCREMENT,
+        SCALE_INCREMENT,
+        SCALE_INCREMENT,
+        SCALE_INCREMENT,
+        SCALE_INCREMENT,
+        SCALE_INCREMENT
+    );
+}
 
-bool has_selection = false;
-LevelEditorMode prev_mode = EDITOR_NONE;
-LevelEditorMode current_mode = EDITOR_NONE;
 
 void level_editor_init() {
     selection = add_entity();
@@ -838,6 +1111,7 @@ void level_editor_init() {
     Shape selection_hit_box = create_circle(0.1, 5);
     set_hitbox(selection, selection_hit_box);
     delete_components(selection, COLLISION);
+    print_editor_controls();
 }
 
 void level_editor_update(SDL_Renderer *renderer) {
@@ -845,9 +1119,9 @@ void level_editor_update(SDL_Renderer *renderer) {
         EditorInput input = sdl_event_to_editor_input(renderer, event);
         prev_mode = current_mode;
         current_mode = editor_input_to_mode(current_mode, input);
-        if(prev_mode != current_mode) {
-            print_mode(current_mode);
-        }
+        //if(prev_mode != current_mode) {
+        //    print_mode(current_mode);
+        //}
         bind_selection_to_mouse(renderer);
         resolve_mode(current_mode, input);
 

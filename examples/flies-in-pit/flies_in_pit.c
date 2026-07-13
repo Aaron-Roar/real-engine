@@ -73,7 +73,7 @@ int main() {
         Entity ball = add_entity();
         set_position(ball, (Position){.x = tools_random_range(100, 400), .y = tools_random_range(0, 300)});
         set_orientation(ball, tools_random_range(0, 2*PI_F));
-        set_mass(ball, 0.001);
+        set_mass(ball, 0.002);
         set_velocity(ball, (Velocity){.x = tools_random_range(-10, 10), .y = tools_random_range(0, 100)});
         set_acceleration(ball, (Acceleration){tools_random_range(0,10), 50});
         set_restitution(ball, 0.3);
@@ -99,16 +99,6 @@ int main() {
             console_write(LOG_CONSOLE, "%s", console_line.string);
         }
         level_editor_update(renderer);
-
-
-        SDL_Event event = engine_poll_event();
-        if (event.type == SDL_EVENT_KEY_UP && event.key.scancode == SDL_SCANCODE_SPACE) {
-            engine_set_dt(-dt);
-            for(int i = 0; i < MAX_ENTITIES; i += 1) {
-                accelerations[i].x = -accelerations[i].x;
-                accelerations[i].y = -accelerations[i].y;
-            }
-        }
 
         //physics
         engine_update_time();

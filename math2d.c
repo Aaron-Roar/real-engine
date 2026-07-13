@@ -193,6 +193,51 @@ Vec2D rotate_vector(Vec2D vector, float angle) {
     };
 }
 
+Vec2D polygon_centroid(Shape shape)
+{
+    double area_sum = 0.0;
+    double cx_sum = 0.0;
+    double cy_sum = 0.0;
+
+    for (int i = 0; i < shape.amount_of_vertices; i++) {
+        int j = (i + 1) % shape.amount_of_vertices;
+
+        double xi = shape.vertices[i].x;
+        double yi = shape.vertices[i].y;
+        double xj = shape.vertices[j].x;
+        double yj = shape.vertices[j].y;
+
+        double cross = xi * yj - xj * yi;
+
+        area_sum += cross;
+        cx_sum += (xi + xj) * cross;
+        cy_sum += (yi + yj) * cross;
+    }
+
+    double area = area_sum * 0.5;
+
+    if (fabs(area) < 1e-8) {
+        // Degenerate polygon fallback: average vertices
+        Vec2D avg = {0};
+
+        for (int i = 0; i < shape.amount_of_vertices; i++) {
+            avg.x += shape.vertices[i].x;
+            avg.y += shape.vertices[i].y;
+        }
+
+        avg.x /= shape.amount_of_vertices;
+        avg.y /= shape.amount_of_vertices;
+
+        return avg;
+    }
+
+    Vec2D centroid = {
+        .x = cx_sum / (6.0 * area),
+        .y = cy_sum / (6.0 * area),
+    };
+
+    return centroid;
+}
 //Circles
 Vec1D circle_radius(Shape circle, Vec2D centroid) {
   return sqrt(
@@ -242,4 +287,42 @@ Shape scale_shape(Shape shape, float scale)
     }
 
     return scaled_shape;
+}
+
+Shape add_vertex(Shape shape) {
+    uint16_t amount_of_vertices = shape.amount_of_vertices + 1;
+    if(amount_of_vertices >= MAX_VERTICIES) {
+        return shape;
+    }
+    if(amount_of_vertices < 3) {
+        return shape;
+    }
+
+    float radius = circle_radius(shape, polygon_centroid(shape));
+    if(amount_of_vertices == 3) {
+        return create_circle(radius, 3);
+    }
+    if(amount_of_vertices == 4) {
+        return create_square(radius, radius);
+    }
+    return create_circle(radius, amount_of_vertices);
+}
+
+Shape delete_vertex(Shape shape) {
+    uint16_t amount_of_vertices = shape.amount_of_vertices - 1;
+    if(amount_of_vertices >= MAX_VERTICIES) {
+        return shape;
+    }
+    if(amount_of_vertices < 3) {
+        return shape;
+    }
+
+    float radius = circle_radius(shape, polygon_centroid(shape));
+    if(amount_of_vertices == 3) {
+        return create_circle(radius, 3);
+    }
+    if(amount_of_vertices == 4) {
+        return create_square(radius, radius);
+    }
+    return create_circle(radius, amount_of_vertices);
 }

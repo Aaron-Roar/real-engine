@@ -17,13 +17,13 @@ int main() {
     console_init();
     console_set_debug(CONSOLE_DEBUG_OFF);
     engine_init();
-    level_editor_init();
     SDL_Renderer *renderer = NULL;
     SDL_Window *window = NULL;
     if (!graphics_start(&renderer, &window)) {
         engine_shutdown();
         return 1;
     }
+    level_editor_init();
 
 
     Entity entity_1 = add_entity();
@@ -37,7 +37,7 @@ int main() {
     set_static(entity_2);
     set_position(entity_2, (Vec2D){100, 390});
     set_orientation(entity_2, 0*(PI_F/180));
-    Shape shape_2 = create_circle(20, 5);
+    Shape shape_2 = create_circle(20, 4);
     set_hitbox(entity_2, shape_2);
 
     //Game Loop

@@ -5,7 +5,7 @@
 
 #define MAX_VECTORS 100
 #define MAX_VERTICIES 50
-#define MIN_VERTICIES 4
+#define MIN_VERTICIES 3
 
 #define PI_F 3.14159265358979323846f
 typedef float Vec1D;
@@ -54,4 +54,7 @@ float projection_overlap(Projection projection_1, Projection projection_2);
 Shape scale_shape(Shape shape, float scale);
 Shape scale_shape_y(Shape shape, float scale);
 Shape scale_shape_x(Shape shape, float scale);
+Vec2D polygon_centroid(Shape shape);
+Shape add_vertex(Shape shape);
+Shape delete_vertex(Shape shape);
 #endif

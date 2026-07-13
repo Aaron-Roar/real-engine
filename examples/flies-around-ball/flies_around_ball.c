@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <time.h>
 #include <stdlib.h>
+#include "level_editor.h"
 #include "examples/test-assets/elder-fly/elderfly_descriptors.h"
 
 const Color background_color = (Color){255,255,255,255};
@@ -19,6 +20,7 @@ int main() {
     console_init();
     console_set_debug(CONSOLE_DEBUG_OFF);
     engine_init();
+    level_editor_init();
     SDL_Renderer *renderer = NULL;
     SDL_Window *window = NULL;
     SDL_Event event = {0};
@@ -77,6 +79,7 @@ int main() {
         if(read_console(&console_line)) {
             console_write(LOG_CONSOLE, "%s", console_line.string);
         }
+        level_editor_update(renderer);
 
         //Game Code
         if(engine_get_tick() % 10000 == 0) {
@@ -102,7 +105,6 @@ int main() {
         engine_update_tick();
         apply_collisions();
         system_update_physics(engine_get_dt());
-        SDL_Event event = engine_poll_event();
 
         //render
         draw_background(renderer, background_color);
