@@ -61,7 +61,7 @@ TermWindow capture_window() {
     return window;
 }
 
-int count_logs() {
+int console_count_logs() {
     int log_count = 0;
     for(int i = 0; i < MAX_LOGS; i++) {
         if(logs[i].log.string[0] != 0)
@@ -70,7 +70,7 @@ int count_logs() {
     return log_count;
 }
 
-void clear_row(int row) {
+void console_clear_row(int row) {
     TermWindow window = {0};
     getmaxyx(stdscr, window.rows, window.cols);
     if((row >= window.rows) || (row < 0) ) { //Rows accessing out of range
@@ -82,10 +82,10 @@ void clear_row(int row) {
     }
 }
 
-void clear_logs() {
+void console_clear_logs() {
     TermWindow window = capture_window();
 
-    int log_size = count_logs();
+    int log_size = console_count_logs();
     int log_overflow = (log_size > (window.rows - LOG_ROW_OFFSET)) ? log_size - (window.rows - LOG_ROW_OFFSET) : 0; //If log_size > window.rows ? true : false;
     for(int i = 0; i < log_size - log_overflow; i++) {
         move(i, 0);
@@ -93,12 +93,12 @@ void clear_logs() {
     }
 }
 
-void print_logs() {
+void console_print_logs() {
     if(console_active) {
         TermWindow window = capture_window();
 
-        clear_logs();
-        int log_size = count_logs();
+        console_clear_logs();
+        int log_size = console_count_logs();
         int log_overflow = (log_size > (window.rows - LOG_ROW_OFFSET)) ? log_size - (window.rows - LOG_ROW_OFFSET) : 0; //If log_size > window.rows
 
         for(int i = 0; i < log_size - log_overflow; i++) {
@@ -108,7 +108,7 @@ void print_logs() {
 }
 
 
-void print_input() {
+void console_print_input() {
     if(console_active) {
         TermWindow w = capture_window();
         char input_line[w.cols - 1];
@@ -116,12 +116,12 @@ void print_input() {
         input_line[w.cols - 2] = '\0';
 
         mvprintw(w.rows - LOG_ROW_OFFSET, 0, "%s", input_line);
-        clear_row(w.rows - INPUT_ROW_OFFSET);
+        console_clear_row(w.rows - INPUT_ROW_OFFSET);
         mvprintw(w.rows - INPUT_ROW_OFFSET, 0, ">>%s", cmd_line_input.string);
     }
 }
 
-void log_input(ConsoleLogString input) {
+void console_log_input(ConsoleLogString input) {
     input.string[MAX_LOG_STR - 1] = '\0';
 
     memcpy(
@@ -132,14 +132,14 @@ void log_input(ConsoleLogString input) {
 
     log_index = (log_index + 1) % MAX_LOGS;
 
-    print_logs();
+    console_print_logs();
 }
 
-void clear_input() {
+void console_clear_input() {
     TermWindow w = capture_window();
 
     memset(cmd_line_input.string, 0, sizeof(ConsoleLogString));
-    clear_row(w.rows - INPUT_ROW_OFFSET);
+    console_clear_row(w.rows - INPUT_ROW_OFFSET);
 }
 
 void console_init() {
@@ -162,12 +162,12 @@ void console_backspace() {
 void console_shutdown() {
     //Goodbye MSG
     console_write(LOG_CONSOLE, "<ESC-Key> Recived.\nConsole Shutting...\n");
-    clear_logs();
-    print_logs();
+    console_clear_logs();
+    console_print_logs();
 
     console_active = false;
-    clear_logs();
-    clear_input();
+    console_clear_logs();
+    console_clear_input();
     endwin(); //Kills ncurses now terminal is back to normal
 }
 
@@ -183,7 +183,7 @@ ConsoleLogString input_log_buffer = {0};
 int input_log_buffer_index = 0;
 //ConsoleStr will be all JSON
 
-bool read_console(ConsoleLogString *console_str) {
+bool console_read(ConsoleLogString *console_str) {
     if(console_active) {
         TermWindow w = capture_window();
         move(w.rows - INPUT_ROW_OFFSET, cmd_line_input_index + 2);
@@ -198,12 +198,12 @@ bool read_console(ConsoleLogString *console_str) {
                     break;
                 case Console_KEY_ENTER_1:
                     memcpy(console_str->string, cmd_line_input.string, sizeof(ConsoleLogString));
-                    clear_input();
+                    console_clear_input();
                     cmd_line_input_index = 0;
                     return true;
                 case Console_KEY_ENTER_2:
                     memcpy(console_str->string, cmd_line_input.string, sizeof(ConsoleLogString));
-                    clear_input();
+                    console_clear_input();
                     cmd_line_input_index = 0;
                     return true;
                 case Console_KEY_BACKSPACE_1:
@@ -222,13 +222,13 @@ bool read_console(ConsoleLogString *console_str) {
                     }
                     break;
             }
-            print_input();
+            console_print_input();
             return false;
     }
     return false;
 }
 
-char source_symbol(LogSourceType source) {
+char console_source_symbol(LogSourceType source) {
     char result = 0;
     switch(source) {
         case LOG_ENGINE:
@@ -256,7 +256,7 @@ void console_write(LogSourceType source, const char *fmt, ...)
         ConsoleLogString str_buff = {0};
 
     str_buff.string[0] = '[';
-    str_buff.string[1] = source_symbol(source);
+    str_buff.string[1] = console_source_symbol(source);
     str_buff.string[2] = ']';
 
     va_list args;
@@ -271,7 +271,7 @@ void console_write(LogSourceType source, const char *fmt, ...)
 
     va_end(args);
 
-    log_input(str_buff);
+    console_log_input(str_buff);
 }
 
 void console_debug_write(LogSourceType source, const char *fmt, ...)
@@ -280,7 +280,7 @@ void console_debug_write(LogSourceType source, const char *fmt, ...)
       ConsoleLogString str_buff = {0};
 
       str_buff.string[0] = '[';
-      str_buff.string[1] = source_symbol(source);
+      str_buff.string[1] = console_source_symbol(source);
       str_buff.string[2] = ']';
 
       va_list args;
@@ -295,7 +295,7 @@ void console_debug_write(LogSourceType source, const char *fmt, ...)
 
       va_end(args);
 
-      log_input(str_buff);
+      console_log_input(str_buff);
     }
 }
 

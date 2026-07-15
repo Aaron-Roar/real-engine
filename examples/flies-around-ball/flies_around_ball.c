@@ -29,8 +29,8 @@ int main() {
         return 1;
     }
 
-    animation = load_animation(renderer, elderfly_fly_files);
-    sprite = create_animated_sprite(animation, (Scale){3,3});
+    animation = graphics_load_animation(renderer, elderfly_fly_files);
+    sprite = graphics_create_animated_sprite(animation, (Scale){3,3});
 
     Entity magnet_smash = add_entity();
     set_position(magnet_smash, (Position){.x = 400, .y = 200});
@@ -40,7 +40,7 @@ int main() {
     //set_angular_velocity(water_smash, 3);
     set_acceleration(magnet_smash, (Acceleration){0, 0});
     set_restitution(magnet_smash, 0.7);
-    Shape shape4 = create_circle(50, 4);
+    Shape shape4 = math_create_circle(50, 4);
     set_hitbox(magnet_smash, shape4);
     set_friction(magnet_smash, 0.4);
     set_dynamic(magnet_smash);
@@ -58,25 +58,25 @@ int main() {
         set_acceleration(ball, (Acceleration){tools_random_range(0,10), 50});
         set_restitution(ball, 0.1);
         float size = tools_random_range_float(10, 20);
-        Shape shape3 = create_circle(size, 5);
+        Shape shape3 = math_create_circle(size, 5);
         set_hitbox(ball, shape3);
         set_friction(ball, 0.4);
         set_dynamic(ball);
         //set_transform_lock(ball, water_smash, (Vec2D){tools_random_range(100, 400), tools_random_range(100, 400)}, tools_random_range(0, 10), true, true, false);
         set_joint(ball, magnet_smash, JOINT_DISTANCE, (Vec2D){0}, (Vec2D){0}, 10, 0);
-        sprite = create_animated_sprite(animation, (Scale){size/10, size/10});
+        sprite = graphics_create_animated_sprite(animation, (Scale){size/10, size/10});
         sprite.animation.time_per_frame = tools_random_range_float(0.005, 0.5);
-        add_animated_sprite(ball, sprite);
+        graphics_add_animated_sprite(ball, sprite);
         add_components(ball, PARTICLE);
     }
 
 
     //Game Loop
     while (console_is_active()) {
-        clean_entities_past_lifetime();
+        system_clean_entities_past_lifetime();
         //Console
         ConsoleLogString console_line = {0};
-        if(read_console(&console_line)) {
+        if(console_read(&console_line)) {
             console_write(LOG_CONSOLE, "%s", console_line.string);
         }
         level_editor_update(renderer);
@@ -103,15 +103,14 @@ int main() {
         //physics
         engine_update_time();
         engine_update_tick();
-        apply_collisions();
         system_update_physics(engine_get_dt());
 
         //render
-        draw_background(renderer, background_color);
-        draw_hit_boxes(renderer);
-        update_sprite_frames(engine_get_tick(), engine_get_time());
-        draw_animated_sprites(renderer);
-        show_graphics(renderer);
+        graphics_draw_background(renderer, background_color);
+        graphics_draw_hit_boxes(renderer);
+        graphics_update_sprite_frames(engine_get_tick(), engine_get_time());
+        graphics_draw_animated_sprites(renderer);
+        graphics_show(renderer);
 
     }
     graphics_end(renderer, window);

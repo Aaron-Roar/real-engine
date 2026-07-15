@@ -168,7 +168,7 @@ Collision system_get_entity_collision(Entity entity_1, Entity entity_2) {
     return sat_collision(shape1, shape2);
 }
 
-void separate_entities(Entity entity_1, Entity entity_2, Collision collision)
+void system_separate_entities(Entity entity_1, Entity entity_2, Collision collision)
 {
     bool entity_1_dynamic = (entity_mask[entity_1] & DYNAMIC) == DYNAMIC;
     bool entity_2_dynamic = (entity_mask[entity_2] & DYNAMIC) == DYNAMIC;
@@ -202,7 +202,7 @@ void separate_entities(Entity entity_1, Entity entity_2, Collision collision)
     positions[entity_2].y += correction.y * (inv_mass_2 / inv_mass_sum);
 }
 
-Position support_point_average(Shape shape, Vec2D direction)
+Position system_support_point_average(Shape shape, Vec2D direction)
 {
     float best_projection = -FLT_MAX;
     Position sum = {0};
@@ -212,7 +212,7 @@ Position support_point_average(Shape shape, Vec2D direction)
 
     for(int i = 0; i < shape.amount_of_vertices; i += 1) {
         Position vertex = shape.vertices[i];
-        float projection = dot_product(vertex, direction);
+        float projection = math_dot_product(vertex, direction);
 
         if(projection > best_projection + epsilon) {
             best_projection = projection;
@@ -241,7 +241,7 @@ Position system_get_particle_edge(Entity entity, Vec2D normal, Vec1D radius) {
         .y = positions[entity].y + normal.y*radius,
     };
 }
-Position collision_contact_point(Entity entity_1, Entity entity_2, Collision collision)
+Position system_collision_contact_point(Entity entity_1, Entity entity_2, Collision collision)
 {
     Shape shape_1 = get_global_hit_box(entity_1);
     Shape shape_2 = get_global_hit_box(entity_2);
@@ -260,14 +260,14 @@ Position collision_contact_point(Entity entity_1, Entity entity_2, Collision col
     Position point_2 = {0};
     //PARTICLE
     if(has_components(entity_1, PARTICLE) && has_components(entity_2, PARTICLE)){
-        Vec1D r1 = circle_radius(shape_1, polygon_centroid(shape_1));
-        Vec1D r2 = circle_radius(shape_2, polygon_centroid(shape_2));
+        Vec1D r1 = math_circle_radius(shape_1, math_polygon_centroid(shape_1));
+        Vec1D r2 = math_circle_radius(shape_2, math_polygon_centroid(shape_2));
         point_1 = system_get_particle_edge(entity_1, normal, r1);
         point_2 = system_get_particle_edge(entity_2, opposite_normal, r2);
     }
     else {
-        point_1 = support_point_average(shape_1, normal);
-        point_2 = support_point_average(shape_2, opposite_normal);
+        point_1 = system_support_point_average(shape_1, normal);
+        point_2 = system_support_point_average(shape_2, opposite_normal);
 
     }
 
@@ -297,7 +297,7 @@ Position collision_contact_point(Entity entity_1, Entity entity_2, Collision col
     };
 }
 
-void apply_friction_impulse(
+void system_apply_friction_impulse(
     Entity entity_1,
     Entity entity_2,
     Collision collision,
@@ -309,8 +309,8 @@ void apply_friction_impulse(
     float inv_inertia_1,
     float inv_inertia_2
 ) {
-    Vec2D angular_v1 = angular_velocity_cross_vec(angular_velocities[entity_1], r1);
-    Vec2D angular_v2 = angular_velocity_cross_vec(angular_velocities[entity_2], r2);
+    Vec2D angular_v1 = math_angular_velocity_cross_vec(angular_velocities[entity_1], r1);
+    Vec2D angular_v2 = math_angular_velocity_cross_vec(angular_velocities[entity_2], r2);
 
     Vec2D contact_v1 = {
         .x = velocities[entity_1].x + angular_v1.x,
@@ -327,7 +327,7 @@ void apply_friction_impulse(
         .y = contact_v2.y - contact_v1.y
     };
 
-    float rel_v_along_normal = dot_product(rel_v, collision.normal);
+    float rel_v_along_normal = math_dot_product(rel_v, collision.normal);
 
     Vec2D tangent = {
         .x = rel_v.x - collision.normal.x * rel_v_along_normal,
@@ -343,8 +343,8 @@ void apply_friction_impulse(
     tangent.x /= tangent_mag;
     tangent.y /= tangent_mag;
 
-    float r1_cross_t = cross_2d(r1, tangent);
-    float r2_cross_t = cross_2d(r2, tangent);
+    float r1_cross_t = math_cross_2d(r1, tangent);
+    float r2_cross_t = math_cross_2d(r2, tangent);
 
     float denominator =
         inv_mass_1 +
@@ -356,7 +356,7 @@ void apply_friction_impulse(
         return;
     }
 
-    float jt = -dot_product(rel_v, tangent) / denominator;
+    float jt = -math_dot_product(rel_v, tangent) / denominator;
 
     float mu = sqrtf(frictions[entity_1] * frictions[entity_2]);
 
@@ -380,11 +380,11 @@ void apply_friction_impulse(
     velocities[entity_2].x += friction_impulse.x * inv_mass_2;
     velocities[entity_2].y += friction_impulse.y * inv_mass_2;
 
-    angular_velocities[entity_1] -= cross_2d(r1, friction_impulse) * inv_inertia_1;
-    angular_velocities[entity_2] += cross_2d(r2, friction_impulse) * inv_inertia_2;
+    angular_velocities[entity_1] -= math_cross_2d(r1, friction_impulse) * inv_inertia_1;
+    angular_velocities[entity_2] += math_cross_2d(r2, friction_impulse) * inv_inertia_2;
 }
 
-void resolve_collision(Entity entity_1, Entity entity_2, Collision collision) {
+void system_resolve_collision(Entity entity_1, Entity entity_2, Collision collision) {
     // Assume collision.normal points from entity_1 -> entity_2
 
     // ================================
@@ -417,7 +417,7 @@ void resolve_collision(Entity entity_1, Entity entity_2, Collision collision) {
     }
 
     //Position contact = approximate_contact_point(positions[entity_1], positions[entity_2]);
-    Position contact = collision_contact_point(entity_1, entity_2, collision);
+    Position contact = system_collision_contact_point(entity_1, entity_2, collision);
 
     Vec2D r1 = {
         .x = contact.x - positions[entity_1].x,
@@ -438,12 +438,12 @@ void resolve_collision(Entity entity_1, Entity entity_2, Collision collision) {
 
     if (entity_1_movable) {
         rotational_velocity_1 =
-            angular_velocity_cross_vec(angular_velocities[entity_1], r1);
+            math_angular_velocity_cross_vec(angular_velocities[entity_1], r1);
     }
 
     if (entity_2_movable) {
         rotational_velocity_2 =
-            angular_velocity_cross_vec(angular_velocities[entity_2], r2);
+            math_angular_velocity_cross_vec(angular_velocities[entity_2], r2);
     }
 
     Vec2D contact_velocity_1 = {0};
@@ -464,7 +464,7 @@ void resolve_collision(Entity entity_1, Entity entity_2, Collision collision) {
         .y = contact_velocity_2.y - contact_velocity_1.y
     };
 
-    float v_normal = dot_product(v_rel, collision.normal);
+    float v_normal = math_dot_product(v_rel, collision.normal);
 
     if (v_normal > 0.0f) {
         return;
@@ -511,8 +511,8 @@ void resolve_collision(Entity entity_1, Entity entity_2, Collision collision) {
         }
     }
 
-    float r1_cross_n = cross_2d(r1, collision.normal);
-    float r2_cross_n = cross_2d(r2, collision.normal);
+    float r1_cross_n = math_cross_2d(r1, collision.normal);
+    float r2_cross_n = math_cross_2d(r2, collision.normal);
 
     // ================================
     // CHANGED: denominator uses inverse mass/inertia
@@ -549,10 +549,10 @@ void resolve_collision(Entity entity_1, Entity entity_2, Collision collision) {
     // CHANGED: angular velocity update uses inverse inertia
     // If entity is not movable, inv_inertia = 0, so it does not rotate.
     // ================================
-    angular_velocities[entity_1] -= cross_2d(r1, impulse) * inv_inertia_1;
-    angular_velocities[entity_2] += cross_2d(r2, impulse) * inv_inertia_2;
+    angular_velocities[entity_1] -= math_cross_2d(r1, impulse) * inv_inertia_1;
+    angular_velocities[entity_2] += math_cross_2d(r2, impulse) * inv_inertia_2;
 
-        apply_friction_impulse(
+        system_apply_friction_impulse(
         entity_1,
         entity_2,
         collision,
@@ -567,7 +567,7 @@ void resolve_collision(Entity entity_1, Entity entity_2, Collision collision) {
 }
 
 //Test function
-void separate_overlapped_entities() {
+void system_separate_overlapped_entities() {
     CMask filter = COLLISION;
     for(int i = 0; i < MAX_ENTITIES; i += 1) {
         if(!entity_alive[i]) {
@@ -590,7 +590,7 @@ void separate_overlapped_entities() {
 
             Collision collision = system_get_entity_collision(i, j);
             if(collision.overlap == true) {
-                separate_entities(i, j, collision);
+                system_separate_entities(i, j, collision);
                 system_generate_global_hitbox(i);
                 system_generate_global_hitbox(j);
             }
@@ -600,7 +600,7 @@ void separate_overlapped_entities() {
 }
 
 //Test function
-void separate_static_entities() {
+void system_separate_static_entities() {
     CMask filter = COLLISION | STATIC;
     CMask filter2 = COLLISION;
     for(int i = 0; i < MAX_ENTITIES; i += 1) {
@@ -624,7 +624,7 @@ void separate_static_entities() {
 
             Collision collision = system_get_entity_collision(i, j);
             if(collision.overlap == true) {
-                separate_entities(i, j, collision);
+                system_separate_entities(i, j, collision);
                 system_generate_global_hitbox(i);
                 system_generate_global_hitbox(j);
             }
@@ -633,7 +633,7 @@ void separate_static_entities() {
 
 }
 
-void apply_collisions() {
+void system_apply_collisions() {
     for(int i = 0; i < MAX_ENTITIES; i += 1) {
         if(!entity_alive[i]) {
             continue;
@@ -653,7 +653,7 @@ void apply_collisions() {
                 set_collision_report(i, j, true);
                 set_collision_report(j, i, true);
                 if(has_components(i, filter) && has_components(j, filter)) {
-                    resolve_collision(i, j, collision);
+                    system_resolve_collision(i, j, collision);
                 }
                 //separate_entities(i, j, collision);
                 system_generate_global_hitbox(i);
@@ -760,7 +760,7 @@ void system_apply_axis_locks() {
 
         Axis axis = axis_locks[entity].axis;
 
-        float mag = axis_magnitude(axis);
+        float mag = math_axis_magnitude(axis);
 
         if(mag <= 0.00001f) {
             continue;
@@ -788,7 +788,7 @@ void system_apply_axis_locks() {
             .y = positions[entity].y - point_on_axis.y
         };
 
-        float distance_along_axis = dot_product(relative, axis);
+        float distance_along_axis = math_dot_product(relative, axis);
 
         positions[entity].x = point_on_axis.x + axis.x * distance_along_axis;
         positions[entity].y = point_on_axis.y + axis.y * distance_along_axis;
@@ -796,19 +796,19 @@ void system_apply_axis_locks() {
         /*
             2. Lock velocity onto the axis.
         */
-        velocities[entity] = project_onto_axis(velocities[entity], axis);
+        velocities[entity] = math_project_onto_axis(velocities[entity], axis);
 
         /*
             3. Lock acceleration onto the axis.
         */
-        accelerations[entity] = project_onto_axis(accelerations[entity], axis);
-        force_accelerations[entity] = project_onto_axis(force_accelerations[entity], axis);
+        accelerations[entity] = math_project_onto_axis(accelerations[entity], axis);
+        force_accelerations[entity] = math_project_onto_axis(force_accelerations[entity], axis);
 
         /*
             4. Optional: lock direct force accumulator too.
             This only matters if forces[entity] is used directly.
         */
-        forces[entity] = project_onto_axis(forces[entity], axis);
+        forces[entity] = math_project_onto_axis(forces[entity], axis);
     }
 }
 
@@ -830,7 +830,7 @@ void system_apply_transform_locks()
             continue;
         }
 
-        Vec2D world_offset = rotate_vector(
+        Vec2D world_offset = math_rotate_vector(
             transform_locks[driven].local_offset,
             orientations[driver]
         );
@@ -848,7 +848,7 @@ void system_apply_transform_locks()
         if(transform_locks[driven].inherit_velocity) {
             velocities[driven] = velocities[driver];
 
-            Vec2D rotational_velocity = angular_velocity_cross_vec(
+            Vec2D rotational_velocity = math_angular_velocity_cross_vec(
                 angular_velocities[driver],
                 world_offset
             );
@@ -863,7 +863,7 @@ void system_apply_transform_locks()
     }
 }
 
-void clean_entities_past_lifetime() {
+void system_clean_entities_past_lifetime() {
     for(int i = 0; i < MAX_ENTITIES; i += 1) {
         if( (entity_mask[i] & LIFETIME) == LIFETIME ) {
 
@@ -877,9 +877,9 @@ void clean_entities_past_lifetime() {
     }
 }
 
-static Velocity point_velocity(Entity entity, Vec2D world_offset)
+static Velocity system_point_velocity(Entity entity, Vec2D world_offset)
 {
-    Vec2D angular_part = angular_velocity_cross_vec(
+    Vec2D angular_part = math_angular_velocity_cross_vec(
         angular_velocities[entity],
         world_offset
     );
@@ -889,7 +889,7 @@ static Velocity point_velocity(Entity entity, Vec2D world_offset)
         .y = velocities[entity].y + angular_part.y
     };
 }
-static void add_joint_force_for_one_tick(Entity target, Force force)
+static void system_add_joint_force_for_one_tick(Entity target, Force force)
 {
     //Entity force_entity = set_force(target, force);
     force_accelerations[target].x += force.x/mass[target];
@@ -905,7 +905,7 @@ static void add_joint_force_for_one_tick(Entity target, Force force)
     //    engine_get_tick() + 1
     //);
 }
-static void add_joint_torque_for_one_tick(Entity target, Torque torque)
+static void system_add_joint_torque_for_one_tick(Entity target, Torque torque)
 {
     torque_angular_accelerations[target] += torque/polygon_moment_of_inertia(hit_boxes[target], mass[target]);
     //Entity torque_entity = set_torque(target, torque);
@@ -921,7 +921,7 @@ static void add_joint_torque_for_one_tick(Entity target, Torque torque)
     //);
 }
 
-static void add_joint_force_at_point_for_one_tick(
+static void system_add_joint_force_at_point_for_one_tick(
     Entity target,
     Position world_point,
     Force force
@@ -945,7 +945,7 @@ static void add_joint_force_at_point_for_one_tick(
         .y = world_point.y - positions[target].y
     };
 
-    Torque torque = cross_2d(r, force);
+    Torque torque = math_cross_2d(r, force);
 
     Entity torque_entity = set_torque(target, torque);
 
@@ -954,7 +954,7 @@ static void add_joint_force_at_point_for_one_tick(
     }
 }
 
-static void apply_pin_joint(Entity joint_entity)
+static void system_apply_pin_joint(Entity joint_entity)
 {
     Joint joint = joints[joint_entity];
 
@@ -966,12 +966,12 @@ static void apply_pin_joint(Entity joint_entity)
         return;
     }
 
-    Vec2D offset_a = rotate_vector(
+    Vec2D offset_a = math_rotate_vector(
         joint.local_anchor_a,
         orientations[a]
     );
 
-    Vec2D offset_b = rotate_vector(
+    Vec2D offset_b = math_rotate_vector(
         joint.local_anchor_b,
         orientations[b]
     );
@@ -991,8 +991,8 @@ static void apply_pin_joint(Entity joint_entity)
         .y = world_anchor_b.y - world_anchor_a.y
     };
 
-    Velocity velocity_a = point_velocity(a, offset_a);
-    Velocity velocity_b = point_velocity(b, offset_b);
+    Velocity velocity_a = system_point_velocity(a, offset_a);
+    Velocity velocity_b = system_point_velocity(b, offset_b);
 
     Vec2D relative_velocity = {
         .x = velocity_b.x - velocity_a.x,
@@ -1009,20 +1009,20 @@ static void apply_pin_joint(Entity joint_entity)
         .y = -force_on_a.y
     };
 
-    add_joint_force_at_point_for_one_tick(
+    system_add_joint_force_at_point_for_one_tick(
         a,
         world_anchor_a,
         force_on_a
     );
 
-    add_joint_force_at_point_for_one_tick(
+    system_add_joint_force_at_point_for_one_tick(
         b,
         world_anchor_b,
         force_on_b
     );
 }
 
-void apply_distance_joint(Entity joint_entity) {
+void system_apply_distance_joint(Entity joint_entity) {
         Joint joint = joints[joint_entity];
         if(joint.type != JOINT_DISTANCE) {
             return;
@@ -1031,12 +1031,12 @@ void apply_distance_joint(Entity joint_entity) {
         Entity a = joint.a;
         Entity b = joint.b;
 
-        Vec2D offset_a = rotate_vector(
+        Vec2D offset_a = math_rotate_vector(
             joint.local_anchor_a,
             orientations[a]
         );
 
-        Vec2D offset_b = rotate_vector(
+        Vec2D offset_b = math_rotate_vector(
             joint.local_anchor_b,
             orientations[b]
         );
@@ -1056,7 +1056,7 @@ void apply_distance_joint(Entity joint_entity) {
             .y = world_anchor_b.y - world_anchor_a.y
         };
 
-        float length = vector_magnitude(delta);
+        float length = math_vector_magnitude(delta);
 
         if(length <= 0.00001f) {
             return;
@@ -1067,15 +1067,15 @@ void apply_distance_joint(Entity joint_entity) {
             .y = delta.y / length
         };
 
-        Velocity velocity_a = point_velocity(a, offset_a);
-        Velocity velocity_b = point_velocity(b, offset_b);
+        Velocity velocity_a = system_point_velocity(a, offset_a);
+        Velocity velocity_b = system_point_velocity(b, offset_b);
 
         Vec2D relative_velocity = {
             .x = velocity_b.x - velocity_a.x,
             .y = velocity_b.y - velocity_a.y
         };
 
-        float relative_speed = dot_product(relative_velocity, normal);
+        float relative_speed = math_dot_product(relative_velocity, normal);
 
         float stretch = length - joint.rest_length;
 
@@ -1103,14 +1103,14 @@ void apply_distance_joint(Entity joint_entity) {
             .y = world_anchor_b.y - positions[b].y
         };
 
-        Torque torque_on_a = cross_2d(r_a, force_on_a);
-        Torque torque_on_b = cross_2d(r_b, force_on_b);
+        Torque torque_on_a = math_cross_2d(r_a, force_on_a);
+        Torque torque_on_b = math_cross_2d(r_b, force_on_b);
 
-        add_joint_force_for_one_tick(a, force_on_a);
-        add_joint_force_for_one_tick(b, force_on_b);
+        system_add_joint_force_for_one_tick(a, force_on_a);
+        system_add_joint_force_for_one_tick(b, force_on_b);
 
-        add_joint_torque_for_one_tick(a, torque_on_a);
-        add_joint_torque_for_one_tick(b, torque_on_b);
+        system_add_joint_torque_for_one_tick(a, torque_on_a);
+        system_add_joint_torque_for_one_tick(b, torque_on_b);
 
 }
 void system_apply_joints()
@@ -1122,10 +1122,10 @@ void system_apply_joints()
         Joint joint = joints[joint_entity];
         switch(joint.type) {
             case JOINT_PIN:
-                apply_pin_joint(joint_entity);
+                system_apply_pin_joint(joint_entity);
                 break;
             case JOINT_DISTANCE:
-                apply_distance_joint(joint_entity);
+                system_apply_distance_joint(joint_entity);
                 break;
             case JOINT_WELD:
                 //Not implemented
@@ -1154,8 +1154,8 @@ void system_update_physics(double dt) {
     system_apply_transform_locks();
 
     system_generate_global_hitboxes();
-    apply_collisions();
-    separate_overlapped_entities();
+    system_apply_collisions();
+    system_separate_overlapped_entities();
 }
 
 void print_entity_movement(Entity entity) {

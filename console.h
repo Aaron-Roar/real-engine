@@ -24,12 +24,10 @@ typedef enum LogSourceType {
     LOG_CONSOLE,
 } LogSourceType;
 
-
-
-void print_logs();
+void console_print_logs();
 void console_init();
 void console_shutdown();
-bool read_console(ConsoleLogString *input);
+bool console_read(ConsoleLogString *input);
 void console_write(LogSourceType source, const char *fmt, ...);
 bool console_is_active();
 void console_debug_write(LogSourceType source, const char *fmt, ...);

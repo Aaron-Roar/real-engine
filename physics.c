@@ -27,7 +27,7 @@ Shape shape_world_translate(Shape shape, Position position, Orientation angle) {
     Shape world_shape = {0};
     world_shape.amount_of_vertices = shape.amount_of_vertices;
 
-    Position center = polygon_centroid(shape);
+    Position center = math_polygon_centroid(shape);
 
     float cos_a = cosf(angle);
     float sin_a = sinf(angle);
@@ -47,7 +47,7 @@ Shape shape_world_translate(Shape shape, Position position, Orientation angle) {
 }
 float polygon_moment_of_inertia(Shape shape, Mass mass)
 {
-    Position c = polygon_centroid(shape);
+    Position c = math_polygon_centroid(shape);
 
     float area_sum = 0.0f;
     float inertia_sum = 0.0f;
@@ -87,10 +87,10 @@ Collision sat_collision_on_axes(Shape shape_1, Shape shape_2, Vec2DList axes, Co
     for (int i = 0; i < axes.amount_of_vectors; i += 1) {
         Axis axis = axes.vectors[i];
 
-        Projection p1 = project_shape_on_axis(shape_1, axis);
-        Projection p2 = project_shape_on_axis(shape_2, axis);
+        Projection p1 = math_project_shape_on_axis(shape_1, axis);
+        Projection p2 = math_project_shape_on_axis(shape_2, axis);
 
-        float overlap = projection_overlap(p1, p2);
+        float overlap = math_projection_overlap(p1, p2);
 
         if (overlap <= 0.0f) {
             return (Collision){ .overlap = false };
@@ -113,15 +113,15 @@ Collision particle_collision(Shape shape_1, Shape shape_2) {
     };
 
 
-    Vec2D centroid_1 = polygon_centroid(shape_1);
-    Vec2D centroid_2 = polygon_centroid(shape_2);
-    Vec1D radius_1 = circle_radius(shape_1, centroid_1);
-    Vec1D radius_2 = circle_radius(shape_2, centroid_2);
+    Vec2D centroid_1 = math_polygon_centroid(shape_1);
+    Vec2D centroid_2 = math_polygon_centroid(shape_2);
+    Vec1D radius_1 = math_circle_radius(shape_1, centroid_1);
+    Vec1D radius_2 = math_circle_radius(shape_2, centroid_2);
     Vec2D normal = (Vec2D) {
       .x = centroid_2.x - centroid_1.x,
       .y = centroid_2.y - centroid_1.y
     };
-    Vec2D normalized_normal = normalize_vector(normal);
+    Vec2D normalized_normal = math_normalize_vector(normal);
     Vec1D depth = (radius_1 + radius_2) - sqrt( (normal.x)*(normal.x) + (normal.y)*(normal.y) );
 
     if(depth > 0) {
@@ -143,8 +143,8 @@ Collision sat_collision(Shape shape_1, Shape shape_2)
         .depth = FLT_MAX
     };
 
-    Vec2DList shape1_axes = normalize_vectors(create_normals(shape_1));
-    Vec2DList shape2_axes = normalize_vectors(create_normals(shape_2));
+    Vec2DList shape1_axes = math_normalize_vectors(math_create_normals(shape_1));
+    Vec2DList shape2_axes = math_normalize_vectors(math_create_normals(shape_2));
 
     collision = sat_collision_on_axes(shape_1, shape_2, shape1_axes, collision);
 
@@ -158,15 +158,15 @@ Collision sat_collision(Shape shape_1, Shape shape_2)
         return collision;
     }
 
-    Position c1 = polygon_centroid(shape_1);
-    Position c2 = polygon_centroid(shape_2);
+    Position c1 = math_polygon_centroid(shape_1);
+    Position c2 = math_polygon_centroid(shape_2);
 
     Vec2D center_delta = {
         .x = c2.x - c1.x,
         .y = c2.y - c1.y
     };
 
-    if (dot_product(center_delta, collision.normal) < 0.0f) {
+    if (math_dot_product(center_delta, collision.normal) < 0.0f) {
         collision.normal.x *= -1.0f;
         collision.normal.y *= -1.0f;
     }
@@ -181,7 +181,7 @@ Position approximate_contact_point(Position p1, Position p2)
     };
 }
 Vec1D circle_moment_of_inertia(Shape circle, Mass mass) {
-  Vec1D radius = circle_radius(circle, polygon_centroid(circle));
+  Vec1D radius = math_circle_radius(circle, math_polygon_centroid(circle));
   Vec1D area = PI_F*radius*radius;
   Vec1D density = mass/fabsf(area);
   Vec1D area_moment = 0.5f * area * radius * radius;
@@ -336,7 +336,7 @@ void set_axis_lock(Entity entity, Axis axis, Position axis_point) {
         return;
     }
     add_components(entity, AXIS_LOCK);
-    Axis normalized_axis = normalize_vector(axis);
+    Axis normalized_axis = math_normalize_vector(axis);
     axis_locks[entity] = (AxisLock){
         .axis = (Axis){
             .x = normalized_axis.x,
@@ -407,7 +407,7 @@ void set_transform_lock_current_transform(
         .y = positions[driven].y - positions[driver].y
     };
 
-    Vec2D local_offset = rotate_vector(
+    Vec2D local_offset = math_rotate_vector(
         world_offset,
         -orientations[driver]
     );
@@ -443,13 +443,13 @@ Entity set_joint(
     add_components(joint, JOINT);
 
     Vec2D world_anchor_a = {
-        .x = positions[a].x + rotate_vector(local_anchor_a, orientations[a]).x,
-        .y = positions[a].y + rotate_vector(local_anchor_a, orientations[a]).y
+        .x = positions[a].x + math_rotate_vector(local_anchor_a, orientations[a]).x,
+        .y = positions[a].y + math_rotate_vector(local_anchor_a, orientations[a]).y
     };
 
     Vec2D world_anchor_b = {
-        .x = positions[b].x + rotate_vector(local_anchor_b, orientations[b]).x,
-        .y = positions[b].y + rotate_vector(local_anchor_b, orientations[b]).y
+        .x = positions[b].x + math_rotate_vector(local_anchor_b, orientations[b]).x,
+        .y = positions[b].y + math_rotate_vector(local_anchor_b, orientations[b]).y
     };
 
     Vec2D delta = {
@@ -463,7 +463,7 @@ Entity set_joint(
         .b = b,
         .local_anchor_a = local_anchor_a,
         .local_anchor_b = local_anchor_b,
-        .rest_length = vector_magnitude(delta),
+        .rest_length = math_vector_magnitude(delta),
         .stiffness = stiffness,
         .damping = damping,
         .lock_angle = false,

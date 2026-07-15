@@ -7,14 +7,14 @@
 AnimatedSprite animated_sprites[MAX_ENTITIES] = {0};
 const Color hit_box_color = (Color){255,0,0,255};
 
-void scale_textures(Entity entity, Scale scale) {
+void graphics_scale_textures(Entity entity, Scale scale) {
     for(int i = 0; i < MAX_TEXTURES; i += 1) {
         animated_sprites[entity].animation.texture_list.textures[i].size.x *= scale.x;
         animated_sprites[entity].animation.texture_list.textures[i].size.y *= scale.y;
     }
 }
 
-Color creat_color_hex(uint32_t hex_color_code) {
+Color graphics_creat_color_hex(uint32_t hex_color_code) {
   return (Color) {
     .red = (hex_color_code >> 16) & 0xFF,
     .green = (hex_color_code >> 8)  & 0xFF,
@@ -23,13 +23,29 @@ Color creat_color_hex(uint32_t hex_color_code) {
   };
 }
 
-Color create_color_rgba(uint8_t red, uint8_t green, uint8_t blue, uint8_t alpha) {
+Color graphics_create_color_rgba(uint8_t red, uint8_t green, uint8_t blue, uint8_t alpha) {
   return (Color){
       .red = red,
       .blue = blue,
       .green = green,
       .alpha = alpha
   };
+}
+
+Position graphics_world_to_screen(Position world)
+{
+    return (Position){
+        .x = world.x + WINDOW_WIDTH * 0.5f,
+        .y = WINDOW_HEIGHT * 0.5f - world.y
+    };
+}
+
+Position graphics_screen_to_world(Position screen)
+{
+    return (Position){
+        .x = screen.x - WINDOW_WIDTH * 0.5f,
+        .y = WINDOW_HEIGHT * 0.5f - screen.y
+    };
 }
 
 bool graphics_start(SDL_Renderer **renderer, SDL_Window **window) {
@@ -68,20 +84,20 @@ bool graphics_start(SDL_Renderer **renderer, SDL_Window **window) {
     return true;
 }
 
-void renderer_end(SDL_Renderer *r) {
+void graphics_renderer_end(SDL_Renderer *r) {
     SDL_DestroyRenderer(r);
     console_write(LOG_ENGINE, "Renderer terminated\n");
 }
 
-void window_end(SDL_Window *window) {
+void graphics_window_end(SDL_Window *window) {
     SDL_DestroyWindow(window);
     console_write(LOG_ENGINE, "Window terminated\n");
 }
 
 void graphics_end(SDL_Renderer *renderer, SDL_Window *window) {
     console_write(LOG_ENGINE, "---Graphics Termination---\n");
-    renderer_end(renderer);
-    window_end(window);
+    graphics_renderer_end(renderer);
+    graphics_window_end(window);
     SDL_QuitSubSystem(SDL_INIT_VIDEO);
     console_write(LOG_ENGINE, "SDL3 terminated\n");
     console_write(LOG_ENGINE, "Graphics termination complete\n");
@@ -98,28 +114,29 @@ bool graphics_poll_events(SDL_Event *event) {
     return true;
 }
 
-void draw_background(SDL_Renderer *renderer, Color color) {
+void graphics_draw_background(SDL_Renderer *renderer, Color color) {
     /* as you can see from this, rendering draws over whatever was drawn before it. */
     SDL_SetRenderDrawColor(renderer, color.red, color.green, color.blue, color.alpha);
     SDL_RenderClear(renderer);  /* start with a blank canvas. */
 }
 
-void draw_rect(SDL_Renderer *renderer, Shape rect, Position pos) {
+void graphics_draw_rect(SDL_Renderer *renderer, Shape rect, Position pos) {
     SDL_FRect sdl_rect;
     /* draw a filled rectangle in the middle of the canvas. */
     SDL_SetRenderDrawColor(renderer, 0, 0, 255, SDL_ALPHA_OPAQUE);  /* blue, full alpha */
-    sdl_rect.x = pos.x;
-    sdl_rect.y = pos.y;
+    Position screen_loc = graphics_world_to_screen(pos);
+    sdl_rect.x = screen_loc.x;
+    sdl_rect.y = screen_loc.y;
     sdl_rect.w = 20;
     sdl_rect.h = 20;
     SDL_RenderFillRect(renderer, &sdl_rect);
 }
 
-void show_graphics(SDL_Renderer *renderer) {
+void graphics_show(SDL_Renderer *renderer) {
     SDL_RenderPresent(renderer);
 }
 
-bool draw_shape_outline(SDL_Renderer *renderer, Shape shape, Color color) {
+bool graphics_draw_shape_outline(SDL_Renderer *renderer, Shape shape, Color color) {
     if (shape.amount_of_vertices < 2) {
         return false;
     }
@@ -127,8 +144,9 @@ bool draw_shape_outline(SDL_Renderer *renderer, Shape shape, Color color) {
     SDL_FPoint points[MAX_VERTICIES + 1];
 
     for (int i = 0; i < shape.amount_of_vertices; i++) {
-        points[i].x = shape.vertices[i].x;
-        points[i].y = shape.vertices[i].y;
+        Position screen_loc = graphics_world_to_screen(shape.vertices[i]);
+        points[i].x = screen_loc.x;
+        points[i].y = screen_loc.y;
     }
 
     points[shape.amount_of_vertices] = points[0];
@@ -137,7 +155,7 @@ bool draw_shape_outline(SDL_Renderer *renderer, Shape shape, Color color) {
     return SDL_RenderLines(renderer, points, shape.amount_of_vertices + 1);
 }
 
-bool draw_shape_filled(SDL_Renderer *renderer, Shape shape, Color color)
+bool graphics_draw_shape_filled(SDL_Renderer *renderer, Shape shape, Color color)
 {
     if (shape.amount_of_vertices < 3) {
         return false;
@@ -146,8 +164,9 @@ bool draw_shape_filled(SDL_Renderer *renderer, Shape shape, Color color)
     SDL_Vertex vertices[MAX_VERTICIES];
 
     for (int i = 0; i < shape.amount_of_vertices; i++) {
-        vertices[i].position.x = shape.vertices[i].x;
-        vertices[i].position.y = shape.vertices[i].y;
+        Position screen_loc = graphics_world_to_screen(shape.vertices[i]);
+        vertices[i].position.x = screen_loc.x;
+        vertices[i].position.y = screen_loc.y;
 
         vertices[i].color.r = color.red / 255.0f;
         vertices[i].color.g = color.green / 255.0f;
@@ -177,27 +196,27 @@ bool draw_shape_filled(SDL_Renderer *renderer, Shape shape, Color color)
     );
 }
 
-void draw_hit_box(SDL_Renderer *renderer, Entity entity, Fill fill_type) {
+void graphics_draw_hit_box(SDL_Renderer *renderer, Entity entity, Fill fill_type) {
     Shape shape = get_global_hit_box(entity);
     if(fill_type == GRAPHICS_FILLED) {
-        draw_shape_filled(renderer, shape, hit_box_color);
+        graphics_draw_shape_filled(renderer, shape, hit_box_color);
     }
     else {
-        draw_shape_outline(renderer, shape, hit_box_color);
+        graphics_draw_shape_outline(renderer, shape, hit_box_color);
     }
 }
 
-void draw_hit_boxes(SDL_Renderer *renderer) {
+void graphics_draw_hit_boxes(SDL_Renderer *renderer) {
   for(int i = 0; i < MAX_ENTITIES; i += 1) {
     if(entity_alive[i]) {
         if( (entity_mask[i] & HIT_BOX) == HIT_BOX) {
-            draw_hit_box(renderer, i, GRAPHICS_OUTLINE);
+            graphics_draw_hit_box(renderer, i, GRAPHICS_OUTLINE);
         }
     }
   }
 }
 
-TextureAsset load_texture(SDL_Renderer *renderer, TextureDescriptor text_desc) {
+TextureAsset graphics_load_texture(SDL_Renderer *renderer, TextureDescriptor text_desc) {
         SDL_Surface *surface = NULL;
         char *png_path = NULL;
         TextureAsset asset = {0};
@@ -216,21 +235,21 @@ TextureAsset load_texture(SDL_Renderer *renderer, TextureDescriptor text_desc) {
         return asset;
 }
 
-AnimationAsset load_animation(SDL_Renderer *renderer, AnimationDescriptor anim_desc) {
+AnimationAsset graphics_load_animation(SDL_Renderer *renderer, AnimationDescriptor anim_desc) {
     AnimationAsset asset = {0};
     asset.texture_list.amount = anim_desc.amount_of_descriptors;
     asset.ticks_per_frame = anim_desc.ticks_per_frame;
     asset.time_per_frame = anim_desc.time_per_frame;
 
     for(int i = 0; i < anim_desc.amount_of_descriptors; i += 1) {
-        TextureAsset texture = load_texture(renderer, anim_desc.texture_descriptors[i]);
+        TextureAsset texture = graphics_load_texture(renderer, anim_desc.texture_descriptors[i]);
         asset.texture_list.textures[i] = texture;
     }
 
     return asset;
 }
 
-AnimatedSprite create_animated_sprite(AnimationAsset asset_ptr, Scale scale) {
+AnimatedSprite graphics_create_animated_sprite(AnimationAsset asset_ptr, Scale scale) {
     AnimatedSprite sprite = {0};
     sprite.animation = asset_ptr;
     sprite.animation_frame = 0;
@@ -242,7 +261,7 @@ AnimatedSprite create_animated_sprite(AnimationAsset asset_ptr, Scale scale) {
     return sprite;
 }
 
-void update_sprite_frame(AnimatedSprite *sprite, Tick current_tick, Time current_time) {
+void graphics_update_sprite_frame(AnimatedSprite *sprite, Tick current_tick, Time current_time) {
     bool frame_need_update_tick = (sprite->animation.ticks_per_frame <= (current_tick - sprite->last_update_tick)) && (sprite->animation.ticks_per_frame != 0);
     bool frame_need_update_time = (sprite->animation.time_per_frame <= (current_time - sprite->last_update_time) && (sprite->animation.time_per_frame != 0));
 
@@ -253,12 +272,13 @@ void update_sprite_frame(AnimatedSprite *sprite, Tick current_tick, Time current
     }
 }
 
-void draw_texture(SDL_Renderer *renderer, TextureAsset texture_asset, Position pos, Orientation ort) {
+void graphics_draw_texture(SDL_Renderer *renderer, TextureAsset texture_asset, Position pos, Orientation ort) {
     SDL_FRect dst_rect = {0};
+    Position screen_loc = graphics_world_to_screen(pos);
     dst_rect.w = texture_asset.size.x;//(float) texture_width;
     dst_rect.h = texture_asset.size.y;//(float) texture_width;
-    dst_rect.x = pos.x - dst_rect.w * 0.5f;//(float) texture_width;
-    dst_rect.y = pos.y - dst_rect.h * 0.5f;//(float) texture_height;
+    dst_rect.x = screen_loc.x - dst_rect.w * 0.5f;//(float) texture_width;
+    dst_rect.y = screen_loc.y - dst_rect.h * 0.5f;//(float) texture_height;
 
     SDL_FPoint center = {
         .x = dst_rect.w * 0.5f,
@@ -277,34 +297,34 @@ void draw_texture(SDL_Renderer *renderer, TextureAsset texture_asset, Position p
     );
 }
 
-void draw_sprite(SDL_Renderer *renderer, AnimatedSprite sprite, Position pos, Orientation ort) {
+void graphics_draw_sprite(SDL_Renderer *renderer, AnimatedSprite sprite, Position pos, Orientation ort) {
     TextureAsset asset = {0};
     asset = sprite.animation.texture_list.textures[sprite.animation_frame];
     asset.size.x = asset.size.x * sprite.scale.x;
     asset.size.y = asset.size.y * sprite.scale.y;
 
-    draw_texture(renderer, asset, pos, ort);
+    graphics_draw_texture(renderer, asset, pos, ort);
 }
 
-void add_animated_sprite(Entity entity, AnimatedSprite sprite) {
+void graphics_add_animated_sprite(Entity entity, AnimatedSprite sprite) {
     animated_sprites[entity] = sprite;
     entity_mask[entity] |= ANIMATED_SPRITE;
 }
 
-void draw_animated_sprites(SDL_Renderer *renderer) {
+void graphics_draw_animated_sprites(SDL_Renderer *renderer) {
     CMask filter = ANIMATED_SPRITE;
     for(int i = 0; i < MAX_ENTITIES; i += 1) {
         if(has_components(i, filter)) {
-            draw_sprite(renderer, animated_sprites[i], positions[i], orientations[i]);
+            graphics_draw_sprite(renderer, animated_sprites[i], positions[i], orientations[i]);
         }
     }
 }
 
-void update_sprite_frames(Tick current_tick, Time current_time) {
+void graphics_update_sprite_frames(Tick current_tick, Time current_time) {
     CMask filter = ANIMATED_SPRITE;
     for(int i = 0; i < MAX_ENTITIES; i += 1) {
         if(has_components(i, filter)) {
-            update_sprite_frame(&animated_sprites[i], current_tick, current_time);
+            graphics_update_sprite_frame(&animated_sprites[i], current_tick, current_time);
         }
     }
 }
