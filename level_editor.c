@@ -794,62 +794,62 @@ void editor_move_mouse(EditorInput input) {
 
 //Rotation
 void editor_rotate_cw(EditorInput input) {
-    set_orientation(selected_entity, orientations[selected_entity] - 1*2*PI_F/360);
+    physics_set_orientation(selected_entity, orientations[selected_entity] - 1*2*PI_F/360);
 }
 void editor_rotate_ccw(EditorInput input) {
-    set_orientation(selected_entity, orientations[selected_entity] + 1*2*PI_F/360);
+    physics_set_orientation(selected_entity, orientations[selected_entity] + 1*2*PI_F/360);
 }
 void editor_rotate_up(EditorInput input) {
-    set_orientation(selected_entity, orientations[selected_entity] - 180*2*PI_F/360);
+    physics_set_orientation(selected_entity, orientations[selected_entity] - 180*2*PI_F/360);
 }
 void editor_rotate_down(EditorInput input) {
-    set_orientation(selected_entity, orientations[selected_entity] + 180*2*PI_F/360);
+    physics_set_orientation(selected_entity, orientations[selected_entity] + 180*2*PI_F/360);
 }
 void editor_rotate_right(EditorInput input) {
-    set_orientation(selected_entity, orientations[selected_entity] - 90*2*PI_F/360);
+    physics_set_orientation(selected_entity, orientations[selected_entity] - 90*2*PI_F/360);
 }
 void editor_rotate_left(EditorInput input) {
-    set_orientation(selected_entity, orientations[selected_entity] + 90*2*PI_F/360);
+    physics_set_orientation(selected_entity, orientations[selected_entity] + 90*2*PI_F/360);
 }
 
 void editor_scale_all_up(EditorInput input) {
     Shape shape = math_scale_shape(hit_boxes[selected_entity], 1 + SCALE_INCREMENT);
-    set_hitbox(selected_entity, shape);
+    physics_set_hitbox(selected_entity, shape);
     graphics_scale_textures(selected_entity, (Scale){1 + SCALE_INCREMENT,1 + SCALE_INCREMENT});
 }
 void editor_scale_all_down(EditorInput input) {
     Shape shape = math_scale_shape(hit_boxes[selected_entity], 1 - SCALE_INCREMENT);
-    set_hitbox(selected_entity, shape);
+    physics_set_hitbox(selected_entity, shape);
     graphics_scale_textures(selected_entity, (Scale){1 - SCALE_INCREMENT,1 - SCALE_INCREMENT});
 }
 void editor_scale_x_up(EditorInput input) {
     Shape shape = math_scale_shape_x(hit_boxes[selected_entity], 1 + SCALE_INCREMENT);
-    set_hitbox(selected_entity, shape);
+    physics_set_hitbox(selected_entity, shape);
     graphics_scale_textures(selected_entity, (Scale){1 + SCALE_INCREMENT,1});
 }
 void editor_scale_x_down(EditorInput input) {
     Shape shape = math_scale_shape_x(hit_boxes[selected_entity], 1 - SCALE_INCREMENT);
-    set_hitbox(selected_entity, shape);
+    physics_set_hitbox(selected_entity, shape);
     graphics_scale_textures(selected_entity, (Scale){1 - SCALE_INCREMENT,1});
 }
 void editor_scale_y_up(EditorInput input) {
     Shape shape = math_scale_shape_y(hit_boxes[selected_entity], 1 + SCALE_INCREMENT);
-    set_hitbox(selected_entity, shape);
+    physics_set_hitbox(selected_entity, shape);
     graphics_scale_textures(selected_entity, (Scale){1,1 + SCALE_INCREMENT});
 }
 void editor_scale_y_down(EditorInput input) {
     Shape shape = math_scale_shape_y(hit_boxes[selected_entity], 1 - SCALE_INCREMENT);
-    set_hitbox(selected_entity, shape);
+    physics_set_hitbox(selected_entity, shape);
     graphics_scale_textures(selected_entity, (Scale){1,1 - SCALE_INCREMENT});
 }
 
 void editor_shape_add_vertex(EditorInput input) {
     Shape new_shape = math_add_vertex(hit_boxes[selected_entity]);
-    set_hitbox(selected_entity, new_shape);
+    physics_set_hitbox(selected_entity, new_shape);
 }
 void editor_shape_remove_vertex(EditorInput input) {
     Shape new_shape = math_delete_vertex(hit_boxes[selected_entity]);
-    set_hitbox(selected_entity, new_shape);
+    physics_set_hitbox(selected_entity, new_shape);
 }
 void editor_move_up(EditorInput input) {
     positions[selected_entity].y += MOVE_INCREMENT;
@@ -1106,12 +1106,12 @@ void print_editor_controls(void)
 
 
 void level_editor_init() {
-    selection = add_entity();
-    set_static(selection);
-    set_position(selection, (Vec2D){80, 390});
+    selection = entity_add();
+    physics_set_static(selection);
+    physics_set_position(selection, (Vec2D){80, 390});
     Shape selection_hit_box = math_create_circle(0.1, 5);
-    set_hitbox(selection, selection_hit_box);
-    delete_components(selection, COLLISION);
+    physics_set_hitbox(selection, selection_hit_box);
+    entity_delete_components(selection, COLLISION);
     print_editor_controls();
 }
 

@@ -26,19 +26,19 @@ int main() {
     level_editor_init();
 
 
-    Entity entity_1 = add_entity();
-    set_static(entity_1);
-    set_position(entity_1, (Vec2D){80, 390});
-    set_orientation(entity_1, 0*(PI_F/180));
+    Entity entity_1 = entity_add();
+    physics_set_static(entity_1);
+    physics_set_position(entity_1, (Vec2D){80, 390});
+    physics_set_orientation(entity_1, 0*(PI_F/180));
     Shape shape_1 = math_create_square(40, 150);
-    set_hitbox(entity_1, shape_1);
+    physics_set_hitbox(entity_1, shape_1);
 
-    Entity entity_2 = add_entity();
-    set_static(entity_2);
-    set_position(entity_2, (Vec2D){100, 390});
-    set_orientation(entity_2, 0*(PI_F/180));
+    Entity entity_2 = entity_add();
+    physics_set_static(entity_2);
+    physics_set_position(entity_2, (Vec2D){100, 390});
+    physics_set_orientation(entity_2, 0*(PI_F/180));
     Shape shape_2 = math_create_circle(20, 4);
-    set_hitbox(entity_2, shape_2);
+    physics_set_hitbox(entity_2, shape_2);
 
     //Game Loop
     while (console_is_active()) {

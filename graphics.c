@@ -197,7 +197,7 @@ bool graphics_draw_shape_filled(SDL_Renderer *renderer, Shape shape, Color color
 }
 
 void graphics_draw_hit_box(SDL_Renderer *renderer, Entity entity, Fill fill_type) {
-    Shape shape = get_global_hit_box(entity);
+    Shape shape = physics_get_global_hit_box(entity);
     if(fill_type == GRAPHICS_FILLED) {
         graphics_draw_shape_filled(renderer, shape, hit_box_color);
     }
@@ -314,7 +314,7 @@ void graphics_add_animated_sprite(Entity entity, AnimatedSprite sprite) {
 void graphics_draw_animated_sprites(SDL_Renderer *renderer) {
     CMask filter = ANIMATED_SPRITE;
     for(int i = 0; i < MAX_ENTITIES; i += 1) {
-        if(has_components(i, filter)) {
+        if(entity_has_components(i, filter)) {
             graphics_draw_sprite(renderer, animated_sprites[i], positions[i], orientations[i]);
         }
     }
@@ -323,7 +323,7 @@ void graphics_draw_animated_sprites(SDL_Renderer *renderer) {
 void graphics_update_sprite_frames(Tick current_tick, Time current_time) {
     CMask filter = ANIMATED_SPRITE;
     for(int i = 0; i < MAX_ENTITIES; i += 1) {
-        if(has_components(i, filter)) {
+        if(entity_has_components(i, filter)) {
             graphics_update_sprite_frame(&animated_sprites[i], current_tick, current_time);
         }
     }

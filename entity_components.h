@@ -74,20 +74,19 @@ extern LifeTime life_times[MAX_ENTITIES];
 extern Entity targets[MAX_ENTITIES];
 //Target Capable Effects
 
-Entity add_entity();
-void delete_entity(Entity entity);
-void add_components(Entity entity, CMask mask);
-bool has_components(Entity entity, Component components);
-void delete_components(Entity entity, CMask mask);
-void print_entity_components(Entity entity);
-void print_alive_entities();
-bool equate_mask(CMask e_mask, CMask filter);
-void set_child(Entity parent, Entity child);
-void set_parent(Entity child, Entity parent);
-void remove_parent(Entity child);
-void remove_child(Entity parent, Entity child);
-Children get_children(Entity entity);
-Parent get_parent(Entity entity);
-void set_life_time(Entity entity, Time expirey_time, Tick expirey_tick);
-void remove_life_time(Entity entity);
+Entity entity_add();
+void entity_delete(Entity entity);
+void entity_add_components(Entity entity, CMask mask);
+bool entity_has_components(Entity entity, Component components);
+void entity_delete_components(Entity entity, CMask mask);
+void entity_print_entity_components(Entity entity);
+bool entity_equate_mask(CMask e_mask, CMask filter);
+void entity_set_child(Entity parent, Entity child);
+void entity_set_parent(Entity child, Entity parent);
+void entity_remove_parent(Entity child);
+void entity_remove_child(Entity parent, Entity child);
+Children entity_get_children(Entity entity);
+Parent entity_get_parent(Entity entity);
+void entity_set_life_time(Entity entity, Time expirey_time, Tick expirey_tick);
+void entity_remove_life_time(Entity entity);
 #endif

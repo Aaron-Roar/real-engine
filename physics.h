@@ -87,31 +87,31 @@ extern AxisLock axis_locks[MAX_ENTITIES];
 extern TransformLock transform_locks[MAX_ENTITIES];
 extern Joint joints[MAX_ENTITIES];
 //Math2d
-Shape shape_world_translate(Shape shape, Position position, Orientation angle);
-float polygon_moment_of_inertia(Shape shape, Mass mass);
-Collision sat_collision(Shape shape_1, Shape shape_2);
-Position approximate_contact_point(Position p1, Position p2);
-Vec1D circle_moment_of_inertia(Shape circle, Mass mass);
+Shape physics_shape_world_translate(Shape shape, Position position, Orientation angle);
+float physics_polygon_moment_of_inertia(Shape shape, Mass mass);
+Collision physics_sat_collision(Shape shape_1, Shape shape_2);
+Position physics_approximate_contact_point(Position p1, Position p2);
+Vec1D physics_circle_moment_of_inertia(Shape circle, Mass mass);
 
 //Entity
 
-void set_acceleration(Entity entity, Acceleration a);
-void set_velocity(Entity entity, Velocity v);
-void set_position(Entity entity, Position p);
-void set_mass(Entity entity, Mass m);
-Entity set_force(Entity entity, Force f);
-Entity set_torque(Entity entity, Torque t);
-void set_hitbox(Entity entity, Shape hitbox);
-void set_orientation(Entity entity, Orientation angle);
-void set_angular_velocity(Entity entity, AngularVelocity v);
-Shape get_global_hit_box(Entity entity);
-void set_restitution(Entity entity, Restitution restitution);
-void set_dynamic(Entity entity);
-void set_static(Entity entity);
-void set_angle_lock(Entity entity, Orientation min, Orientation max);
-void set_axis_lock(Entity entity, Axis axis, Position axis_point);
-void set_friction(Entity entity, float friction);
-void set_transform_lock(
+void physics_set_acceleration(Entity entity, Acceleration a);
+void physics_set_velocity(Entity entity, Velocity v);
+void physics_set_position(Entity entity, Position p);
+void physics_set_mass(Entity entity, Mass m);
+Entity physics_set_force(Entity entity, Force f);
+Entity physics_set_torque(Entity entity, Torque t);
+void physics_set_hitbox(Entity entity, Shape hitbox);
+void physics_set_orientation(Entity entity, Orientation angle);
+void physics_set_angular_velocity(Entity entity, AngularVelocity v);
+Shape physics_get_global_hit_box(Entity entity);
+void physics_set_restitution(Entity entity, Restitution restitution);
+void physics_set_dynamic(Entity entity);
+void physics_set_static(Entity entity);
+void physics_set_angle_lock(Entity entity, Orientation min, Orientation max);
+void physics_set_axis_lock(Entity entity, Axis axis, Position axis_point);
+void physics_set_friction(Entity entity, float friction);
+void physics_set_transform_lock(
         Entity driven,
         Entity driver, 
         Vec2D local_offset,
@@ -120,15 +120,15 @@ void set_transform_lock(
         bool lock_orientation,
         bool inherit_velocity
 );
-void remove_transform_lock(Entity entity);
-void set_transform_lock_current_transform(
+void physics_remove_transform_lock(Entity entity);
+void physics_set_transform_lock_current_transform(
         Entity driven,
         Entity driver,
         bool lock_position,
         bool lock_orientation,
         bool inherit_velocity
 );
-Entity set_joint(
+Entity physics_set_joint(
     Entity a,
     Entity b,
     JointType type,
@@ -137,7 +137,7 @@ Entity set_joint(
     float stiffness,
     float damping
 );
-Collision particle_collision(Shape shape_1, Shape shape_2);
-void set_collision_report(Entity entity, Entity target, bool state);
-bool get_collision_report(Entity entity, Entity target);
+Collision physics_particle_collision(Shape shape_1, Shape shape_2);
+void physics_set_collision_report(Entity entity, Entity target, bool state);
+bool physics_get_collision_report(Entity entity, Entity target);
 #endif

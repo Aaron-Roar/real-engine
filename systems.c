@@ -17,7 +17,7 @@ void system_generate_global_hitboxes() {
                 Position pos = positions[i];
                 Orientation ort = orientations[i];
                 Shape hit_box = hit_boxes[i];
-                world_hit_boxes[i] = shape_world_translate(hit_box, pos, ort);
+                world_hit_boxes[i] = physics_shape_world_translate(hit_box, pos, ort);
             }
         }
 
@@ -31,7 +31,7 @@ Shape system_generate_global_hitbox(Entity entity) {
                 Position pos = positions[entity];
                 Orientation ort = orientations[entity];
                 Shape hit_box = hit_boxes[entity];
-                world_hit_boxes[entity] = shape_world_translate(hit_box, pos, ort);
+                world_hit_boxes[entity] = physics_shape_world_translate(hit_box, pos, ort);
                 return world_hit_boxes[entity];
             }
         }
@@ -131,7 +131,7 @@ void system_apply_torques() {
             if( entity_alive[targets[i]] ) { //Check if the target to the force exists
                 if( (entity_mask[targets[i]] & target_filter) == target_filter ) { //Check if the target is moveable
                     if(mass[targets[i]] != 0) {
-                        torque_angular_accelerations[targets[i]] += torques[i]/polygon_moment_of_inertia(hit_boxes[targets[i]], mass[targets[i]]);
+                        torque_angular_accelerations[targets[i]] += torques[i]/physics_polygon_moment_of_inertia(hit_boxes[targets[i]], mass[targets[i]]);
                     } else {
                         //Force on massless entity
                         error.code |= ACCELERATING_MASSLESS_ENTITY | FAILED_UPDATE_ACCELERATION;
@@ -160,12 +160,12 @@ void system_clear_force_torque_accelerations() {
 //HERE
 
 Collision system_get_entity_collision(Entity entity_1, Entity entity_2) {
-    Shape shape1 = get_global_hit_box(entity_1);
-    Shape shape2 = get_global_hit_box(entity_2);
-    if(has_components(entity_1, PARTICLE) && has_components(entity_2, PARTICLE)) {
-        return particle_collision(shape1, shape2);
+    Shape shape1 = physics_get_global_hit_box(entity_1);
+    Shape shape2 = physics_get_global_hit_box(entity_2);
+    if(entity_has_components(entity_1, PARTICLE) && entity_has_components(entity_2, PARTICLE)) {
+        return physics_particle_collision(shape1, shape2);
     }
-    return sat_collision(shape1, shape2);
+    return physics_sat_collision(shape1, shape2);
 }
 
 void system_separate_entities(Entity entity_1, Entity entity_2, Collision collision)
@@ -173,33 +173,26 @@ void system_separate_entities(Entity entity_1, Entity entity_2, Collision collis
     bool entity_1_dynamic = (entity_mask[entity_1] & DYNAMIC) == DYNAMIC;
     bool entity_2_dynamic = (entity_mask[entity_2] & DYNAMIC) == DYNAMIC;
 
-    float inv_mass_1 = 0.0f;
-    float inv_mass_2 = 0.0f;
-
-    if(entity_1_dynamic && mass[entity_1] > 0.0f) {
-        inv_mass_1 = 1.0f / mass[entity_1];
-    }
-
-    if(entity_2_dynamic && mass[entity_2] > 0.0f) {
-        inv_mass_2 = 1.0f / mass[entity_2];
-    }
-
-    float inv_mass_sum = inv_mass_1 + inv_mass_2;
-
-    if(inv_mass_sum <= 0.0f) {
-        return;
-    }
-
     Vec2D correction = {
         .x = collision.normal.x * collision.depth,
         .y = collision.normal.y * collision.depth
     };
 
-    positions[entity_1].x -= correction.x * (inv_mass_1 / inv_mass_sum);
-    positions[entity_1].y -= correction.y * (inv_mass_1 / inv_mass_sum);
+    if(entity_1_dynamic && entity_2_dynamic) {
+        positions[entity_1].x -= (correction.x/2);// * (inv_mass_1 / inv_mass_sum);
+        positions[entity_1].y -= (correction.y/2);// * (inv_mass_1 / inv_mass_sum);
+        positions[entity_2].x += (correction.x/2);// * (inv_mass_2 / inv_mass_sum);
+        positions[entity_2].y += (correction.y/2);// * (inv_mass_2 / inv_mass_sum);
+    }
 
-    positions[entity_2].x += correction.x * (inv_mass_2 / inv_mass_sum);
-    positions[entity_2].y += correction.y * (inv_mass_2 / inv_mass_sum);
+    else if(entity_1_dynamic && !entity_2_dynamic) {
+        positions[entity_1].x -= (correction.x);// * (inv_mass_1 / inv_mass_sum);
+        positions[entity_1].y -= (correction.y);// * (inv_mass_1 / inv_mass_sum);
+    }
+    else if(!entity_1_dynamic && entity_2_dynamic) {
+        positions[entity_2].x += (correction.x);// * (inv_mass_1 / inv_mass_sum);
+        positions[entity_2].y += (correction.y);// * (inv_mass_1 / inv_mass_sum);
+    }
 }
 
 Position system_support_point_average(Shape shape, Vec2D direction)
@@ -243,8 +236,8 @@ Position system_get_particle_edge(Entity entity, Vec2D normal, Vec1D radius) {
 }
 Position system_collision_contact_point(Entity entity_1, Entity entity_2, Collision collision)
 {
-    Shape shape_1 = get_global_hit_box(entity_1);
-    Shape shape_2 = get_global_hit_box(entity_2);
+    Shape shape_1 = physics_get_global_hit_box(entity_1);
+    Shape shape_2 = physics_get_global_hit_box(entity_2);
 
     bool entity_1_dynamic = (entity_mask[entity_1] & DYNAMIC) == DYNAMIC;
     bool entity_2_dynamic = (entity_mask[entity_2] & DYNAMIC) == DYNAMIC;
@@ -259,7 +252,7 @@ Position system_collision_contact_point(Entity entity_1, Entity entity_2, Collis
     Position point_1 = {0};
     Position point_2 = {0};
     //PARTICLE
-    if(has_components(entity_1, PARTICLE) && has_components(entity_2, PARTICLE)){
+    if(entity_has_components(entity_1, PARTICLE) && entity_has_components(entity_2, PARTICLE)){
         Vec1D r1 = math_circle_radius(shape_1, math_polygon_centroid(shape_1));
         Vec1D r2 = math_circle_radius(shape_2, math_polygon_centroid(shape_2));
         point_1 = system_get_particle_edge(entity_1, normal, r1);
@@ -485,11 +478,11 @@ void system_resolve_collision(Entity entity_1, Entity entity_2, Collision collis
 
     if (entity_1_movable) {
         float inertia_1 = 0;
-        if(has_components(entity_1, PARTICLE)) {
-            inertia_1 = circle_moment_of_inertia(hit_boxes[entity_1], mass[entity_1]);
+        if(entity_has_components(entity_1, PARTICLE)) {
+            inertia_1 = physics_circle_moment_of_inertia(hit_boxes[entity_1], mass[entity_1]);
         } else {
             inertia_1 =
-            polygon_moment_of_inertia(hit_boxes[entity_1], mass[entity_1]);
+            physics_polygon_moment_of_inertia(hit_boxes[entity_1], mass[entity_1]);
 
         }
         if (inertia_1 > 0.0f) {
@@ -499,11 +492,11 @@ void system_resolve_collision(Entity entity_1, Entity entity_2, Collision collis
 
     if (entity_2_movable) {
         float inertia_2 = 0;
-        if(has_components(entity_2, PARTICLE)) {
-            inertia_2 = circle_moment_of_inertia(hit_boxes[entity_1], mass[entity_1]);
+        if(entity_has_components(entity_2, PARTICLE)) {
+            inertia_2 = physics_circle_moment_of_inertia(hit_boxes[entity_1], mass[entity_1]);
         } else {
             inertia_2 =
-            polygon_moment_of_inertia(hit_boxes[entity_2], mass[entity_2]);
+            physics_polygon_moment_of_inertia(hit_boxes[entity_2], mass[entity_2]);
 
         }
         if (inertia_2 > 0.0f) {
@@ -633,6 +626,7 @@ void system_separate_static_entities() {
 
 }
 
+
 void system_apply_collisions() {
     for(int i = 0; i < MAX_ENTITIES; i += 1) {
         if(!entity_alive[i]) {
@@ -650,9 +644,9 @@ void system_apply_collisions() {
             CMask filter = COLLISION;
             Collision collision = system_get_entity_collision(i, j);
             if(collision.overlap == true) {
-                set_collision_report(i, j, true);
-                set_collision_report(j, i, true);
-                if(has_components(i, filter) && has_components(j, filter)) {
+                physics_set_collision_report(i, j, true);
+                physics_set_collision_report(j, i, true);
+                if(entity_has_components(i, filter) && entity_has_components(j, filter)) {
                     system_resolve_collision(i, j, collision);
                 }
                 //separate_entities(i, j, collision);
@@ -661,8 +655,8 @@ void system_apply_collisions() {
                 //console_write(LOG_ENGINE, "Entity %d and Entity %d Colided\n", j, i);
             }
             else {
-                set_collision_report(i, j, false);
-                set_collision_report(j, i, false);
+                physics_set_collision_report(i, j, false);
+                physics_set_collision_report(j, i, false);
 
             }
         }
@@ -826,7 +820,7 @@ void system_apply_transform_locks()
         Entity driver = transform_locks[driven].driver;
 
         if(!entity_alive[driver]) {
-            remove_transform_lock(driven);
+            physics_remove_transform_lock(driven);
             continue;
         }
 
@@ -868,10 +862,10 @@ void system_clean_entities_past_lifetime() {
         if( (entity_mask[i] & LIFETIME) == LIFETIME ) {
 
             if( (life_times[i].expirey_time != 0 && life_times[i].expirey_time <= engine_get_time()) ) {
-                delete_entity(i);
+                entity_delete(i);
             }
             else if( (life_times[i].expirey_tick != 0 && life_times[i].expirey_tick <= engine_get_tick()) ) {
-                delete_entity(i);
+                entity_delete(i);
             }
         }
     }
@@ -907,7 +901,7 @@ static void system_add_joint_force_for_one_tick(Entity target, Force force)
 }
 static void system_add_joint_torque_for_one_tick(Entity target, Torque torque)
 {
-    torque_angular_accelerations[target] += torque/polygon_moment_of_inertia(hit_boxes[target], mass[target]);
+    torque_angular_accelerations[target] += torque/physics_polygon_moment_of_inertia(hit_boxes[target], mass[target]);
     //Entity torque_entity = set_torque(target, torque);
 
     //if(torque_entity == 0) {
@@ -934,10 +928,10 @@ static void system_add_joint_force_at_point_for_one_tick(
         return;
     }
 
-    Entity force_entity = set_force(target, force);
+    Entity force_entity = physics_set_force(target, force);
 
     if(force_entity != 0) {
-        set_life_time(force_entity, 0.0, engine_get_tick() + 1);
+        entity_set_life_time(force_entity, 0.0, engine_get_tick() + 1);
     }
 
     Vec2D r = {
@@ -947,10 +941,10 @@ static void system_add_joint_force_at_point_for_one_tick(
 
     Torque torque = math_cross_2d(r, force);
 
-    Entity torque_entity = set_torque(target, torque);
+    Entity torque_entity = physics_set_torque(target, torque);
 
     if(torque_entity != 0) {
-        set_life_time(torque_entity, 0.0, engine_get_tick() + 1);
+        entity_set_life_time(torque_entity, 0.0, engine_get_tick() + 1);
     }
 }
 
@@ -962,7 +956,7 @@ static void system_apply_pin_joint(Entity joint_entity)
     Entity b = joint.b;
 
     if(!entity_alive[a] || !entity_alive[b]) {
-        delete_entity(joint_entity);
+        entity_delete(joint_entity);
         return;
     }
 

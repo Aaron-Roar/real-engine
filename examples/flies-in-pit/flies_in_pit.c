@@ -14,7 +14,7 @@
 const Color background_color = (Color){255,255,255,255};
 AnimationAsset animation = {0};
 AnimatedSprite sprite = {0};
-#define amount_of_entities 20
+#define amount_of_entities 200
 
 int main() {
     console_init();
@@ -28,47 +28,66 @@ int main() {
         return 1;
     }
 
-    Entity water_wall_1 = add_entity();
-    set_static(water_wall_1);
-    set_position(water_wall_1, (Position){0, 0});
-    set_orientation(water_wall_1, 0*(PI_F/180));
-    set_restitution(water_wall_1, 0.5);
-    set_friction(water_wall_1, 0.5);
-    Shape shape_1 = math_create_square(40, 150);
-    set_hitbox(water_wall_1, shape_1);
+    Entity water_wall_1 = entity_add();
+    physics_set_static(water_wall_1);
+    physics_set_position(water_wall_1, (Position){0, -60});
+    physics_set_orientation(water_wall_1, 90*(PI_F/180));
+    physics_set_restitution(water_wall_1, 0.5);
+    physics_set_friction(water_wall_1, 1);
+    Shape shape_1 = math_create_square(40, 400);
+    physics_set_hitbox(water_wall_1, shape_1);
 
-    Entity water_smash = add_entity();
-    set_position(water_smash, (Position){.x = 0, .y = 0});
-    set_orientation(water_smash, 3);
-    set_mass(water_smash, 500);
-    set_velocity(water_smash, (Velocity){0, 0});
-    set_acceleration(water_smash, (Acceleration){0, -30});
-    set_restitution(water_smash, 0.7);
+    Entity water_wall_2 = entity_add();
+    physics_set_static(water_wall_2);
+    physics_set_position(water_wall_2, (Position){-180, -10});
+    physics_set_orientation(water_wall_2, 0*(PI_F/180));
+    physics_set_restitution(water_wall_2, 0.5);
+    physics_set_friction(water_wall_2, 1);
+    Shape shape_2 = math_create_square(40, 60);
+    physics_set_hitbox(water_wall_2, shape_2);
+
+    Entity water_wall_3 = entity_add();
+    physics_set_static(water_wall_3);
+    physics_set_position(water_wall_3, (Position){180, -10});
+    physics_set_orientation(water_wall_3, 0*(PI_F/180));
+    physics_set_restitution(water_wall_3, 0.5);
+    physics_set_friction(water_wall_3, 1);
+    Shape shape_3 = math_create_square(40, 60);
+    physics_set_hitbox(water_wall_3, shape_3);
+
+    Entity water_smash = entity_add();
+    physics_set_position(water_smash, (Position){.x = 0, .y = 700});
+    physics_set_orientation(water_smash, 3);
+    physics_set_mass(water_smash, 500);
+    physics_set_velocity(water_smash, (Velocity){0, 0});
+    physics_set_acceleration(water_smash, (Acceleration){0, -30});
+    physics_set_restitution(water_smash, 0.9);
     Shape shape4 = math_create_circle(50, 10);
-    set_hitbox(water_smash, shape4);
-    set_friction(water_smash, 0.4);
-    set_dynamic(water_smash);
+    physics_set_hitbox(water_smash, shape4);
+    physics_set_friction(water_smash, 0.4);
+    physics_set_dynamic(water_smash);
     //set_axis_lock(water_smash, (Axis){0,1}, positions[smash]);
 
     time_t seed = 1003463;
     srand(seed);
     for(int i = 0; i < amount_of_entities; i += 1) {
-        Entity ball = add_entity();
-        set_position(ball, (Position){.x = tools_random_range(-10, 10), .y = tools_random_range(0, 100)});
-        set_orientation(ball, tools_random_range(0, 2*PI_F));
-        set_mass(ball, 0.002);
-        set_velocity(ball, (Velocity){.x = tools_random_range(-10, 10), .y = tools_random_range(0, -10)});
-        set_acceleration(ball, (Acceleration){0, -50});
-        set_restitution(ball, 0.3);
-        float size = tools_random_range_float(10, 20);
+        Entity ball = entity_add();
+        physics_set_position(ball, (Position){.x = tools_random_range(-10, 10), .y = tools_random_range(100, 200)});
+        physics_set_orientation(ball, tools_random_range(0, 2*PI_F));
+        physics_set_mass(ball, 1);
+        physics_set_velocity(ball, (Velocity){0, .y = tools_random_range(0, -10)});
+        physics_set_acceleration(ball, (Acceleration){0, -50});
+        physics_set_restitution(ball, 0.8);
+        float size = tools_random_range_float(3, 5);
         Shape shape3 = math_create_circle(size, 5);
-        set_hitbox(ball, shape3);
-        set_friction(ball, 0);
-        set_dynamic(ball);
+        physics_set_hitbox(ball, shape3);
+        physics_set_friction(ball, 0.4);
+        physics_set_dynamic(ball);
         animation = graphics_load_animation(renderer, elderfly_fly_files);
         sprite = graphics_create_animated_sprite(animation, (Scale){size/10,size/10});
         sprite.animation.time_per_frame = tools_random_range_float(0.005, 0.5);
         graphics_add_animated_sprite(ball, sprite);
+        entity_add_components(ball, PARTICLE);
     }
 
     Time dt = engine_get_dt();

@@ -12,6 +12,7 @@
 #define WINDOW_HEIGHT 480
 #define MAX_TEXTURES 50
 #define MAX_ANIMATIONS_FRAMES 20
+#define MAX_ANIMATION_SETS 10
 
 typedef struct {
     float x;
@@ -59,6 +60,10 @@ typedef struct {
     Direction direction;
     Scale scale;
 } AnimatedSprite;
+
+typedef struct {
+    AnimatedSprite sprite_set[MAX_ANIMATION_SETS];
+} AnimatedSpriteSet;
 
 typedef enum Fill {
     GRAPHICS_OUTLINE,

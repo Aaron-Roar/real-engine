@@ -17,7 +17,7 @@ Children children[MAX_ENTITIES] = {0};
 LifeTime life_times[MAX_ENTITIES] = {0};
 
 uint32_t entity_counter = 0; //Temporary solution. Leaks memory on entity deletion
-Entity add_entity() {
+Entity entity_add() {
     Error error = {0};
 
     if(entity_counter >= MAX_ENTITIES) {
@@ -38,12 +38,12 @@ Entity add_entity() {
     return 0;
 }
 
-void clear_entity(Entity entity) {
+void entity_clear(Entity entity) {
     entity_alive[entity] = 0;
     entity_mask[entity] = 0;
 }
 
-void delete_entity(Entity entity) {
+void entity_delete(Entity entity) {
     Error error = {0};
 
     if(entity_alive[entity] == 0) {
@@ -51,12 +51,12 @@ void delete_entity(Entity entity) {
         error_add_entity(&error, entity);
         error_print(error);
     }
-    clear_entity(entity);
+    entity_clear(entity);
 
     entity_counter -= 1;
 }
 
-void add_components(Entity entity, CMask mask) {
+void entity_add_components(Entity entity, CMask mask) {
     Error error = {0};
 
     if(entity_alive[entity] == 0) {
@@ -67,7 +67,7 @@ void add_components(Entity entity, CMask mask) {
     entity_mask[entity] |= mask;
 }
 
-void delete_components(Entity entity, CMask mask) {
+void entity_delete_components(Entity entity, CMask mask) {
     Error error = {0};
 
     if(entity_alive[entity] == 0) {
@@ -78,62 +78,37 @@ void delete_components(Entity entity, CMask mask) {
     entity_mask[entity] &= ~mask;
 }
 
-bool has_components(Entity entity, Component components) {
+bool entity_has_components(Entity entity, Component components) {
   if( (entity_mask[entity] & components) == components) {
     return true;
   }
   return false;
 }
 
-void print_entity_components(Entity entity) {
-}
 
-
-
-
-
-//Applies a force to a target
-
-
-
-void print_alive_entities() {
-    console_write(LOG_ENGINE, "AliveEntities: {");
-    for(int i = 0; i < MAX_ENTITIES; i++) {
-        if(entity_alive[i]) {
-            console_write(LOG_ENGINE,"%d ", i);
-        }
-    }
-    console_write(LOG_ENGINE, "}\n");
-}
-
-
-
-
-
-
-void set_child(Entity parent, Entity child) {
+void entity_set_child(Entity parent, Entity child) {
     if(!entity_alive[parent] || !entity_alive[child]) {
         //Error parent or child not alive
         return;
     }
-    add_components(parent, HAS_CHILDREN);
-    add_components(child, HAS_PARENT);
+    entity_add_components(parent, HAS_CHILDREN);
+    entity_add_components(child, HAS_PARENT);
     children[parent].entities[child] = child;
     parents[child] = parent;
 }
 
-void set_parent(Entity child, Entity parent) {
+void entity_set_parent(Entity child, Entity parent) {
     if(!entity_alive[parent] || !entity_alive[child]) {
         //Error parent or child not alive
         return;
     }
-    add_components(parent, HAS_CHILDREN);
-    add_components(child, HAS_PARENT);
+    entity_add_components(parent, HAS_CHILDREN);
+    entity_add_components(child, HAS_PARENT);
     children[parent].entities[child] = child;
     parents[child] = parent;
 }
 
-void remove_parent(Entity child) {
+void entity_remove_parent(Entity child) {
     if(!entity_alive[child]) {
         //Error
         return;
@@ -146,16 +121,16 @@ void remove_parent(Entity child) {
     //If the parent has no more children remove the flag
     for(int i = 0; i < MAX_ENTITIES; i += 1) {
         if(children[parents[child]].entities[i] != 0) {
-            delete_components(parents[child], HAS_CHILDREN);
+            entity_delete_components(parents[child], HAS_CHILDREN);
         }
     }
 
     //Remove the parent from the child
     parents[child] = 0;
-    delete_components(child, HAS_PARENT);
+    entity_delete_components(child, HAS_PARENT);
 }
 
-void remove_child(Entity parent, Entity child) {
+void entity_remove_child(Entity parent, Entity child) {
     if(!entity_alive[parent]) {
         //Error
         return;
@@ -168,24 +143,24 @@ void remove_child(Entity parent, Entity child) {
     //If the parent has no more children remove the flag
     for(int i = 0; i < MAX_ENTITIES; i += 1) {
         if(children[parent].entities[i] != 0) {
-            delete_components(parents[child], HAS_CHILDREN);
+            entity_delete_components(parents[child], HAS_CHILDREN);
         }
     }
 
     //Removing the parent from the child
     parents[child] = 0;
-    delete_components(child, HAS_PARENT);
+    entity_delete_components(child, HAS_PARENT);
 
 }
 
-Children get_children(Entity entity) {
+Children entity_get_children(Entity entity) {
     if(!entity_alive[entity]) {
         //Error
         return (Children){0};
     }
     return children[entity];
 }
-Parent get_parent(Entity entity) {
+Parent entity_get_parent(Entity entity) {
     return parents[entity];
 }
 
@@ -193,21 +168,21 @@ Parent get_parent(Entity entity) {
 
 
 
-void set_life_time(Entity entity, Time expirey_time, Tick expirey_tick) {
+void entity_set_life_time(Entity entity, Time expirey_time, Tick expirey_tick) {
     if(!entity_alive[entity]) {
         //Error
         return;
     }
 
-    add_components(entity, LIFETIME);
+    entity_add_components(entity, LIFETIME);
     life_times[entity] = (LifeTime){
         .expirey_time = expirey_time,
         .expirey_tick = expirey_tick
     };
 }
 
-void remove_life_time(Entity entity) {
-    delete_components(entity, LIFETIME);
+void entity_remove_life_time(Entity entity) {
+    entity_delete_components(entity, LIFETIME);
     life_times[entity] = (LifeTime){0};
 }
 
