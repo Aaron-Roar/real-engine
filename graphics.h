@@ -14,6 +14,9 @@
 #define MAX_ANIMATIONS_FRAMES 20
 #define MAX_ANIMATION_SETS 10
 
+#define RECORDING_WIDTH  WINDOW_WIDTH
+#define RECORDING_HEIGHT WINDOW_HEIGHT
+
 typedef struct {
     float x;
     float y;
@@ -63,6 +66,7 @@ typedef struct {
 
 typedef struct {
     AnimatedSprite sprite_set[MAX_ANIMATION_SETS];
+    uint8_t amount_of_sets;
 } AnimatedSpriteSet;
 
 typedef enum Fill {
@@ -100,5 +104,10 @@ void graphics_update_sprite_frames(Tick current_tick, Time current_time);
 void graphics_scale_textures(Entity entity, Scale scale);
 Position graphics_world_to_screen(Position pos);
 Position graphics_screen_to_world(Position screen);
-
+void graphics_draw_grid(SDL_Renderer *renderer);
+bool graphics_recording_start(
+    const char *output_path,
+    int fps
+);
+void graphics_recording_stop(void);
 #endif

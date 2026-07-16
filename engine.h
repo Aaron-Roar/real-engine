@@ -21,4 +21,5 @@ bool engine_is_paused();
 Time engine_get_dt();
 void engine_calculate_dt();
 void engine_set_dt(Time dt);
+void engine_reset_clock();
 #endif

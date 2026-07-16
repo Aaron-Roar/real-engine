@@ -104,35 +104,55 @@ Collision physics_sat_collision_on_axes(Shape shape_1, Shape shape_2, Vec2DList 
 
     return collision;
 }
+Collision physics_particle_collision(Shape shape_1, Shape shape_2)
+{
+    Position center_1 = math_polygon_centroid(shape_1);
+    Position center_2 = math_polygon_centroid(shape_2);
 
-Collision physics_particle_collision(Shape shape_1, Shape shape_2) {
-    Collision collision = {
-        .overlap = true,
-        .normal = {0},
-        .depth = FLT_MAX
+    float radius_1 = math_circle_radius(shape_1, center_1);
+    float radius_2 = math_circle_radius(shape_2, center_2);
+
+    Vec2D delta = {
+        .x = center_2.x - center_1.x,
+        .y = center_2.y - center_1.y
     };
 
+    float distance_squared =
+        delta.x * delta.x +
+        delta.y * delta.y;
 
-    Vec2D centroid_1 = math_polygon_centroid(shape_1);
-    Vec2D centroid_2 = math_polygon_centroid(shape_2);
-    Vec1D radius_1 = math_circle_radius(shape_1, centroid_1);
-    Vec1D radius_2 = math_circle_radius(shape_2, centroid_2);
-    Vec2D normal = (Vec2D) {
-      .x = centroid_2.x - centroid_1.x,
-      .y = centroid_2.y - centroid_1.y
-    };
-    Vec2D normalized_normal = math_normalize_vector(normal);
-    Vec1D depth = (radius_1 + radius_2) - sqrt( (normal.x)*(normal.x) + (normal.y)*(normal.y) );
+    float radius_sum = radius_1 + radius_2;
+    float radius_sum_squared = radius_sum * radius_sum;
 
-    if(depth > 0) {
-      collision.overlap = true;
-    } else {
-      collision.overlap = false;
+    if(distance_squared >= radius_sum_squared) {
+        return (Collision){
+            .overlap = false
+        };
     }
 
-    collision.normal = normalized_normal;
-    collision.depth = depth;
-    return collision;
+    float distance = sqrtf(distance_squared);
+
+    Vec2D normal;
+
+    if(distance > 0.00001f) {
+        normal = (Vec2D){
+            .x = delta.x / distance,
+            .y = delta.y / distance
+        };
+    } else {
+        /*
+         * The centres are identical, so there is no geometrically
+         * preferred direction.
+         */
+        normal = (Vec2D){1.0f, 0.0f};
+        distance = 0.0f;
+    }
+
+    return (Collision){
+        .overlap = true,
+        .normal = normal,
+        .depth = radius_sum - distance
+    };
 }
 
 Collision physics_sat_collision(Shape shape_1, Shape shape_2)

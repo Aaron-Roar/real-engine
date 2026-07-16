@@ -2,11 +2,13 @@
 #include "systems.h"
 #include "error.h"
 #include "console.h"
+#include "grid.h"
+#include <math2d.h>
 #include <math.h>
 #include <float.h>
 #include <stdio.h>
 #include <time.h>
-
+#include "grid.h"
 
 void system_generate_global_hitboxes() {
     CMask filter = HIT_BOX;
@@ -17,6 +19,7 @@ void system_generate_global_hitboxes() {
                 Position pos = positions[i];
                 Orientation ort = orientations[i];
                 Shape hit_box = hit_boxes[i];
+
                 world_hit_boxes[i] = physics_shape_world_translate(hit_box, pos, ort);
             }
         }
@@ -157,8 +160,6 @@ void system_clear_force_torque_accelerations() {
     }
 }
 
-//HERE
-
 Collision system_get_entity_collision(Entity entity_1, Entity entity_2) {
     Shape shape1 = physics_get_global_hit_box(entity_1);
     Shape shape2 = physics_get_global_hit_box(entity_2);
@@ -166,6 +167,45 @@ Collision system_get_entity_collision(Entity entity_1, Entity entity_2) {
         return physics_particle_collision(shape1, shape2);
     }
     return physics_sat_collision(shape1, shape2);
+}
+
+void system_separate_entities_tuned(
+    Entity entity_1,
+    Entity entity_2,
+    Collision collision
+) {
+    bool dynamic_1 = entity_has_components(entity_1, DYNAMIC);
+    bool dynamic_2 = entity_has_components(entity_2, DYNAMIC);
+
+    float inv_mass_1 =
+        dynamic_1 && mass[entity_1] > 0.0f
+        ? 1.0f / mass[entity_1]
+        : 0.0f;
+
+    float inv_mass_2 =
+        dynamic_2 && mass[entity_2] > 0.0f
+        ? 1.0f / mass[entity_2]
+        : 0.0f;
+
+    float inv_mass_sum = inv_mass_1 + inv_mass_2;
+
+    if(inv_mass_sum <= 0.0f) {
+        return;
+    }
+
+    Vec2D correction = {
+        .x = collision.normal.x * collision.depth,
+        .y = collision.normal.y * collision.depth
+    };
+
+    float share_1 = inv_mass_1 / inv_mass_sum;
+    float share_2 = inv_mass_2 / inv_mass_sum;
+
+    positions[entity_1].x -= correction.x * share_1;
+    positions[entity_1].y -= correction.y * share_1;
+
+    positions[entity_2].x += correction.x * share_2;
+    positions[entity_2].y += correction.y * share_2;
 }
 
 void system_separate_entities(Entity entity_1, Entity entity_2, Collision collision)
@@ -177,12 +217,20 @@ void system_separate_entities(Entity entity_1, Entity entity_2, Collision collis
         .x = collision.normal.x * collision.depth,
         .y = collision.normal.y * collision.depth
     };
+    Mass mass_1 = mass[entity_1];
+    Mass mass_2 = mass[entity_2];
+    Mass mass_sum = mass_1 + mass_2;
 
     if(entity_1_dynamic && entity_2_dynamic) {
-        positions[entity_1].x -= (correction.x/2);// * (inv_mass_1 / inv_mass_sum);
-        positions[entity_1].y -= (correction.y/2);// * (inv_mass_1 / inv_mass_sum);
-        positions[entity_2].x += (correction.x/2);// * (inv_mass_2 / inv_mass_sum);
-        positions[entity_2].y += (correction.y/2);// * (inv_mass_2 / inv_mass_sum);
+        positions[entity_1].x -= ( (correction.x)*(mass_2/(mass_sum)) );
+        positions[entity_1].y -= ( (correction.y)*(mass_2/(mass_sum)) );
+        positions[entity_2].x += ( (correction.x)*(mass_1/(mass_sum)) );
+        positions[entity_2].y += ( (correction.y)*(mass_1/(mass_sum)) );
+
+        //positions[entity_1].x -= (correction.x)/2;
+        //positions[entity_1].y -= (correction.y)/2;
+        //positions[entity_2].x += (correction.x)/2;
+        //positions[entity_2].y += (correction.y)/2;
     }
 
     else if(entity_1_dynamic && !entity_2_dynamic) {
@@ -491,15 +539,21 @@ void system_resolve_collision(Entity entity_1, Entity entity_2, Collision collis
     }
 
     if (entity_2_movable) {
-        float inertia_2 = 0;
-        if(entity_has_components(entity_2, PARTICLE)) {
-            inertia_2 = physics_circle_moment_of_inertia(hit_boxes[entity_1], mass[entity_1]);
-        } else {
-            inertia_2 =
-            physics_polygon_moment_of_inertia(hit_boxes[entity_2], mass[entity_2]);
+        float inertia_2 = 0.0f;
 
+        if(entity_has_components(entity_2, PARTICLE)) {
+            inertia_2 = physics_circle_moment_of_inertia(
+                hit_boxes[entity_2],
+                mass[entity_2]
+            );
+        } else {
+            inertia_2 = physics_polygon_moment_of_inertia(
+                hit_boxes[entity_2],
+                mass[entity_2]
+            );
         }
-        if (inertia_2 > 0.0f) {
+
+        if(inertia_2 > 0.0f) {
             inv_inertia_2 = 1.0f / inertia_2;
         }
     }
@@ -559,73 +613,63 @@ void system_resolve_collision(Entity entity_1, Entity entity_2, Collision collis
     );
 }
 
-//Test function
-void system_separate_overlapped_entities() {
-    CMask filter = COLLISION;
+void system_add_entities_to_grid() {
     for(int i = 0; i < MAX_ENTITIES; i += 1) {
         if(!entity_alive[i]) {
             continue;
         }
-        if( (entity_mask[i] & filter) != filter) {
-            continue;
-        }
-
-        for(int j = i + 1; j < MAX_ENTITIES; j += 1) {
-            if(!entity_alive[j]) {
-                continue;
-            }
-            if( (entity_mask[j] & filter) != filter) {
-                continue;
-            }
-            if(i == j) {
-                continue;
-            }
-
-            Collision collision = system_get_entity_collision(i, j);
-            if(collision.overlap == true) {
-                system_separate_entities(i, j, collision);
-                system_generate_global_hitbox(i);
-                system_generate_global_hitbox(j);
-            }
-        }
+        if( (entity_mask[i] & HIT_BOX) == HIT_BOX) {
+            add_entity_to_grids(i);
+        } 
     }
-
 }
 
-//Test function
-void system_separate_static_entities() {
-    CMask filter = COLLISION | STATIC;
-    CMask filter2 = COLLISION;
-    for(int i = 0; i < MAX_ENTITIES; i += 1) {
-        if(!entity_alive[i]) {
-            continue;
-        }
-        if( (entity_mask[i] & filter) != filter) {
-            continue;
-        }
+void system_apply_collisions_tuned() {
+    for(int row = 0; row < GRID_ROWS; row += 1) {
+        for(int col = 0; col < GRID_COLS; col += 1) {
 
-        for(int j = 0; j < MAX_ENTITIES; j += 1) {
-            if(!entity_alive[j]) {
-                continue;
-            }
-            if( (entity_mask[j] & filter2) != filter2) {
-                continue;
-            }
-            if(i == j) {
-                continue;
+            for(int i = 0; i < MAX_ENTITIES; i += 1) {
+                if(grid.cells[row][col].entity_present[i]) {
+                    for(int j = 0; j < MAX_ENTITIES; j +=1 ) {
+                        if(i == j) {
+                            continue;
+                        }
+                        if(grid.cells[row][col].entity_present[j]) {
+                            Entity entity_1 = grid.cells[row][col].entities[i];
+                            Entity entity_2 = grid.cells[row][col].entities[j];
+                            if(checked_pair(entity_1,entity_2)) {
+                                continue;
+                            }
+                            add_pair(entity_1,entity_2);
+                            Collision collision = system_get_entity_collision(entity_1, entity_2);
+                            if(collision.overlap == true) {
+                                physics_set_collision_report(entity_1, entity_2, true);
+                                physics_set_collision_report(entity_2, entity_1, true);
+                                if((entity_mask[entity_1] & entity_mask[entity_2] & COLLISION) == COLLISION) {
+                                    system_resolve_collision(entity_1, entity_2, collision);
+                                    system_separate_entities(entity_1,entity_2, collision);
+                                    
+                                    system_generate_global_hitbox(entity_1);
+                                    system_generate_global_hitbox(entity_2);
+                                    grid_update_aabb(entity_1);
+                                    grid_update_aabb(entity_2);
+                                }
+                                
+                            } else {
+                                physics_set_collision_report(entity_1, entity_2, false);
+                                physics_set_collision_report(entity_2, entity_1, false);
+
+                            }
+
+                        }
+                    }
+                }
+
             }
 
-            Collision collision = system_get_entity_collision(i, j);
-            if(collision.overlap == true) {
-                system_separate_entities(i, j, collision);
-                system_generate_global_hitbox(i);
-                system_generate_global_hitbox(j);
-            }
         }
     }
-
 }
-
 
 void system_apply_collisions() {
     for(int i = 0; i < MAX_ENTITIES; i += 1) {
@@ -641,18 +685,20 @@ void system_apply_collisions() {
                 continue;
             }
 
-            CMask filter = COLLISION;
+            const CMask filter = HIT_BOX;
+            if((entity_mask[i] & entity_mask[j] & HIT_BOX) != HIT_BOX) {
+                continue;
+            }
             Collision collision = system_get_entity_collision(i, j);
+            
+
             if(collision.overlap == true) {
                 physics_set_collision_report(i, j, true);
                 physics_set_collision_report(j, i, true);
-                if(entity_has_components(i, filter) && entity_has_components(j, filter)) {
+                if((entity_mask[i] & entity_mask[j] & COLLISION) == COLLISION) {
                     system_resolve_collision(i, j, collision);
                 }
-                //separate_entities(i, j, collision);
-                system_generate_global_hitbox(i);
-                system_generate_global_hitbox(j);
-                //console_write(LOG_ENGINE, "Entity %d and Entity %d Colided\n", j, i);
+                
             }
             else {
                 physics_set_collision_report(i, j, false);
@@ -1132,6 +1178,16 @@ void system_apply_joints()
     }
 }
 
+void system_update_aabbs() {
+    for(int i = 0; i < MAX_ENTITIES; i += 1) {
+        if(!entity_alive[i]) {
+            continue;
+        }
+        if( (entity_mask[i] & HIT_BOX) == HIT_BOX) {
+            grid_update_aabb(i);
+        }
+    }
+}
 
 void system_update_physics(double dt) {
     system_clear_force_torque_accelerations();
@@ -1148,8 +1204,10 @@ void system_update_physics(double dt) {
     system_apply_transform_locks();
 
     system_generate_global_hitboxes();
-    system_apply_collisions();
-    system_separate_overlapped_entities();
+    system_update_aabbs();
+    system_add_entities_to_grid();
+    system_apply_collisions_tuned();
+    clear_grid();
 }
 
 void print_entity_movement(Entity entity) {

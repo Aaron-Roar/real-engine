@@ -2,6 +2,64 @@
 #include "math2d.h"
 #include <float.h>
 
+#include <float.h>
+
+AABB math_create_aabb(Shape world_shape)
+{
+    AABB aabb = {
+        .min_x =  FLT_MAX,
+        .max_x = -FLT_MAX,
+        .min_y =  FLT_MAX,
+        .max_y = -FLT_MAX
+    };
+
+    if(world_shape.amount_of_vertices <= 0) {
+        return (AABB){0};
+    }
+
+    for(int i = 0; i < world_shape.amount_of_vertices; i++) {
+        Vec2D vertex = world_shape.vertices[i];
+
+        if(vertex.x < aabb.min_x) {
+            aabb.min_x = vertex.x;
+        }
+
+        if(vertex.x > aabb.max_x) {
+            aabb.max_x = vertex.x;
+        }
+
+        if(vertex.y < aabb.min_y) {
+            aabb.min_y = vertex.y;
+        }
+
+        if(vertex.y > aabb.max_y) {
+            aabb.max_y = vertex.y;
+        }
+    }
+
+    return aabb;
+}
+float math_aabb_width(AABB aabb) {
+    return aabb.max_x - aabb.min_x;
+}
+
+float math_aabb_height(AABB aabb) {
+    return aabb.max_y - aabb.min_y;
+}
+
+Vec2D math_aabb_center(AABB aabb) {
+    return (Vec2D){
+        .x = (aabb.min_x + aabb.max_x) * 0.5f,
+        .y = (aabb.min_y + aabb.max_y) * 0.5f
+    };
+}
+bool math_aabb_overlap(AABB a, AABB b) {
+    return
+        a.min_x <= b.max_x &&
+        a.max_x >= b.min_x &&
+        a.min_y <= b.max_y &&
+        a.max_y >= b.min_y;
+}
 
 float math_list_maximum(Vec1DList list) {
     float max_value = list.vectors[0];

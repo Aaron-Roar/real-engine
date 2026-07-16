@@ -14,7 +14,8 @@ ENGINE_SRC := \
 	physics.c \
 	systems.c \
 	tools.c \
-	level_editor.c
+	level_editor.c\
+	grid.c
 
 
 ASSET_SRC := \

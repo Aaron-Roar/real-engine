@@ -9,6 +9,7 @@
 #include <time.h>
 #include <stdlib.h>
 #include "level_editor.h"
+#include "grid.h"
 #include "examples/test-assets/elder-fly/elderfly_descriptors.h"
 
 const Color background_color = (Color){255,255,255,255};
@@ -28,14 +29,14 @@ int main() {
 
     Entity entity_1 = entity_add();
     physics_set_static(entity_1);
-    physics_set_position(entity_1, (Vec2D){80, 390});
+    physics_set_position(entity_1, (Vec2D){10, 10});
     physics_set_orientation(entity_1, 0*(PI_F/180));
     Shape shape_1 = math_create_square(40, 150);
     physics_set_hitbox(entity_1, shape_1);
 
     Entity entity_2 = entity_add();
     physics_set_static(entity_2);
-    physics_set_position(entity_2, (Vec2D){100, 390});
+    physics_set_position(entity_2, (Vec2D){0, 0});
     physics_set_orientation(entity_2, 0*(PI_F/180));
     Shape shape_2 = math_create_circle(20, 4);
     physics_set_hitbox(entity_2, shape_2);

@@ -94,6 +94,10 @@ Tick engine_get_tick() {
 Time engine_get_time() {
     return engine_time;
 }
+void engine_reset_clock() {
+    sdl_prev_counter = SDL_GetPerformanceCounter();
+    engine_dt = 0.0;
+}
 
 void engine_set_dt(Time dt) {
     engine_overide_dt = dt;

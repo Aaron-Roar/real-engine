@@ -33,6 +33,14 @@ typedef struct Projection {
 } Projection;
 
 
+typedef struct AABB {
+    float min_x;
+    float max_x;
+    float min_y;
+    float max_y;
+} AABB;
+
+
 Vec2DList math_create_normals(Shape shape);
 Vec2D math_normalize_vector(Vec2D vector);
 Vec2DList math_normalize_vectors(Vec2DList vectors);
@@ -57,4 +65,6 @@ Shape math_scale_shape_x(Shape shape, float scale);
 Vec2D math_polygon_centroid(Shape shape);
 Shape math_add_vertex(Shape shape);
 Shape math_delete_vertex(Shape shape);
+AABB math_create_aabb(Shape world_shape);
+bool math_aabb_overlap(AABB a, AABB b);
 #endif

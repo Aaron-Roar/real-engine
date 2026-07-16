@@ -3,7 +3,6 @@
 #include "entity_components.h"
 #include "physics.h"
 
-
 void system_update_positions(double dt);
 void system_update_velocities(double dt);
 void system_apply_forces();

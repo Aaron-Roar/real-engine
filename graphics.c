@@ -3,9 +3,369 @@
 #include "engine.h"
 #include "systems.h"
 #include <stdio.h>
+#include "grid.h"
 
 AnimatedSprite animated_sprites[MAX_ENTITIES] = {0};
 const Color hit_box_color = (Color){255,0,0,255};
+
+#include <stdint.h>
+#include <string.h>
+
+typedef struct ScreenRecorder {
+    FILE *ffmpeg_pipe;
+
+    bool recording;
+    int fps;
+    int width;
+    int height;
+
+    char output_path[512];
+} ScreenRecorder;
+
+static ScreenRecorder screen_recorder = {0};
+
+bool graphics_recording_start(
+    const char *output_path,
+    int fps
+) {
+    if(screen_recorder.recording) {
+        return false;
+    }
+
+    if(output_path == NULL || fps <= 0) {
+        return false;
+    }
+
+    screen_recorder = (ScreenRecorder){
+        .ffmpeg_pipe = NULL,
+        .recording = true,
+        .fps = fps,
+        .width = 0,
+        .height = 0
+    };
+
+    snprintf(
+        screen_recorder.output_path,
+        sizeof(screen_recorder.output_path),
+        "%s",
+        output_path
+    );
+
+    return true;
+}
+static bool graphics_recording_open_ffmpeg(
+    int width,
+    int height
+) {
+    char command[1024];
+
+    snprintf(
+        command,
+        sizeof(command),
+
+        "ffmpeg -y "
+        "-loglevel warning "
+        "-f rawvideo "
+        "-pixel_format rgba "
+        "-video_size %dx%d "
+        "-framerate %d "
+        "-i pipe:0 "
+        "-an "
+        "-c:v libx264 "
+        "-preset ultrafast "
+        "-crf 18 "
+        "-pix_fmt yuv420p "
+        "\"%s\"",
+
+        width,
+        height,
+        screen_recorder.fps,
+        screen_recorder.output_path
+    );
+
+    screen_recorder.ffmpeg_pipe =
+        popen(command, "w");
+
+    if(screen_recorder.ffmpeg_pipe == NULL) {
+        console_write(
+            LOG_ENGINE,
+            "Failed to start FFmpeg recording\n"
+        );
+
+        return false;
+    }
+
+    screen_recorder.width = width;
+    screen_recorder.height = height;
+
+    console_write(
+        LOG_ENGINE,
+        "Started recording %dx%d at %d FPS\n",
+        width,
+        height,
+        screen_recorder.fps
+    );
+
+    return true;
+}
+
+static bool graphics_record_frame(SDL_Renderer *renderer)
+{
+    if(!screen_recorder.recording) {
+        return true;
+    }
+
+    SDL_FRect presentation_frect;
+
+    if(!SDL_GetRenderLogicalPresentationRect(
+        renderer,
+        &presentation_frect
+    )) {
+        console_write(
+            LOG_ENGINE,
+            "Failed to get presentation rect: %s\n",
+            SDL_GetError()
+        );
+
+        return false;
+    }
+
+    SDL_Rect presentation_rect = {
+        .x = (int)presentation_frect.x,
+        .y = (int)presentation_frect.y,
+        .w = (int)presentation_frect.w,
+        .h = (int)presentation_frect.h
+    };
+
+    if(presentation_rect.w <= 0 ||
+       presentation_rect.h <= 0) {
+        return true;
+    }
+
+    /*
+     * Read only the game area, excluding letterbox bars.
+     */
+    SDL_Surface *captured =
+        SDL_RenderReadPixels(
+            renderer,
+            &presentation_rect
+        );
+
+    if(captured == NULL) {
+        console_write(
+            LOG_ENGINE,
+            "Failed to capture frame: %s\n",
+            SDL_GetError()
+        );
+
+        return false;
+    }
+
+    /*
+     * Force every recorded frame to the same dimensions.
+     */
+    SDL_Surface *scaled =
+        SDL_ScaleSurface(
+            captured,
+            RECORDING_WIDTH,
+            RECORDING_HEIGHT,
+            SDL_SCALEMODE_LINEAR
+        );
+
+    SDL_DestroySurface(captured);
+
+    if(scaled == NULL) {
+        console_write(
+            LOG_ENGINE,
+            "Failed to scale recorded frame: %s\n",
+            SDL_GetError()
+        );
+
+        return false;
+    }
+
+    SDL_Surface *rgba_surface =
+        SDL_ConvertSurface(
+            scaled,
+            SDL_PIXELFORMAT_RGBA32
+        );
+
+    SDL_DestroySurface(scaled);
+
+    if(rgba_surface == NULL) {
+        console_write(
+            LOG_ENGINE,
+            "Failed to convert recorded frame: %s\n",
+            SDL_GetError()
+        );
+
+        return false;
+    }
+
+    /*
+     * Open FFmpeg using the fixed recording dimensions,
+     * not the captured window dimensions.
+     */
+    if(screen_recorder.ffmpeg_pipe == NULL) {
+        if(!graphics_recording_open_ffmpeg(
+            RECORDING_WIDTH,
+            RECORDING_HEIGHT
+        )) {
+            SDL_DestroySurface(rgba_surface);
+            return false;
+        }
+    }
+
+    size_t bytes_per_row =
+        (size_t)RECORDING_WIDTH * 4;
+
+    uint8_t *pixels =
+        (uint8_t *)rgba_surface->pixels;
+
+    for(int y = 0; y < RECORDING_HEIGHT; y++) {
+        uint8_t *row =
+            pixels + y * rgba_surface->pitch;
+
+        if(fwrite(
+            row,
+            1,
+            bytes_per_row,
+            screen_recorder.ffmpeg_pipe
+        ) != bytes_per_row) {
+            console_write(
+                LOG_ENGINE,
+                "Failed writing recorded frame\n"
+            );
+
+            SDL_DestroySurface(rgba_surface);
+            return false;
+        }
+    }
+
+    SDL_DestroySurface(rgba_surface);
+    return true;
+}
+void graphics_recording_stop(void)
+{
+    if(!screen_recorder.recording) {
+        return;
+    }
+
+    if(screen_recorder.ffmpeg_pipe != NULL) {
+        int result =
+            pclose(screen_recorder.ffmpeg_pipe);
+
+        if(result != 0) {
+            console_write(
+                LOG_ENGINE,
+                "FFmpeg exited with status: %d\n",
+                result
+            );
+        }
+    }
+
+    screen_recorder = (ScreenRecorder){0};
+
+    console_write(
+        LOG_ENGINE,
+        "Recording stopped\n"
+    );
+}
+
+void graphics_draw_grid(SDL_Renderer *renderer) {
+    Color grid_color = {100, 100, 100, 255};
+
+    SDL_SetRenderDrawColor(
+        renderer,
+        grid_color.red,
+        grid_color.green,
+        grid_color.blue,
+        grid_color.alpha
+    );
+
+    float grid_min_x =
+        -(GRID_COLS * CELL_SIZE) * 0.5f;
+
+    float grid_max_x =
+        (GRID_COLS * CELL_SIZE) * 0.5f;
+
+    float grid_min_y =
+        -(GRID_ROWS * CELL_SIZE) * 0.5f;
+
+    float grid_max_y =
+        (GRID_ROWS * CELL_SIZE) * 0.5f;
+
+    /*
+     * Vertical lines.
+     */
+    for(int col = 0; col <= GRID_COLS; col++) {
+        float world_x =
+            grid_min_x + col * CELL_SIZE;
+
+        /*
+         * Skip lines outside the visible screen.
+         */
+        if(world_x < -WINDOW_WIDTH * 0.5f ||
+           world_x >  WINDOW_WIDTH * 0.5f) {
+            continue;
+        }
+
+        Position top = graphics_world_to_screen(
+            (Position){
+                .x = world_x,
+                .y = grid_max_y
+            }
+        );
+
+        Position bottom = graphics_world_to_screen(
+            (Position){
+                .x = world_x,
+                .y = grid_min_y
+            }
+        );
+
+        SDL_FPoint points[2] = {
+            {top.x, top.y},
+            {bottom.x, bottom.y}
+        };
+
+        SDL_RenderLines(renderer, points, 2);
+    }
+
+    /*
+     * Horizontal lines.
+     */
+    for(int row = 0; row <= GRID_ROWS; row++) {
+        float world_y =
+            grid_min_y + row * CELL_SIZE;
+
+        if(world_y < -WINDOW_HEIGHT * 0.5f ||
+           world_y >  WINDOW_HEIGHT * 0.5f) {
+            continue;
+        }
+
+        Position left = graphics_world_to_screen(
+            (Position){
+                .x = grid_min_x,
+                .y = world_y
+            }
+        );
+
+        Position right = graphics_world_to_screen(
+            (Position){
+                .x = grid_max_x,
+                .y = world_y
+            }
+        );
+
+        SDL_FPoint points[2] = {
+            {left.x, left.y},
+            {right.x, right.y}
+        };
+
+        SDL_RenderLines(renderer, points, 2);
+    }
+}
 
 void graphics_scale_textures(Entity entity, Scale scale) {
     for(int i = 0; i < MAX_TEXTURES; i += 1) {
@@ -96,6 +456,7 @@ void graphics_window_end(SDL_Window *window) {
 
 void graphics_end(SDL_Renderer *renderer, SDL_Window *window) {
     console_write(LOG_ENGINE, "---Graphics Termination---\n");
+    graphics_recording_stop();
     graphics_renderer_end(renderer);
     graphics_window_end(window);
     SDL_QuitSubSystem(SDL_INIT_VIDEO);
@@ -133,6 +494,11 @@ void graphics_draw_rect(SDL_Renderer *renderer, Shape rect, Position pos) {
 }
 
 void graphics_show(SDL_Renderer *renderer) {
+      if(screen_recorder.recording) {
+        if(!graphics_record_frame(renderer)) {
+            graphics_recording_stop();
+        }
+    }
     SDL_RenderPresent(renderer);
 }
 
@@ -328,3 +694,4 @@ void graphics_update_sprite_frames(Tick current_tick, Time current_time) {
         }
     }
 }
+
