@@ -2,11 +2,13 @@
 #include "console.h"
 #include "engine.h"
 #include "systems.h"
+#include "physics.h"
 #include <stdio.h>
 #include "grid.h"
 
 AnimatedSprite animated_sprites[MAX_ENTITIES] = {0};
 const Color hit_box_color = (Color){255,0,0,255};
+const Color particle_color = (Color){0,0,255,255};
 
 #include <stdint.h>
 #include <string.h>
@@ -73,7 +75,7 @@ static bool graphics_recording_open_ffmpeg(
         "-an "
         "-c:v libx264 "
         "-preset ultrafast "
-        "-crf 18 "
+        "-crf 30 "
         "-pix_fmt yuv420p "
         "\"%s\"",
 
@@ -582,6 +584,29 @@ void graphics_draw_hit_boxes(SDL_Renderer *renderer) {
   }
 }
 
+void graphics_draw_particle(SDL_Renderer *renderer, Entity entity, Fill fill_type) {
+    Shape shape = physics_get_global_hit_box(entity);
+    float radius = math_circle_radius(shape,math_polygon_centroid(shape));
+    Shape circle = math_create_circle(radius, 10);
+    Shape world_circle = physics_shape_world_translate(circle, positions[entity], 0);
+    if(fill_type == GRAPHICS_FILLED) {
+        graphics_draw_shape_filled(renderer, world_circle, particle_color);
+    }
+    else {
+        graphics_draw_shape_outline(renderer, world_circle, particle_color);
+    }
+}
+void graphics_draw_particles(SDL_Renderer *renderer) {
+  for(int i = 0; i < MAX_ENTITIES; i += 1) {
+    if(entity_alive[i]) {
+        if( (entity_mask[i] & HIT_BOX) == HIT_BOX) {
+          if( (entity_mask[i] & PARTICLE) == PARTICLE) {
+              graphics_draw_particle(renderer, i, GRAPHICS_OUTLINE);
+          }
+        }
+    }
+  }
+}
 TextureAsset graphics_load_texture(SDL_Renderer *renderer, TextureDescriptor text_desc) {
         SDL_Surface *surface = NULL;
         char *png_path = NULL;
@@ -651,7 +676,7 @@ void graphics_draw_texture(SDL_Renderer *renderer, TextureAsset texture_asset, P
         .y = dst_rect.h * 0.5f
     };
     //SDL_RenderTexture(renderer, texture_asset.texture, NULL, &dst_rect);
-    double degrees = (double)ort * 180.0 / (double)PI_F;
+    double degrees = -(double)ort * 180.0 / (double)PI_F;
     SDL_RenderTextureRotated(
         renderer,
     texture_asset.texture,

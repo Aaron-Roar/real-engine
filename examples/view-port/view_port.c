@@ -9,39 +9,43 @@
 #include <time.h>
 #include <stdlib.h>
 #include "level_editor.h"
-#include "grid.h"
 #include "examples/test-assets/elder-fly/elderfly_descriptors.h"
+#include "examples/test-assets/orm/orm_descriptors.h"
 
 const Color background_color = (Color){255,255,255,255};
-#define amount_of_entities 20
+AnimationAsset animation_orm = {0};
+AnimatedSprite sprite_orm = {0};
 int main() {
     console_init();
     console_set_debug(CONSOLE_DEBUG_OFF);
     engine_init();
+    level_editor_init();
     SDL_Renderer *renderer = NULL;
     SDL_Window *window = NULL;
     if (!graphics_start(&renderer, &window)) {
         engine_shutdown();
         return 1;
     }
-    level_editor_init();
 
+    Entity water_smash = entity_add();
+    physics_set_position(water_smash, (Position){.x = 0, .y = 0});
+    physics_set_orientation(water_smash, 0);
+    physics_set_mass(water_smash, 50);
+    physics_set_velocity(water_smash, (Velocity){0, 0});
+    physics_set_acceleration(water_smash, (Acceleration){0, -30});
+    physics_set_restitution(water_smash, 0.1);
+    Shape shape4 = math_create_square(150, 220);
+    physics_set_hitbox(water_smash, shape4);
+    physics_set_friction(water_smash, 0.4);
+    physics_set_static(water_smash);
+    animation_orm = graphics_load_animation(renderer, elderfly_fly_files);
+        sprite_orm = graphics_create_animated_sprite(animation_orm, (Scale){10,10});
+        graphics_add_animated_sprite(water_smash, sprite_orm);
 
-    Entity entity_1 = entity_add();
-    physics_set_static(entity_1);
-    physics_set_position(entity_1, (Vec2D){10, 10});
-    physics_set_orientation(entity_1, 0*(PI_F/180));
-    Shape shape_1 = math_create_square(40, 150);
-    physics_set_hitbox(entity_1, shape_1);
-
-    Entity entity_2 = entity_add();
-    physics_set_static(entity_2);
-    physics_set_position(entity_2, (Vec2D){0, 0});
-    physics_set_orientation(entity_2, 0*(PI_F/180));
-    Shape shape_2 = math_create_circle(20, 4);
-    physics_set_hitbox(entity_2, shape_2);
-
+    engine_reset_clock();
+    Time dt = engine_get_dt();
     //Game Loop
+    graphics_recording_start("examples/view-port/recording.mp4",60);
     while (console_is_active()) {
         system_clean_entities_past_lifetime();
 
@@ -55,12 +59,10 @@ int main() {
         //physics
         engine_update_time();
         engine_update_tick();
-        //apply_collisions();
         system_update_physics(engine_get_dt());
 
+        //render
         graphics_draw_background(renderer, background_color);
-
-        graphics_draw_hit_boxes(renderer);
         graphics_update_sprite_frames(engine_get_tick(), engine_get_time());
         graphics_draw_animated_sprites(renderer);
         graphics_show(renderer);
@@ -69,4 +71,5 @@ int main() {
     graphics_end(renderer, window);
     engine_shutdown();
 }
+
 

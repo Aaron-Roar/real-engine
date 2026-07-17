@@ -19,7 +19,8 @@ ENGINE_SRC := \
 
 
 ASSET_SRC := \
-	examples/test-assets/elder-fly/elderfly_descriptors.c
+	examples/test-assets/elder-fly/elderfly_descriptors.c\
+	examples/test-assets/orm/orm_descriptors.c
 
 PIT_BINARY := build/examples/flies_in_pit
 BALL_BINARY := build/examples/flies_around_ball

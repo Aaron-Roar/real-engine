@@ -110,4 +110,5 @@ bool graphics_recording_start(
     int fps
 );
 void graphics_recording_stop(void);
+void graphics_draw_particles(SDL_Renderer *renderer);
 #endif

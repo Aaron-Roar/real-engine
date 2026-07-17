@@ -204,11 +204,6 @@ bool math_shape_overlap(Shape shape_1, Shape shape_2) {
     return true;
 }
 
-
-
-
-
-
 float math_cross_2d(Vec2D a, Vec2D b)
 {
     return a.x * b.y - a.y * b.x;
