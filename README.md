@@ -14,8 +14,8 @@ The long-term goal is to provide a modular engine for creating reactive 2D and 2
 * Forces, torque, and joints
 * Sprite rendering and animation
 * Transform and axis constraints
-* Terminal debugging interface (ncurses)
-* Cross-platform build environment using Nix
+* Screen playback recording
+* Terminal debugging interface (ncurses) "Implementation to be changed"
 
 ---
 
@@ -45,12 +45,13 @@ engine/
 - `sdl3`
 - `sdl3-image`
 - `ncurses`
+- `ffmpeg` "If using video recording"
 - Math library: `libm` / `-lm`
 
 Build the examples:
 
 ```bash
-make
+make build
 ```
 
 Run an example:

@@ -15,7 +15,8 @@ ENGINE_SRC := \
 	systems.c \
 	tools.c \
 	level_editor.c\
-	grid.c
+	grid.c\
+	controller.c
 
 
 ASSET_SRC := \

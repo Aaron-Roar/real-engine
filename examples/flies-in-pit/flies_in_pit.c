@@ -17,7 +17,7 @@ AnimationAsset animation_elderfly = {0};
 AnimatedSprite sprite_elderfly = {0};
 AnimationAsset animation_orm = {0};
 AnimatedSprite sprite_orm = {0};
-#define amount_of_entities 800
+#define amount_of_entities 500
 
 int main() {
     console_init();
@@ -100,7 +100,7 @@ int main() {
     engine_reset_clock();
     Time dt = engine_get_dt();
     //Game Loop
-    graphics_recording_start("examples/flies-in-pit/recording.mp4",60);
+    //graphics_recording_start("examples/flies-in-pit/recording.mp4",60);
     while (console_is_active()) {
         system_clean_entities_past_lifetime();
 

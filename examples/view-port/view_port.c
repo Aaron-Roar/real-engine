@@ -9,6 +9,7 @@
 #include <time.h>
 #include <stdlib.h>
 #include "level_editor.h"
+#include "controller.h"
 #include "examples/test-assets/elder-fly/elderfly_descriptors.h"
 #include "examples/test-assets/orm/orm_descriptors.h"
 
@@ -19,7 +20,8 @@ int main() {
     console_init();
     console_set_debug(CONSOLE_DEBUG_OFF);
     engine_init();
-    level_editor_init();
+    KeyboardState keyboard = {0};
+    //level_editor_init();
     SDL_Renderer *renderer = NULL;
     SDL_Window *window = NULL;
     if (!graphics_start(&renderer, &window)) {
@@ -38,14 +40,14 @@ int main() {
     physics_set_hitbox(water_smash, shape4);
     physics_set_friction(water_smash, 0.4);
     physics_set_static(water_smash);
-    animation_orm = graphics_load_animation(renderer, elderfly_fly_files);
+    animation_orm = graphics_load_animation(renderer, orm_files);
         sprite_orm = graphics_create_animated_sprite(animation_orm, (Scale){10,10});
         graphics_add_animated_sprite(water_smash, sprite_orm);
 
     engine_reset_clock();
     Time dt = engine_get_dt();
     //Game Loop
-    graphics_recording_start("examples/view-port/recording.mp4",60);
+    //graphics_recording_start("examples/view-port/recording.mp4",60);
     while (console_is_active()) {
         system_clean_entities_past_lifetime();
 
@@ -54,7 +56,7 @@ int main() {
         if(console_read(&console_line)) {
             console_write(LOG_CONSOLE, "%s", console_line.string);
         }
-        level_editor_update(renderer);
+        //level_editor_update(renderer);
 
         //physics
         engine_update_time();
@@ -67,6 +69,12 @@ int main() {
         graphics_draw_animated_sprites(renderer);
         graphics_show(renderer);
 
+        SDL_Event sdl_event = engine_poll_event();
+        KeyboardEvent key_event = capture_keyboard_event(&sdl_event);
+        add_key_event(&keyboard, key_event);
+        update_key_states(&keyboard);
+        print_keyboard_event(key_event);
+        
     }
     graphics_end(renderer, window);
     engine_shutdown();

@@ -48,5 +48,5 @@ AnimationDescriptor orm_files = (AnimationDescriptor) {
   },
   .amount_of_descriptors = 11,
   .ticks_per_frame = 0,
-  .time_per_frame = 0.04,
+  .time_per_frame = 0.06,
 };
