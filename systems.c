@@ -227,19 +227,15 @@ void system_separate_entities(Entity entity_1, Entity entity_2, Collision collis
         positions[entity_2].x += ( (correction.x)*(mass_1/(mass_sum)) );
         positions[entity_2].y += ( (correction.y)*(mass_1/(mass_sum)) );
 
-        //positions[entity_1].x -= (correction.x)/2;
-        //positions[entity_1].y -= (correction.y)/2;
-        //positions[entity_2].x += (correction.x)/2;
-        //positions[entity_2].y += (correction.y)/2;
     }
 
     else if(entity_1_dynamic && !entity_2_dynamic) {
-        positions[entity_1].x -= (correction.x);// * (inv_mass_1 / inv_mass_sum);
-        positions[entity_1].y -= (correction.y);// * (inv_mass_1 / inv_mass_sum);
+        positions[entity_1].x -= (correction.x);
+        positions[entity_1].y -= (correction.y);
     }
     else if(!entity_1_dynamic && entity_2_dynamic) {
-        positions[entity_2].x += (correction.x);// * (inv_mass_1 / inv_mass_sum);
-        positions[entity_2].y += (correction.y);// * (inv_mass_1 / inv_mass_sum);
+        positions[entity_2].x += (correction.x);
+        positions[entity_2].y += (correction.y);
     }
 }
 
@@ -275,13 +271,13 @@ Position system_support_point_average(Shape shape, Vec2D direction)
     return sum;
 }
 
-//PARTICLE
 Position system_get_particle_edge(Entity entity, Vec2D normal, Vec1D radius) {
     return (Position) {
         .x = positions[entity].x + normal.x*radius,
         .y = positions[entity].y + normal.y*radius,
     };
 }
+
 Position system_collision_contact_point(Entity entity_1, Entity entity_2, Collision collision)
 {
     Shape shape_1 = physics_get_global_hit_box(entity_1);
@@ -313,13 +309,7 @@ Position system_collision_contact_point(Entity entity_1, Entity entity_2, Collis
     }
 
 
-    /*
-        If one object is static and one is dynamic,
-        use the dynamic object's contact point.
-
-        This prevents a huge static floor from producing
-        a fake contact point at the middle of the entire floor.
-    */
+    //Use dynamic entities contact point
     if(entity_1_dynamic && !entity_2_dynamic) {
         return point_1;
     }
@@ -328,10 +318,7 @@ Position system_collision_contact_point(Entity entity_1, Entity entity_2, Collis
         return point_2;
     }
 
-    /*
-        Both dynamic, or both static.
-        Midpoint is okay as a temporary approximation.
-    */
+    //Midpoint is good enough for now
     return (Position){
         .x = (point_1.x + point_2.x) * 0.5f,
         .y = (point_1.y + point_2.y) * 0.5f
@@ -377,7 +364,7 @@ void system_apply_friction_impulse(
 
     float tangent_mag = sqrtf(tangent.x * tangent.x + tangent.y * tangent.y);
 
-    if(tangent_mag <= 0.00001f) {
+    if(tangent_mag <= 0) {
         return;
     }
 
@@ -393,7 +380,7 @@ void system_apply_friction_impulse(
         (r1_cross_t * r1_cross_t) * inv_inertia_1 +
         (r2_cross_t * r2_cross_t) * inv_inertia_2;
 
-    if(denominator <= 0.00001f) {
+    if(denominator <= 0) {
         return;
     }
 
@@ -426,21 +413,13 @@ void system_apply_friction_impulse(
 }
 
 void system_resolve_collision(Entity entity_1, Entity entity_2, Collision collision) {
-    // Assume collision.normal points from entity_1 -> entity_2
-
-    // ================================
-    // CHANGED: use your MOVABLE bitmask
-    // ================================
+    //Assume collision.normal points from entity_1 -> entity_2
     bool entity_1_movable =
         ((entity_mask[entity_1] & DYNAMIC) == DYNAMIC);
 
     bool entity_2_movable =
         ((entity_mask[entity_2] & DYNAMIC) == DYNAMIC);
 
-    // ================================
-    // CHANGED: local inverse mass from your mass[] array
-    // If not movable, inverse mass = 0.
-    // ================================
     float inv_mass_1 = 0.0f;
     float inv_mass_2 = 0.0f;
 
@@ -452,7 +431,7 @@ void system_resolve_collision(Entity entity_1, Entity entity_2, Collision collis
         inv_mass_2 = 1.0f / mass[entity_2];
     }
 
-    // If neither body can move, no velocity response is needed.
+    //If neither body can move, no velocity response is needed
     if (inv_mass_1 + inv_mass_2 <= 0.0f) {
         return;
     }
@@ -470,10 +449,6 @@ void system_resolve_collision(Entity entity_1, Entity entity_2, Collision collis
         .y = contact.y - positions[entity_2].y
     };
 
-    // ================================
-    // CHANGED: static/non-movable objects should not contribute contact velocity
-    // for now. Later you may add kinematic objects.
-    // ================================
     Vec2D rotational_velocity_1 = {0};
     Vec2D rotational_velocity_2 = {0};
 
@@ -517,10 +492,6 @@ void system_resolve_collision(Entity entity_1, Entity entity_2, Collision collis
       restitution = 0.0f;
     }
 
-    // ================================
-    // CHANGED: local inverse inertia
-    // Non-movable objects get inverse inertia = 0.
-    // ================================
     float inv_inertia_1 = 0.0f;
     float inv_inertia_2 = 0.0f;
 
@@ -561,9 +532,6 @@ void system_resolve_collision(Entity entity_1, Entity entity_2, Collision collis
     float r1_cross_n = math_cross_2d(r1, collision.normal);
     float r2_cross_n = math_cross_2d(r2, collision.normal);
 
-    // ================================
-    // CHANGED: denominator uses inverse mass/inertia
-    // ================================
     float denominator =
         inv_mass_1 +
         inv_mass_2 +
@@ -582,20 +550,12 @@ void system_resolve_collision(Entity entity_1, Entity entity_2, Collision collis
         .y = collision.normal.y * impulse_magnitude
     };
 
-    // ================================
-    // CHANGED: velocity update uses inverse mass
-    // If entity is not movable, inv_mass = 0, so it does not change.
-    // ================================
     velocities[entity_1].x -= impulse.x * inv_mass_1;
     velocities[entity_1].y -= impulse.y * inv_mass_1;
 
     velocities[entity_2].x += impulse.x * inv_mass_2;
     velocities[entity_2].y += impulse.y * inv_mass_2;
 
-    // ================================
-    // CHANGED: angular velocity update uses inverse inertia
-    // If entity is not movable, inv_inertia = 0, so it does not rotate.
-    // ================================
     angular_velocities[entity_1] -= math_cross_2d(r1, impulse) * inv_inertia_1;
     angular_velocities[entity_2] += math_cross_2d(r2, impulse) * inv_inertia_2;
 
@@ -620,7 +580,7 @@ void system_add_entities_to_grid() {
         }
         if( (entity_mask[i] & HIT_BOX) == HIT_BOX) {
             add_entity_to_grids(i);
-        } 
+        }
     }
 }
 
@@ -648,13 +608,13 @@ void system_apply_collisions_tuned() {
                                 if((entity_mask[entity_1] & entity_mask[entity_2] & COLLISION) == COLLISION) {
                                     system_resolve_collision(entity_1, entity_2, collision);
                                     system_separate_entities(entity_1,entity_2, collision);
-                                    
+
                                     system_generate_global_hitbox(entity_1);
                                     system_generate_global_hitbox(entity_2);
                                     grid_update_aabb(entity_1);
                                     grid_update_aabb(entity_2);
                                 }
-                                
+
                             } else {
                                 physics_set_collision_report(entity_1, entity_2, false);
                                 physics_set_collision_report(entity_2, entity_1, false);
@@ -690,7 +650,7 @@ void system_apply_collisions() {
                 continue;
             }
             Collision collision = system_get_entity_collision(i, j);
-            
+
 
             if(collision.overlap == true) {
                 physics_set_collision_report(i, j, true);
@@ -698,7 +658,7 @@ void system_apply_collisions() {
                 if((entity_mask[i] & entity_mask[j] & COLLISION) == COLLISION) {
                     system_resolve_collision(i, j, collision);
                 }
-                
+
             }
             else {
                 physics_set_collision_report(i, j, false);
@@ -728,10 +688,7 @@ void system_apply_angle_locks() {
             max = temp;
         }
 
-        /*
-            Locked completely.
-        */
-        if(fabsf(max - min) <= 0.00001f) {
+        if(fabsf(max - min) <= 0) {
             orientations[entity] = min;
             angular_velocities[entity] = 0.0f;
             angular_accelerations[entity] = 0.0f;
@@ -740,9 +697,6 @@ void system_apply_angle_locks() {
             continue;
         }
 
-        /*
-            Hit minimum angle.
-        */
         if(orientations[entity] < min) {
             orientations[entity] = min;
 
@@ -763,9 +717,6 @@ void system_apply_angle_locks() {
             }
         }
 
-        /*
-            Hit maximum angle.
-        */
         if(orientations[entity] > max) {
             orientations[entity] = max;
 
@@ -802,27 +753,15 @@ void system_apply_axis_locks() {
 
         float mag = math_axis_magnitude(axis);
 
-        if(mag <= 0.00001f) {
+        if(mag <= 0) {
             continue;
         }
 
-        /*
-            Safety normalize.
-            Ideally this already happened in set_axis_lock(),
-            but this prevents bad input from exploding.
-        */
         axis.x /= mag;
         axis.y /= mag;
 
         Position point_on_axis = axis_locks[entity].point_on_axis;
 
-        /*
-            1. Lock position onto the line.
-
-            relative = position - point_on_axis
-            distance = dot(relative, axis)
-            new_position = point_on_axis + axis * distance
-        */
         Vec2D relative = {
             .x = positions[entity].x - point_on_axis.x,
             .y = positions[entity].y - point_on_axis.y
@@ -833,27 +772,16 @@ void system_apply_axis_locks() {
         positions[entity].x = point_on_axis.x + axis.x * distance_along_axis;
         positions[entity].y = point_on_axis.y + axis.y * distance_along_axis;
 
-        /*
-            2. Lock velocity onto the axis.
-        */
         velocities[entity] = math_project_onto_axis(velocities[entity], axis);
 
-        /*
-            3. Lock acceleration onto the axis.
-        */
         accelerations[entity] = math_project_onto_axis(accelerations[entity], axis);
         force_accelerations[entity] = math_project_onto_axis(force_accelerations[entity], axis);
 
-        /*
-            4. Optional: lock direct force accumulator too.
-            This only matters if forces[entity] is used directly.
-        */
         forces[entity] = math_project_onto_axis(forces[entity], axis);
     }
 }
 
-void system_apply_transform_locks()
-{
+void system_apply_transform_locks() {
     for(Entity driven = 0; driven < MAX_ENTITIES; driven += 1) {
         if(!entity_alive[driven]) {
             continue;
@@ -917,8 +845,7 @@ void system_clean_entities_past_lifetime() {
     }
 }
 
-static Velocity system_point_velocity(Entity entity, Vec2D world_offset)
-{
+static Velocity system_point_velocity(Entity entity, Vec2D world_offset) {
     Vec2D angular_part = math_angular_velocity_cross_vec(
         angular_velocities[entity],
         world_offset
@@ -929,8 +856,7 @@ static Velocity system_point_velocity(Entity entity, Vec2D world_offset)
         .y = velocities[entity].y + angular_part.y
     };
 }
-static void system_add_joint_force_for_one_tick(Entity target, Force force)
-{
+static void system_add_joint_force_for_one_tick(Entity target, Force force) {
     //Entity force_entity = set_force(target, force);
     force_accelerations[target].x += force.x/mass[target];
     force_accelerations[target].y += force.y/mass[target];
@@ -945,8 +871,7 @@ static void system_add_joint_force_for_one_tick(Entity target, Force force)
     //    engine_get_tick() + 1
     //);
 }
-static void system_add_joint_torque_for_one_tick(Entity target, Torque torque)
-{
+static void system_add_joint_torque_for_one_tick(Entity target, Torque torque) {
     torque_angular_accelerations[target] += torque/physics_polygon_moment_of_inertia(hit_boxes[target], mass[target]);
     //Entity torque_entity = set_torque(target, torque);
 
@@ -961,11 +886,7 @@ static void system_add_joint_torque_for_one_tick(Entity target, Torque torque)
     //);
 }
 
-static void system_add_joint_force_at_point_for_one_tick(
-    Entity target,
-    Position world_point,
-    Force force
-) {
+static void system_add_joint_force_at_point_for_one_tick(Entity target, Position world_point, Force force) {
     if(!entity_alive[target]) {
         return;
     }
@@ -994,8 +915,7 @@ static void system_add_joint_force_at_point_for_one_tick(
     }
 }
 
-static void system_apply_pin_joint(Entity joint_entity)
-{
+static void system_apply_pin_joint(Entity joint_entity) {
     Joint joint = joints[joint_entity];
 
     Entity a = joint.a;
@@ -1098,7 +1018,7 @@ void system_apply_distance_joint(Entity joint_entity) {
 
         float length = math_vector_magnitude(delta);
 
-        if(length <= 0.00001f) {
+        if(length <= 0.0) {
             return;
         }
 

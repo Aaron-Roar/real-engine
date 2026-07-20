@@ -45,8 +45,7 @@ Shape physics_shape_world_translate(Shape shape, Position position, Orientation 
 
     return world_shape;
 }
-float physics_polygon_moment_of_inertia(Shape shape, Mass mass)
-{
+float physics_polygon_moment_of_inertia(Shape shape, Mass mass) {
     Position c = math_polygon_centroid(shape);
 
     float area_sum = 0.0f;
@@ -74,8 +73,8 @@ float physics_polygon_moment_of_inertia(Shape shape, Mass mass)
     float area = 0.5f * area_sum;
     float area_moment = inertia_sum / 12.0f;
 
-    if (fabsf(area) < 1e-8f) {
-        return 0.0f; // invalid/degenerate polygon
+    if (fabsf(area) < 1e-8f) { //Very small area no inertia calc needed
+        return 0;
     }
 
     float density = mass / fabsf(area);
@@ -140,10 +139,6 @@ Collision physics_particle_collision(Shape shape_1, Shape shape_2)
             .y = delta.y / distance
         };
     } else {
-        /*
-         * The centres are identical, so there is no geometrically
-         * preferred direction.
-         */
         normal = (Vec2D){1.0f, 0.0f};
         distance = 0.0f;
     }
@@ -253,8 +248,6 @@ void physics_set_acceleration(Entity entity, Acceleration a) {
         return;
     }
     accelerations[entity] = a;
-    //Force f = (Force){a.x*mass[entity],a.y*mass[entity]};
-    //set_force(entity, f);
     console_debug_write(LOG_ENGINE, "Set Entity: %d Acceleration: {x: %f, y: %f}\n", entity, a.x, a.y);
 }
 Entity physics_set_torque(Entity entity, Torque t) {

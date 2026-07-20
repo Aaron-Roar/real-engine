@@ -86,15 +86,11 @@ extern AngleLock angle_locks[MAX_ENTITIES];
 extern AxisLock axis_locks[MAX_ENTITIES];
 extern TransformLock transform_locks[MAX_ENTITIES];
 extern Joint joints[MAX_ENTITIES];
-//Math2d
 Shape physics_shape_world_translate(Shape shape, Position position, Orientation angle);
 float physics_polygon_moment_of_inertia(Shape shape, Mass mass);
 Collision physics_sat_collision(Shape shape_1, Shape shape_2);
 Position physics_approximate_contact_point(Position p1, Position p2);
 Vec1D physics_circle_moment_of_inertia(Shape circle, Mass mass);
-
-//Entity
-
 void physics_set_acceleration(Entity entity, Acceleration a);
 void physics_set_velocity(Entity entity, Velocity v);
 void physics_set_position(Entity entity, Position p);
@@ -113,7 +109,7 @@ void physics_set_axis_lock(Entity entity, Axis axis, Position axis_point);
 void physics_set_friction(Entity entity, float friction);
 void physics_set_transform_lock(
         Entity driven,
-        Entity driver, 
+        Entity driver,
         Vec2D local_offset,
         Orientation local_angle,
         bool lock_position,

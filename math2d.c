@@ -4,8 +4,7 @@
 
 #include <float.h>
 
-AABB math_create_aabb(Shape world_shape)
-{
+AABB math_create_aabb(Shape world_shape) {
     AABB aabb = {
         .min_x =  FLT_MAX,
         .max_x = -FLT_MAX,
@@ -88,12 +87,9 @@ Vec2DList math_create_normals(Shape shape) {
 
     normals.amount_of_vectors = shape.amount_of_vertices;
 
-    //Could be seg fault if out of range!!
     for(int i = 0; i < shape.amount_of_vertices; i++) {
         int j = (i + 1)%shape.amount_of_vertices;  //makes the last vertex wrap to the first one
 
-        // Getting vector by final-initial then doing perpendicular
-        // (x, y) -> PERPENDICULAR -> (-y, x)
         normals.vectors[i].y = -(shape.vertices[j].x - shape.vertices[i].x);
         normals.vectors[i].x = shape.vertices[j].y - shape.vertices[i].y;
     }
@@ -204,20 +200,16 @@ bool math_shape_overlap(Shape shape_1, Shape shape_2) {
     return true;
 }
 
-float math_cross_2d(Vec2D a, Vec2D b)
-{
+float math_cross_2d(Vec2D a, Vec2D b) {
     return a.x * b.y - a.y * b.x;
 }
 
-Vec2D math_angular_velocity_cross_vec(float omega, Vec2D r)
-{
+Vec2D math_angular_velocity_cross_vec(float omega, Vec2D r) {
     return (Vec2D){
         .x = -omega * r.y,
         .y =  omega * r.x
     };
 }
-
-//uses center (wrong for now)
 
 Vec2D math_project_onto_axis(Vec2D v, Axis axis) {
     float amount = math_dot_product(v, axis);
@@ -246,8 +238,7 @@ Vec2D math_rotate_vector(Vec2D vector, float angle) {
     };
 }
 
-Vec2D math_polygon_centroid(Shape shape)
-{
+Vec2D math_polygon_centroid(Shape shape) {
     double area_sum = 0.0;
     double cx_sum = 0.0;
     double cy_sum = 0.0;
@@ -291,7 +282,7 @@ Vec2D math_polygon_centroid(Shape shape)
 
     return centroid;
 }
-//Circles
+
 Vec1D math_circle_radius(Shape circle, Vec2D centroid) {
   return sqrt(
       (circle.vertices[0].x - centroid.x)*(circle.vertices[0].x - centroid.x)
@@ -310,8 +301,7 @@ Vec1D math_circle_overlap_depth(Vec2D centroid_1, Vec1D radius_1, Vec2D centroid
       );
 }
 
-Shape math_scale_shape_x(Shape shape, float scale)
-{
+Shape math_scale_shape_x(Shape shape, float scale) {
     Shape scaled_shape = shape;
 
     for (uint16_t i = 0; i < scaled_shape.amount_of_vertices; i++) {
@@ -320,8 +310,7 @@ Shape math_scale_shape_x(Shape shape, float scale)
 
     return scaled_shape;
 }
-Shape math_scale_shape_y(Shape shape, float scale)
-{
+Shape math_scale_shape_y(Shape shape, float scale) {
     Shape scaled_shape = shape;
 
     for (uint16_t i = 0; i < scaled_shape.amount_of_vertices; i++) {
@@ -330,8 +319,7 @@ Shape math_scale_shape_y(Shape shape, float scale)
 
     return scaled_shape;
 }
-Shape math_scale_shape(Shape shape, float scale)
-{
+Shape math_scale_shape(Shape shape, float scale) {
     Shape scaled_shape = shape;
 
     for (uint16_t i = 0; i < scaled_shape.amount_of_vertices; i++) {

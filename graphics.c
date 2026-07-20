@@ -26,10 +26,7 @@ typedef struct ScreenRecorder {
 
 static ScreenRecorder screen_recorder = {0};
 
-bool graphics_recording_start(
-    const char *output_path,
-    int fps
-) {
+bool graphics_recording_start(const char *output_path, int fps) {
     if(screen_recorder.recording) {
         return false;
     }
@@ -55,10 +52,7 @@ bool graphics_recording_start(
 
     return true;
 }
-static bool graphics_recording_open_ffmpeg(
-    int width,
-    int height
-) {
+static bool graphics_recording_open_ffmpeg(int width, int height) {
     char command[1024];
 
     snprintf(
@@ -111,8 +105,7 @@ static bool graphics_recording_open_ffmpeg(
     return true;
 }
 
-static bool graphics_record_frame(SDL_Renderer *renderer)
-{
+static bool graphics_record_frame(SDL_Renderer *renderer) {
     if(!screen_recorder.recording) {
         return true;
     }
@@ -144,9 +137,6 @@ static bool graphics_record_frame(SDL_Renderer *renderer)
         return true;
     }
 
-    /*
-     * Read only the game area, excluding letterbox bars.
-     */
     SDL_Surface *captured =
         SDL_RenderReadPixels(
             renderer,
@@ -163,9 +153,6 @@ static bool graphics_record_frame(SDL_Renderer *renderer)
         return false;
     }
 
-    /*
-     * Force every recorded frame to the same dimensions.
-     */
     SDL_Surface *scaled =
         SDL_ScaleSurface(
             captured,
@@ -204,10 +191,6 @@ static bool graphics_record_frame(SDL_Renderer *renderer)
         return false;
     }
 
-    /*
-     * Open FFmpeg using the fixed recording dimensions,
-     * not the captured window dimensions.
-     */
     if(screen_recorder.ffmpeg_pipe == NULL) {
         if(!graphics_recording_open_ffmpeg(
             RECORDING_WIDTH,
@@ -247,8 +230,7 @@ static bool graphics_record_frame(SDL_Renderer *renderer)
     SDL_DestroySurface(rgba_surface);
     return true;
 }
-void graphics_recording_stop(void)
-{
+void graphics_recording_stop(void) {
     if(!screen_recorder.recording) {
         return;
     }
@@ -297,16 +279,10 @@ void graphics_draw_grid(SDL_Renderer *renderer) {
     float grid_max_y =
         (GRID_ROWS * CELL_SIZE) * 0.5f;
 
-    /*
-     * Vertical lines.
-     */
     for(int col = 0; col <= GRID_COLS; col++) {
         float world_x =
             grid_min_x + col * CELL_SIZE;
 
-        /*
-         * Skip lines outside the visible screen.
-         */
         if(world_x < -WINDOW_WIDTH * 0.5f ||
            world_x >  WINDOW_WIDTH * 0.5f) {
             continue;
@@ -333,10 +309,6 @@ void graphics_draw_grid(SDL_Renderer *renderer) {
 
         SDL_RenderLines(renderer, points, 2);
     }
-
-    /*
-     * Horizontal lines.
-     */
     for(int row = 0; row <= GRID_ROWS; row++) {
         float world_y =
             grid_min_y + row * CELL_SIZE;
@@ -394,16 +366,14 @@ Color graphics_create_color_rgba(uint8_t red, uint8_t green, uint8_t blue, uint8
   };
 }
 
-Position graphics_world_to_screen(Position world)
-{
+Position graphics_world_to_screen(Position world) {
     return (Position){
         .x = world.x + WINDOW_WIDTH * 0.5f,
         .y = WINDOW_HEIGHT * 0.5f - world.y
     };
 }
 
-Position graphics_screen_to_world(Position screen)
-{
+Position graphics_screen_to_world(Position screen) {
     return (Position){
         .x = screen.x - WINDOW_WIDTH * 0.5f,
         .y = WINDOW_HEIGHT * 0.5f - screen.y
@@ -478,14 +448,12 @@ bool graphics_poll_events(SDL_Event *event) {
 }
 
 void graphics_draw_background(SDL_Renderer *renderer, Color color) {
-    /* as you can see from this, rendering draws over whatever was drawn before it. */
     SDL_SetRenderDrawColor(renderer, color.red, color.green, color.blue, color.alpha);
-    SDL_RenderClear(renderer);  /* start with a blank canvas. */
+    SDL_RenderClear(renderer);
 }
 
 void graphics_draw_rect(SDL_Renderer *renderer, Shape rect, Position pos) {
     SDL_FRect sdl_rect;
-    /* draw a filled rectangle in the middle of the canvas. */
     SDL_SetRenderDrawColor(renderer, 0, 0, 255, SDL_ALPHA_OPAQUE);  /* blue, full alpha */
     Position screen_loc = graphics_world_to_screen(pos);
     sdl_rect.x = screen_loc.x;
@@ -523,8 +491,7 @@ bool graphics_draw_shape_outline(SDL_Renderer *renderer, Shape shape, Color colo
     return SDL_RenderLines(renderer, points, shape.amount_of_vertices + 1);
 }
 
-bool graphics_draw_shape_filled(SDL_Renderer *renderer, Shape shape, Color color)
-{
+bool graphics_draw_shape_filled(SDL_Renderer *renderer, Shape shape, Color color) {
     if (shape.amount_of_vertices < 3) {
         return false;
     }
@@ -616,12 +583,12 @@ TextureAsset graphics_load_texture(SDL_Renderer *renderer, TextureDescriptor tex
             .y = text_desc.size.y,
         };
 
-        SDL_asprintf(&png_path, "%s", text_desc.file);  /* allocate a string of the full file path */
+        SDL_asprintf(&png_path, "%s", text_desc.file);
         surface = SDL_LoadPNG(png_path);
-        SDL_free(png_path);  /* done with this, the file is loaded. */
+        SDL_free(png_path);
 
         asset.texture = SDL_CreateTextureFromSurface(renderer, surface);
-        SDL_DestroySurface(surface);  /* done with this, the texture has a copy of the pixels now. */
+        SDL_DestroySurface(surface);
 
         return asset;
 }
@@ -675,7 +642,6 @@ void graphics_draw_texture(SDL_Renderer *renderer, TextureAsset texture_asset, P
         .x = dst_rect.w * 0.5f,
         .y = dst_rect.h * 0.5f
     };
-    //SDL_RenderTexture(renderer, texture_asset.texture, NULL, &dst_rect);
     double degrees = -(double)ort * 180.0 / (double)PI_F;
     SDL_RenderTextureRotated(
         renderer,

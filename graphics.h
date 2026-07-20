@@ -105,10 +105,7 @@ void graphics_scale_textures(Entity entity, Scale scale);
 Position graphics_world_to_screen(Position pos);
 Position graphics_screen_to_world(Position screen);
 void graphics_draw_grid(SDL_Renderer *renderer);
-bool graphics_recording_start(
-    const char *output_path,
-    int fps
-);
+bool graphics_recording_start(const char *output_path, int fps);
 void graphics_recording_stop(void);
 void graphics_draw_particles(SDL_Renderer *renderer);
 #endif
