@@ -693,3 +693,115 @@ void graphics_update_sprite_frames(Tick current_tick, Time current_time) {
     }
 }
 
+void graphics_draw_local_origin(Entity entity) {
+    if (!entity_has_components(entity, HIT_BOX)) {
+        return;
+    }
+
+    Shape global_shape = physics_get_global_hit_box(entity);
+
+    if (global_shape.amount_of_vertices <= 0) {
+        return;
+    }
+
+    Position origin = positions[entity];
+    Orientation angle = orientations[entity];
+
+    float cos_angle = cosf(angle);
+    float sin_angle = sinf(angle);
+
+    Vec2D local_x_axis = {
+        .x = cos_angle,
+        .y = sin_angle
+    };
+
+    Vec2D local_y_axis = {
+        .x = -sin_angle,
+        .y = cos_angle
+    };
+
+    float max_x_projection = 0.0f;
+    float max_y_projection = 0.0f;
+
+    for (int i = 0; i < global_shape.amount_of_vertices; i++) {
+        Vec2D relative_vertex = {
+            .x = global_shape.vertices[i].x - origin.x,
+            .y = global_shape.vertices[i].y - origin.y
+        };
+
+        float x_projection =
+            relative_vertex.x * local_x_axis.x +
+            relative_vertex.y * local_x_axis.y;
+
+        float y_projection =
+            relative_vertex.x * local_y_axis.x +
+            relative_vertex.y * local_y_axis.y;
+
+        if (x_projection > max_x_projection) {
+            max_x_projection = x_projection;
+        }
+
+        if (y_projection > max_y_projection) {
+            max_y_projection = y_projection;
+        }
+    }
+
+    Position x_positive = {
+        .x = origin.x + local_x_axis.x * max_x_projection,
+        .y = origin.y + local_x_axis.y * max_x_projection
+    };
+
+    Position y_positive = {
+        .x = origin.x + local_y_axis.x * max_y_projection,
+        .y = origin.y + local_y_axis.y * max_y_projection
+    };
+
+    Position screen_origin =
+        graphics_world_to_screen(origin);
+
+    Position screen_x_positive =
+        graphics_world_to_screen(x_positive);
+
+    Position screen_y_positive =
+        graphics_world_to_screen(y_positive);
+
+    /* Positive local X axis */
+    SDL_SetRenderDrawColor(
+        sdl_renderer,
+        255, 255, 0, 255
+    );
+
+    SDL_RenderLine(
+        sdl_renderer,
+        screen_origin.x,
+        screen_origin.y,
+        screen_x_positive.x,
+        screen_x_positive.y
+    );
+
+    /* Positive local Y axis */
+    SDL_SetRenderDrawColor(
+        sdl_renderer,
+        0, 255, 255, 255
+    );
+
+    SDL_RenderLine(
+        sdl_renderer,
+        screen_origin.x,
+        screen_origin.y,
+        screen_y_positive.x,
+        screen_y_positive.y
+    );
+}
+
+void graphics_draw_local_origins() {
+    for(int i = 0; i < MAX_ENTITIES; i += 1) {
+        if(!entity_alive[i]) {
+            continue;
+        }
+        if (!entity_has_components(i, HIT_BOX)) {
+            continue;
+        }
+        graphics_draw_local_origin(i);
+    }
+}

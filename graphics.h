@@ -8,6 +8,7 @@
 #include "engine.h"
 #include "physics.h"
 #include "math2d.h"
+#include "math.h"
 
 extern SDL_Renderer *sdl_renderer;
 extern SDL_Window *sdl_window;
@@ -114,4 +115,6 @@ bool graphics_recording_start(
 );
 void graphics_recording_stop(void);
 void graphics_draw_particles();
+void graphics_draw_local_origin(Entity entity);
+void graphics_draw_local_origins();
 #endif
