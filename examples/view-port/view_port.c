@@ -34,12 +34,11 @@ int main() {
     physics_set_orientation(water_smash, 0);
     physics_set_mass(water_smash, 50);
     physics_set_velocity(water_smash, (Velocity){0, 0});
-    physics_set_acceleration(water_smash, (Acceleration){0, -30});
     physics_set_restitution(water_smash, 0.1);
     Shape shape4 = math_create_square(150, 220);
     physics_set_hitbox(water_smash, shape4);
     physics_set_friction(water_smash, 0.4);
-    physics_set_static(water_smash);
+    physics_set_dynamic(water_smash);
     animation_orm = graphics_load_animation(renderer, orm_files);
         sprite_orm = graphics_create_animated_sprite(animation_orm, (Scale){10,10});
         graphics_add_animated_sprite(water_smash, sprite_orm);
@@ -74,7 +73,33 @@ int main() {
         add_key_event(&keyboard, key_event);
         update_key_states(&keyboard);
         print_keyboard_event(key_event);
-        
+        if(
+            keyboard.key_states[KEY_W] == KEY_STATE_UP &&
+            keyboard.key_states[KEY_A] == KEY_STATE_UP &&
+            keyboard.key_states[KEY_S] == KEY_STATE_UP &&
+            keyboard.key_states[KEY_D] == KEY_STATE_UP) {
+
+            physics_set_velocity(water_smash, (Velocity){0, 0});
+        }
+
+        if(keyboard.key_states[KEY_W] == KEY_STATE_DOWN) {
+            physics_set_velocity(water_smash, (Velocity){0, 50});
+
+        }
+        else if(keyboard.key_states[KEY_A] == KEY_STATE_DOWN) {
+            physics_set_velocity(water_smash, (Velocity){-50, 0});
+
+        }
+        else if(keyboard.key_states[KEY_S] == KEY_STATE_DOWN) {
+            physics_set_velocity(water_smash, (Velocity){0, -50});
+
+        }
+        else if(keyboard.key_states[KEY_D] == KEY_STATE_DOWN) {
+            physics_set_velocity(water_smash, (Velocity){50, 0});
+
+        }
+
+
     }
     graphics_end(renderer, window);
     engine_shutdown();
