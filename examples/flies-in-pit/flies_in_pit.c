@@ -17,7 +17,7 @@ AnimationAsset animation_elderfly = {0};
 AnimatedSprite sprite_elderfly = {0};
 AnimationAsset animation_orm = {0};
 AnimatedSprite sprite_orm = {0};
-#define amount_of_entities 800
+#define amount_of_entities 500
 
 int main() {
     console_init();
@@ -25,9 +25,7 @@ int main() {
     engine_init();
     engine_set_dt(1/(float)120);
     level_editor_init();
-    SDL_Renderer *renderer = NULL;
-    SDL_Window *window = NULL;
-    if (!graphics_start(&renderer, &window)) {
+    if (!graphics_start()) {
         engine_shutdown();
         return 1;
     }
@@ -70,12 +68,12 @@ int main() {
     physics_set_hitbox(water_smash, shape4);
     physics_set_friction(water_smash, 0.4);
     physics_set_dynamic(water_smash);
-    animation_orm = graphics_load_animation(renderer, orm_files);
+    animation_orm = graphics_load_animation(orm_files);
         sprite_orm = graphics_create_animated_sprite(animation_orm, (Scale){10,10});
         graphics_add_animated_sprite(water_smash, sprite_orm);
     //set_axis_lock(water_smash, (Axis){0,1}, positions[smash]);
 
-    animation_elderfly = graphics_load_animation(renderer, elderfly_fly_files);
+    animation_elderfly = graphics_load_animation(elderfly_fly_files);
     time_t seed = 1003463;
     srand(seed);
     for(int i = 0; i < amount_of_entities - 1; i += 1) {
@@ -100,7 +98,7 @@ int main() {
     engine_reset_clock();
     Time dt = engine_get_dt();
     //Game Loop
-    graphics_recording_start("examples/flies-in-pit/recording.mp4",60);
+    //graphics_recording_start("examples/flies-in-pit/recording.mp4",60);
     while (console_is_active()) {
         system_clean_entities_past_lifetime();
 
@@ -109,7 +107,7 @@ int main() {
         if(console_read(&console_line)) {
             console_write(LOG_CONSOLE, "%s", console_line.string);
         }
-        level_editor_update(renderer);
+        level_editor_update();
 
         //physics
         engine_update_time();
@@ -117,19 +115,19 @@ int main() {
         system_update_physics(engine_get_dt());
 
         //render
-        graphics_draw_background(renderer, background_color);
-        graphics_draw_hit_box(renderer, water_wall_1, GRAPHICS_FILLED);
-        graphics_draw_hit_box(renderer, water_wall_2, GRAPHICS_FILLED);
-        graphics_draw_hit_box(renderer, water_wall_3, GRAPHICS_FILLED);
+        graphics_draw_background(background_color);
+        graphics_draw_hit_box(water_wall_1, GRAPHICS_FILLED);
+        graphics_draw_hit_box(water_wall_2, GRAPHICS_FILLED);
+        graphics_draw_hit_box(water_wall_3, GRAPHICS_FILLED);
         graphics_update_sprite_frames(engine_get_tick(), engine_get_time());
-        graphics_draw_animated_sprites(renderer);
-        graphics_draw_hit_boxes(renderer);
-        graphics_draw_particles(renderer);
-        graphics_draw_grid(renderer);
-        graphics_show(renderer);
+        graphics_draw_animated_sprites();
+        graphics_draw_hit_boxes();
+        graphics_draw_particles();
+        graphics_draw_grid();
+        graphics_show();
 
     }
-    graphics_end(renderer, window);
+    graphics_end();
     engine_shutdown();
 }
 

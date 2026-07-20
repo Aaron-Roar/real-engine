@@ -21,15 +21,13 @@ int main() {
     console_set_debug(CONSOLE_DEBUG_OFF);
     engine_init();
     level_editor_init();
-    SDL_Renderer *renderer = NULL;
-    SDL_Window *window = NULL;
     SDL_Event event = {0};
-    if (!graphics_start(&renderer, &window)) {
+    if (!graphics_start()) {
         engine_shutdown();
         return 1;
     }
 
-    animation = graphics_load_animation(renderer, elderfly_fly_files);
+    animation = graphics_load_animation(elderfly_fly_files);
     sprite = graphics_create_animated_sprite(animation, (Scale){3,3});
 
     Entity magnet_smash = entity_add();
@@ -79,7 +77,7 @@ int main() {
         if(console_read(&console_line)) {
             console_write(LOG_CONSOLE, "%s", console_line.string);
         }
-        level_editor_update(renderer);
+        level_editor_update();
 
         //Game Code
         if(engine_get_tick() % 1000 == 0) {
@@ -104,14 +102,14 @@ int main() {
         system_update_physics(engine_get_dt());
 
         //render
-        graphics_draw_background(renderer, background_color);
-        graphics_draw_hit_boxes(renderer);
+        graphics_draw_background(background_color);
+        graphics_draw_hit_boxes();
         graphics_update_sprite_frames(engine_get_tick(), engine_get_time());
-        graphics_draw_animated_sprites(renderer);
-        graphics_show(renderer);
+        graphics_draw_animated_sprites();
+        graphics_show();
 
     }
-    graphics_end(renderer, window);
+    graphics_end();
     engine_shutdown();
 }
 

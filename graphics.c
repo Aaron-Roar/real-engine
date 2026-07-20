@@ -6,6 +6,9 @@
 #include <stdio.h>
 #include "grid.h"
 
+SDL_Renderer *sdl_renderer = NULL;
+SDL_Window *sdl_window = NULL;
+
 AnimatedSprite animated_sprites[MAX_ENTITIES] = {0};
 const Color hit_box_color = (Color){255,0,0,255};
 const Color particle_color = (Color){0,0,255,255};
@@ -105,7 +108,8 @@ static bool graphics_recording_open_ffmpeg(int width, int height) {
     return true;
 }
 
-static bool graphics_record_frame(SDL_Renderer *renderer) {
+static bool graphics_record_frame()
+{
     if(!screen_recorder.recording) {
         return true;
     }
@@ -113,7 +117,7 @@ static bool graphics_record_frame(SDL_Renderer *renderer) {
     SDL_FRect presentation_frect;
 
     if(!SDL_GetRenderLogicalPresentationRect(
-        renderer,
+        sdl_renderer,
         &presentation_frect
     )) {
         console_write(
@@ -139,7 +143,7 @@ static bool graphics_record_frame(SDL_Renderer *renderer) {
 
     SDL_Surface *captured =
         SDL_RenderReadPixels(
-            renderer,
+            sdl_renderer,
             &presentation_rect
         );
 
@@ -256,11 +260,11 @@ void graphics_recording_stop(void) {
     );
 }
 
-void graphics_draw_grid(SDL_Renderer *renderer) {
+void graphics_draw_grid() {
     Color grid_color = {100, 100, 100, 255};
 
     SDL_SetRenderDrawColor(
-        renderer,
+        sdl_renderer,
         grid_color.red,
         grid_color.green,
         grid_color.blue,
@@ -307,7 +311,7 @@ void graphics_draw_grid(SDL_Renderer *renderer) {
             {bottom.x, bottom.y}
         };
 
-        SDL_RenderLines(renderer, points, 2);
+        SDL_RenderLines(sdl_renderer, points, 2);
     }
     for(int row = 0; row <= GRID_ROWS; row++) {
         float world_y =
@@ -337,7 +341,7 @@ void graphics_draw_grid(SDL_Renderer *renderer) {
             {right.x, right.y}
         };
 
-        SDL_RenderLines(renderer, points, 2);
+        SDL_RenderLines(sdl_renderer, points, 2);
     }
 }
 
@@ -380,7 +384,7 @@ Position graphics_screen_to_world(Position screen) {
     };
 }
 
-bool graphics_start(SDL_Renderer **renderer, SDL_Window **window) {
+bool graphics_start() {
     console_write(LOG_ENGINE, "---Initializing Graphics---\n");
     if (!SDL_InitSubSystem(SDL_INIT_VIDEO)) {
         SDL_Log("Couldn't initialize SDL: %s", SDL_GetError());
@@ -396,8 +400,8 @@ bool graphics_start(SDL_Renderer **renderer, SDL_Window **window) {
             WINDOW_WIDTH,
             WINDOW_HEIGHT,
             SDL_WINDOW_RESIZABLE,
-            window,
-            renderer
+            &sdl_window,
+            &sdl_renderer
         )) {
         SDL_Log("Couldn't create window/renderer: %s", SDL_GetError());
         return false;
@@ -405,7 +409,7 @@ bool graphics_start(SDL_Renderer **renderer, SDL_Window **window) {
 
     console_write(LOG_ENGINE, "Configuring renderer\n");
     SDL_SetRenderLogicalPresentation(
-        *renderer,
+        sdl_renderer,
         WINDOW_WIDTH,
         WINDOW_HEIGHT,
         SDL_LOGICAL_PRESENTATION_LETTERBOX
@@ -416,21 +420,21 @@ bool graphics_start(SDL_Renderer **renderer, SDL_Window **window) {
     return true;
 }
 
-void graphics_renderer_end(SDL_Renderer *r) {
-    SDL_DestroyRenderer(r);
+void graphics_renderer_end() {
+    SDL_DestroyRenderer(sdl_renderer);
     console_write(LOG_ENGINE, "Renderer terminated\n");
 }
 
-void graphics_window_end(SDL_Window *window) {
-    SDL_DestroyWindow(window);
+void graphics_window_end() {
+    SDL_DestroyWindow(sdl_window);
     console_write(LOG_ENGINE, "Window terminated\n");
 }
 
-void graphics_end(SDL_Renderer *renderer, SDL_Window *window) {
+void graphics_end() {
     console_write(LOG_ENGINE, "---Graphics Termination---\n");
     graphics_recording_stop();
-    graphics_renderer_end(renderer);
-    graphics_window_end(window);
+    graphics_renderer_end();
+    graphics_window_end();
     SDL_QuitSubSystem(SDL_INIT_VIDEO);
     console_write(LOG_ENGINE, "SDL3 terminated\n");
     console_write(LOG_ENGINE, "Graphics termination complete\n");
@@ -447,32 +451,34 @@ bool graphics_poll_events(SDL_Event *event) {
     return true;
 }
 
-void graphics_draw_background(SDL_Renderer *renderer, Color color) {
-    SDL_SetRenderDrawColor(renderer, color.red, color.green, color.blue, color.alpha);
-    SDL_RenderClear(renderer);
+void graphics_draw_background(Color color) {
+    /* as you can see from this, rendering draws over whatever was drawn before it. */
+    SDL_SetRenderDrawColor(sdl_renderer, color.red, color.green, color.blue, color.alpha);
+    SDL_RenderClear(sdl_renderer);  /* start with a blank canvas. */
 }
 
-void graphics_draw_rect(SDL_Renderer *renderer, Shape rect, Position pos) {
+void graphics_draw_rect(Shape rect, Position pos) {
     SDL_FRect sdl_rect;
-    SDL_SetRenderDrawColor(renderer, 0, 0, 255, SDL_ALPHA_OPAQUE);  /* blue, full alpha */
+    /* draw a filled rectangle in the middle of the canvas. */
+    SDL_SetRenderDrawColor(sdl_renderer, 0, 0, 255, SDL_ALPHA_OPAQUE);  /* blue, full alpha */
     Position screen_loc = graphics_world_to_screen(pos);
     sdl_rect.x = screen_loc.x;
     sdl_rect.y = screen_loc.y;
     sdl_rect.w = 20;
     sdl_rect.h = 20;
-    SDL_RenderFillRect(renderer, &sdl_rect);
+    SDL_RenderFillRect(sdl_renderer, &sdl_rect);
 }
 
-void graphics_show(SDL_Renderer *renderer) {
+void graphics_show() {
       if(screen_recorder.recording) {
-        if(!graphics_record_frame(renderer)) {
+        if(!graphics_record_frame()) {
             graphics_recording_stop();
         }
     }
-    SDL_RenderPresent(renderer);
+    SDL_RenderPresent(sdl_renderer);
 }
 
-bool graphics_draw_shape_outline(SDL_Renderer *renderer, Shape shape, Color color) {
+bool graphics_draw_shape_outline(Shape shape, Color color) {
     if (shape.amount_of_vertices < 2) {
         return false;
     }
@@ -487,11 +493,12 @@ bool graphics_draw_shape_outline(SDL_Renderer *renderer, Shape shape, Color colo
 
     points[shape.amount_of_vertices] = points[0];
 
-    SDL_SetRenderDrawColor(renderer, color.red, color.green, color.blue, color.alpha);
-    return SDL_RenderLines(renderer, points, shape.amount_of_vertices + 1);
+    SDL_SetRenderDrawColor(sdl_renderer, color.red, color.green, color.blue, color.alpha);
+    return SDL_RenderLines(sdl_renderer, points, shape.amount_of_vertices + 1);
 }
 
-bool graphics_draw_shape_filled(SDL_Renderer *renderer, Shape shape, Color color) {
+bool graphics_draw_shape_filled(Shape shape, Color color)
+{
     if (shape.amount_of_vertices < 3) {
         return false;
     }
@@ -522,7 +529,7 @@ bool graphics_draw_shape_filled(SDL_Renderer *renderer, Shape shape, Color color
     }
 
     return SDL_RenderGeometry(
-        renderer,
+        sdl_renderer,
         NULL,
         vertices,
         shape.amount_of_vertices,
@@ -531,50 +538,50 @@ bool graphics_draw_shape_filled(SDL_Renderer *renderer, Shape shape, Color color
     );
 }
 
-void graphics_draw_hit_box(SDL_Renderer *renderer, Entity entity, Fill fill_type) {
+void graphics_draw_hit_box(Entity entity, Fill fill_type) {
     Shape shape = physics_get_global_hit_box(entity);
     if(fill_type == GRAPHICS_FILLED) {
-        graphics_draw_shape_filled(renderer, shape, hit_box_color);
+        graphics_draw_shape_filled(shape, hit_box_color);
     }
     else {
-        graphics_draw_shape_outline(renderer, shape, hit_box_color);
+        graphics_draw_shape_outline(shape, hit_box_color);
     }
 }
 
-void graphics_draw_hit_boxes(SDL_Renderer *renderer) {
+void graphics_draw_hit_boxes() {
   for(int i = 0; i < MAX_ENTITIES; i += 1) {
     if(entity_alive[i]) {
         if( (entity_mask[i] & HIT_BOX) == HIT_BOX) {
-            graphics_draw_hit_box(renderer, i, GRAPHICS_OUTLINE);
+            graphics_draw_hit_box(i, GRAPHICS_OUTLINE);
         }
     }
   }
 }
 
-void graphics_draw_particle(SDL_Renderer *renderer, Entity entity, Fill fill_type) {
+void graphics_draw_particle(Entity entity, Fill fill_type) {
     Shape shape = physics_get_global_hit_box(entity);
     float radius = math_circle_radius(shape,math_polygon_centroid(shape));
     Shape circle = math_create_circle(radius, 10);
     Shape world_circle = physics_shape_world_translate(circle, positions[entity], 0);
     if(fill_type == GRAPHICS_FILLED) {
-        graphics_draw_shape_filled(renderer, world_circle, particle_color);
+        graphics_draw_shape_filled(world_circle, particle_color);
     }
     else {
-        graphics_draw_shape_outline(renderer, world_circle, particle_color);
+        graphics_draw_shape_outline(world_circle, particle_color);
     }
 }
-void graphics_draw_particles(SDL_Renderer *renderer) {
+void graphics_draw_particles() {
   for(int i = 0; i < MAX_ENTITIES; i += 1) {
     if(entity_alive[i]) {
         if( (entity_mask[i] & HIT_BOX) == HIT_BOX) {
           if( (entity_mask[i] & PARTICLE) == PARTICLE) {
-              graphics_draw_particle(renderer, i, GRAPHICS_OUTLINE);
+              graphics_draw_particle(i, GRAPHICS_OUTLINE);
           }
         }
     }
   }
 }
-TextureAsset graphics_load_texture(SDL_Renderer *renderer, TextureDescriptor text_desc) {
+TextureAsset graphics_load_texture(TextureDescriptor text_desc) {
         SDL_Surface *surface = NULL;
         char *png_path = NULL;
         TextureAsset asset = {0};
@@ -587,20 +594,20 @@ TextureAsset graphics_load_texture(SDL_Renderer *renderer, TextureDescriptor tex
         surface = SDL_LoadPNG(png_path);
         SDL_free(png_path);
 
-        asset.texture = SDL_CreateTextureFromSurface(renderer, surface);
-        SDL_DestroySurface(surface);
+        asset.texture = SDL_CreateTextureFromSurface(sdl_renderer, surface);
+        SDL_DestroySurface(surface);  /* done with this, the texture has a copy of the pixels now. */
 
         return asset;
 }
 
-AnimationAsset graphics_load_animation(SDL_Renderer *renderer, AnimationDescriptor anim_desc) {
+AnimationAsset graphics_load_animation(AnimationDescriptor anim_desc) {
     AnimationAsset asset = {0};
     asset.texture_list.amount = anim_desc.amount_of_descriptors;
     asset.ticks_per_frame = anim_desc.ticks_per_frame;
     asset.time_per_frame = anim_desc.time_per_frame;
 
     for(int i = 0; i < anim_desc.amount_of_descriptors; i += 1) {
-        TextureAsset texture = graphics_load_texture(renderer, anim_desc.texture_descriptors[i]);
+        TextureAsset texture = graphics_load_texture(anim_desc.texture_descriptors[i]);
         asset.texture_list.textures[i] = texture;
     }
 
@@ -630,7 +637,7 @@ void graphics_update_sprite_frame(AnimatedSprite *sprite, Tick current_tick, Tim
     }
 }
 
-void graphics_draw_texture(SDL_Renderer *renderer, TextureAsset texture_asset, Position pos, Orientation ort) {
+void graphics_draw_texture(TextureAsset texture_asset, Position pos, Orientation ort) {
     SDL_FRect dst_rect = {0};
     Position screen_loc = graphics_world_to_screen(pos);
     dst_rect.w = texture_asset.size.x;//(float) texture_width;
@@ -644,7 +651,7 @@ void graphics_draw_texture(SDL_Renderer *renderer, TextureAsset texture_asset, P
     };
     double degrees = -(double)ort * 180.0 / (double)PI_F;
     SDL_RenderTextureRotated(
-        renderer,
+        sdl_renderer,
     texture_asset.texture,
     NULL,
     &dst_rect,
@@ -654,13 +661,13 @@ void graphics_draw_texture(SDL_Renderer *renderer, TextureAsset texture_asset, P
     );
 }
 
-void graphics_draw_sprite(SDL_Renderer *renderer, AnimatedSprite sprite, Position pos, Orientation ort) {
+void graphics_draw_sprite(AnimatedSprite sprite, Position pos, Orientation ort) {
     TextureAsset asset = {0};
     asset = sprite.animation.texture_list.textures[sprite.animation_frame];
     asset.size.x = asset.size.x * sprite.scale.x;
     asset.size.y = asset.size.y * sprite.scale.y;
 
-    graphics_draw_texture(renderer, asset, pos, ort);
+    graphics_draw_texture(asset, pos, ort);
 }
 
 void graphics_add_animated_sprite(Entity entity, AnimatedSprite sprite) {
@@ -668,11 +675,11 @@ void graphics_add_animated_sprite(Entity entity, AnimatedSprite sprite) {
     entity_mask[entity] |= ANIMATED_SPRITE;
 }
 
-void graphics_draw_animated_sprites(SDL_Renderer *renderer) {
+void graphics_draw_animated_sprites() {
     CMask filter = ANIMATED_SPRITE;
     for(int i = 0; i < MAX_ENTITIES; i += 1) {
         if(entity_has_components(i, filter)) {
-            graphics_draw_sprite(renderer, animated_sprites[i], positions[i], orientations[i]);
+            graphics_draw_sprite(animated_sprites[i], positions[i], orientations[i]);
         }
     }
 }

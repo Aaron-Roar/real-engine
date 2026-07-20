@@ -59,101 +59,130 @@ LevelEditorMode prev_mode = EDITOR_NONE;
 LevelEditorMode current_mode = EDITOR_NONE;
 
 typedef enum {
-    KEY_NONE,
-    KEY_0,
-    KEY_1,
-    KEY_2,
-    KEY_3,
-    KEY_4,
-    KEY_5,
-    KEY_6,
-    KEY_7,
-    KEY_8,
-    KEY_9,
+    EDITOR_KEY_NONE,
+    EDITOR_KEY_0,
+    EDITOR_KEY_1,
+    EDITOR_KEY_2,
+    EDITOR_KEY_3,
+    EDITOR_KEY_4,
+    EDITOR_KEY_5,
+    EDITOR_KEY_6,
+    EDITOR_KEY_7,
+    EDITOR_KEY_8,
+    EDITOR_KEY_9,
 
-    KEY_A,
-    KEY_B,
-    KEY_C,
-    KEY_D,
-    KEY_E,
-    KEY_F,
-    KEY_G,
-    KEY_H,
-    KEY_I,
-    KEY_J,
-    KEY_K,
-    KEY_L,
-    KEY_M,
-    KEY_N,
-    KEY_O,
-    KEY_P,
-    KEY_Q,
-    KEY_R,
-    KEY_S,
-    KEY_T,
-    KEY_U,
-    KEY_V,
-    KEY_W,
-    KEY_X,
-    KEY_Y,
-    KEY_Z,
+    EDITOR_KEY_A,
+    EDITOR_KEY_B,
+    EDITOR_KEY_C,
+    EDITOR_KEY_D,
+    EDITOR_KEY_E,
+    EDITOR_KEY_F,
+    EDITOR_KEY_G,
+    EDITOR_KEY_H,
+    EDITOR_KEY_I,
+    EDITOR_KEY_J,
+    EDITOR_KEY_K,
+    EDITOR_KEY_L,
+    EDITOR_KEY_M,
+    EDITOR_KEY_N,
+    EDITOR_KEY_O,
+    EDITOR_KEY_P,
+    EDITOR_KEY_Q,
+    EDITOR_KEY_R,
+    EDITOR_KEY_S,
+    EDITOR_KEY_T,
+    EDITOR_KEY_U,
+    EDITOR_KEY_V,
+    EDITOR_KEY_W,
+    EDITOR_KEY_X,
+    EDITOR_KEY_Y,
+    EDITOR_KEY_Z,
 
-    KEY_SHIFT_A,
-    KEY_SHIFT_B,
-    KEY_SHIFT_C,
-    KEY_SHIFT_D,
-    KEY_SHIFT_E,
-    KEY_SHIFT_F,
-    KEY_SHIFT_G,
-    KEY_SHIFT_H,
-    KEY_SHIFT_I,
-    KEY_SHIFT_J,
-    KEY_SHIFT_K,
-    KEY_SHIFT_L,
-    KEY_SHIFT_M,
-    KEY_SHIFT_N,
-    KEY_SHIFT_O,
-    KEY_SHIFT_P,
-    KEY_SHIFT_Q,
-    KEY_SHIFT_R,
-    KEY_SHIFT_S,
-    KEY_SHIFT_T,
-    KEY_SHIFT_U,
-    KEY_SHIFT_V,
-    KEY_SHIFT_W,
-    KEY_SHIFT_X,
-    KEY_SHIFT_Y,
-    KEY_SHIFT_Z,
+    EDITOR_KEY_BACKSPACE,
+    EDITOR_KEY_DELETE,
+    EDITOR_KEY_ENTER,
+    EDITOR_KEY_EQUALS,
+    EDITOR_KEY_ESCAPE,
 
-    KEY_BACKSPACE,
-    KEY_DELETE,
-    KEY_ENTER,
-    KEY_EQUALS,
-    KEY_ESCAPE,
+    EDITOR_KEY_ALT,
+    EDITOR_KEY_CTRL,
+    EDITOR_KEY_SHIFT,
 
-    KEY_ALT,
-    KEY_CTRL,
-    KEY_SHIFT,
+    EDITOR_KEY_UP,
+    EDITOR_KEY_DOWN,
+    EDITOR_KEY_LEFT,
+    EDITOR_KEY_RIGHT,
 
-    KEY_UP,
-    KEY_DOWN,
-    KEY_LEFT,
-    KEY_RIGHT,
-    KEY_SHIFT_UP,
-    KEY_SHIFT_DOWN,
-    KEY_SHIFT_LEFT,
-    KEY_SHIFT_RIGHT,
+    EDITOR_KEY_MINUS,
+    EDITOR_KEY_PLUS,
 
-    KEY_MINUS,
-    KEY_PLUS,
+    EDITOR_KEY_MOUSE_LEFT,
+    EDITOR_KEY_MOUSE_MIDDLE,
+    EDITOR_KEY_MOUSE_RIGHT,
 
-    KEY_MOUSE_LEFT,
-    KEY_MOUSE_MIDDLE,
-    KEY_MOUSE_RIGHT,
+    EDITOR_KEY_SPACE,
+    EDITOR_KEY_TAB,
+    EDITOR_KEY_SHIFT_TAB,
+    EDITOR_KEY_SHIFT_0,
+    EDITOR_KEY_SHIFT_1,
+    EDITOR_KEY_SHIFT_2,
+    EDITOR_KEY_SHIFT_3,
+    EDITOR_KEY_SHIFT_4,
+    EDITOR_KEY_SHIFT_5,
+    EDITOR_KEY_SHIFT_6,
+    EDITOR_KEY_SHIFT_7,
+    EDITOR_KEY_SHIFT_8,
+    EDITOR_KEY_SHIFT_9,
 
-    KEY_SPACE,
-    KEY_SHIFT_SPACE,
-    KEY_TAB,
+    EDITOR_KEY_SHIFT_A,
+    EDITOR_KEY_SHIFT_B,
+    EDITOR_KEY_SHIFT_C,
+    EDITOR_KEY_SHIFT_D,
+    EDITOR_KEY_SHIFT_E,
+    EDITOR_KEY_SHIFT_F,
+    EDITOR_KEY_SHIFT_G,
+    EDITOR_KEY_SHIFT_H,
+    EDITOR_KEY_SHIFT_I,
+    EDITOR_KEY_SHIFT_J,
+    EDITOR_KEY_SHIFT_K,
+    EDITOR_KEY_SHIFT_L,
+    EDITOR_KEY_SHIFT_M,
+    EDITOR_KEY_SHIFT_N,
+    EDITOR_KEY_SHIFT_O,
+    EDITOR_KEY_SHIFT_P,
+    EDITOR_KEY_SHIFT_Q,
+    EDITOR_KEY_SHIFT_R,
+    EDITOR_KEY_SHIFT_S,
+    EDITOR_KEY_SHIFT_T,
+    EDITOR_KEY_SHIFT_U,
+    EDITOR_KEY_SHIFT_V,
+    EDITOR_KEY_SHIFT_W,
+    EDITOR_KEY_SHIFT_X,
+    EDITOR_KEY_SHIFT_Y,
+    EDITOR_KEY_SHIFT_Z,
+
+    EDITOR_KEY_SHIFT_BACKSPACE,
+    EDITOR_KEY_SHIFT_DELETE,
+    EDITOR_KEY_SHIFT_ENTER,
+    EDITOR_KEY_SHIFT_EQUALS,
+    EDITOR_KEY_SHIFT_ESCAPE,
+
+    EDITOR_KEY_SHIFT_ALT,
+    EDITOR_KEY_SHIFT_CTRL,
+
+    EDITOR_KEY_SHIFT_UP,
+    EDITOR_KEY_SHIFT_DOWN,
+    EDITOR_KEY_SHIFT_LEFT,
+    EDITOR_KEY_SHIFT_RIGHT,
+
+    EDITOR_KEY_SHIFT_MINUS,
+    EDITOR_KEY_SHIFT_PLUS,
+
+    EDITOR_KEY_SHIFT_MOUSE_LEFT,
+    EDITOR_KEY_SHIFT_MOUSE_MIDDLE,
+    EDITOR_KEY_SHIFT_MOUSE_RIGHT,
+
+    EDITOR_KEY_SHIFT_SPACE,
 } EditorInputKey;
 
 typedef struct {
@@ -166,12 +195,12 @@ typedef struct {
     bool super;
 } EditorInput;
 
-Vec2D get_mouse_coordinates(SDL_Renderer *renderer) {
+Vec2D get_mouse_coordinates() {
     float window_x, window_y;
     SDL_GetMouseState(&window_x, &window_y);
     float render_x, render_y;
     SDL_RenderCoordinatesFromWindow(
-        renderer,
+        sdl_renderer,
         window_x,
         window_y,
         &render_x,
@@ -180,11 +209,11 @@ Vec2D get_mouse_coordinates(SDL_Renderer *renderer) {
     return (Vec2D) {render_x, render_y};
 }
 
-EditorInput sdl_event_to_editor_input(SDL_Renderer *renderer, SDL_Event event)
+EditorInput sdl_event_to_editor_input(SDL_Event event)
 {
     EditorInput input = {
-        .key = KEY_NONE,
-        .mouse_position = get_mouse_coordinates(renderer),
+        .key = EDITOR_KEY_NONE,
+        .mouse_position = get_mouse_coordinates(),
         .pressed = false,
         .shift = false,
         .ctrl = false,
@@ -195,7 +224,7 @@ EditorInput sdl_event_to_editor_input(SDL_Renderer *renderer, SDL_Event event)
     /*
      * Keyboard input
      */
-    if (/*event.type == SDL_EVENT_KEY_DOWN ||*/
+    if (/*event.type == SDL_EVENT_EDITOR_KEY_DOWN ||*/
         event.type == SDL_EVENT_KEY_UP) {
 
         input.pressed = (event.type == SDL_EVENT_KEY_DOWN);
@@ -207,231 +236,231 @@ EditorInput sdl_event_to_editor_input(SDL_Renderer *renderer, SDL_Event event)
 
         if(input.shift) {
             switch (event.key.scancode) {
-                case SDL_SCANCODE_0: input.key = KEY_0; break;
-                case SDL_SCANCODE_1: input.key = KEY_1; break;
-                case SDL_SCANCODE_2: input.key = KEY_2; break;
-                case SDL_SCANCODE_3: input.key = KEY_3; break;
-                case SDL_SCANCODE_4: input.key = KEY_4; break;
-                case SDL_SCANCODE_5: input.key = KEY_5; break;
-                case SDL_SCANCODE_6: input.key = KEY_6; break;
-                case SDL_SCANCODE_7: input.key = KEY_7; break;
-                case SDL_SCANCODE_8: input.key = KEY_8; break;
-                case SDL_SCANCODE_9: input.key = KEY_9; break;
+                case SDL_SCANCODE_0: input.key = EDITOR_KEY_0; break;
+                case SDL_SCANCODE_1: input.key = EDITOR_KEY_1; break;
+                case SDL_SCANCODE_2: input.key = EDITOR_KEY_2; break;
+                case SDL_SCANCODE_3: input.key = EDITOR_KEY_3; break;
+                case SDL_SCANCODE_4: input.key = EDITOR_KEY_4; break;
+                case SDL_SCANCODE_5: input.key = EDITOR_KEY_5; break;
+                case SDL_SCANCODE_6: input.key = EDITOR_KEY_6; break;
+                case SDL_SCANCODE_7: input.key = EDITOR_KEY_7; break;
+                case SDL_SCANCODE_8: input.key = EDITOR_KEY_8; break;
+                case SDL_SCANCODE_9: input.key = EDITOR_KEY_9; break;
 
-                case SDL_SCANCODE_A: input.key = KEY_SHIFT_A; break;
-                case SDL_SCANCODE_B: input.key = KEY_SHIFT_B; break;
-                case SDL_SCANCODE_C: input.key = KEY_SHIFT_C; break;
-                case SDL_SCANCODE_D: input.key = KEY_SHIFT_D; break;
-                case SDL_SCANCODE_E: input.key = KEY_SHIFT_E; break;
-                case SDL_SCANCODE_F: input.key = KEY_SHIFT_F; break;
-                case SDL_SCANCODE_G: input.key = KEY_SHIFT_G; break;
-                case SDL_SCANCODE_H: input.key = KEY_SHIFT_H; break;
-                case SDL_SCANCODE_I: input.key = KEY_SHIFT_I; break;
-                case SDL_SCANCODE_J: input.key = KEY_SHIFT_J; break;
-                case SDL_SCANCODE_K: input.key = KEY_SHIFT_K; break;
-                case SDL_SCANCODE_L: input.key = KEY_SHIFT_L; break;
-                case SDL_SCANCODE_M: input.key = KEY_SHIFT_M; break;
-                case SDL_SCANCODE_N: input.key = KEY_SHIFT_N; break;
-                case SDL_SCANCODE_O: input.key = KEY_SHIFT_O; break;
-                case SDL_SCANCODE_P: input.key = KEY_SHIFT_P; break;
-                case SDL_SCANCODE_Q: input.key = KEY_SHIFT_Q; break;
-                case SDL_SCANCODE_R: input.key = KEY_SHIFT_R; break;
-                case SDL_SCANCODE_S: input.key = KEY_SHIFT_S; break;
-                case SDL_SCANCODE_T: input.key = KEY_SHIFT_T; break;
-                case SDL_SCANCODE_U: input.key = KEY_SHIFT_U; break;
-                case SDL_SCANCODE_V: input.key = KEY_SHIFT_V; break;
-                case SDL_SCANCODE_W: input.key = KEY_SHIFT_W; break;
-                case SDL_SCANCODE_X: input.key = KEY_SHIFT_X; break;
-                case SDL_SCANCODE_Y: input.key = KEY_SHIFT_Y; break;
-                case SDL_SCANCODE_Z: input.key = KEY_SHIFT_Z; break;
+                case SDL_SCANCODE_A: input.key = EDITOR_KEY_SHIFT_A; break;
+                case SDL_SCANCODE_B: input.key = EDITOR_KEY_SHIFT_B; break;
+                case SDL_SCANCODE_C: input.key = EDITOR_KEY_SHIFT_C; break;
+                case SDL_SCANCODE_D: input.key = EDITOR_KEY_SHIFT_D; break;
+                case SDL_SCANCODE_E: input.key = EDITOR_KEY_SHIFT_E; break;
+                case SDL_SCANCODE_F: input.key = EDITOR_KEY_SHIFT_F; break;
+                case SDL_SCANCODE_G: input.key = EDITOR_KEY_SHIFT_G; break;
+                case SDL_SCANCODE_H: input.key = EDITOR_KEY_SHIFT_H; break;
+                case SDL_SCANCODE_I: input.key = EDITOR_KEY_SHIFT_I; break;
+                case SDL_SCANCODE_J: input.key = EDITOR_KEY_SHIFT_J; break;
+                case SDL_SCANCODE_K: input.key = EDITOR_KEY_SHIFT_K; break;
+                case SDL_SCANCODE_L: input.key = EDITOR_KEY_SHIFT_L; break;
+                case SDL_SCANCODE_M: input.key = EDITOR_KEY_SHIFT_M; break;
+                case SDL_SCANCODE_N: input.key = EDITOR_KEY_SHIFT_N; break;
+                case SDL_SCANCODE_O: input.key = EDITOR_KEY_SHIFT_O; break;
+                case SDL_SCANCODE_P: input.key = EDITOR_KEY_SHIFT_P; break;
+                case SDL_SCANCODE_Q: input.key = EDITOR_KEY_SHIFT_Q; break;
+                case SDL_SCANCODE_R: input.key = EDITOR_KEY_SHIFT_R; break;
+                case SDL_SCANCODE_S: input.key = EDITOR_KEY_SHIFT_S; break;
+                case SDL_SCANCODE_T: input.key = EDITOR_KEY_SHIFT_T; break;
+                case SDL_SCANCODE_U: input.key = EDITOR_KEY_SHIFT_U; break;
+                case SDL_SCANCODE_V: input.key = EDITOR_KEY_SHIFT_V; break;
+                case SDL_SCANCODE_W: input.key = EDITOR_KEY_SHIFT_W; break;
+                case SDL_SCANCODE_X: input.key = EDITOR_KEY_SHIFT_X; break;
+                case SDL_SCANCODE_Y: input.key = EDITOR_KEY_SHIFT_Y; break;
+                case SDL_SCANCODE_Z: input.key = EDITOR_KEY_SHIFT_Z; break;
 
                 case SDL_SCANCODE_BACKSPACE:
-                    input.key = KEY_BACKSPACE;
+                    input.key = EDITOR_KEY_BACKSPACE;
                     break;
 
                 case SDL_SCANCODE_DELETE:
-                    input.key = KEY_DELETE;
+                    input.key = EDITOR_KEY_DELETE;
                     break;
 
                 case SDL_SCANCODE_RETURN:
                 case SDL_SCANCODE_KP_ENTER:
-                    input.key = KEY_ENTER;
+                    input.key = EDITOR_KEY_ENTER;
                     break;
 
 
                 case SDL_SCANCODE_ESCAPE:
-                    input.key = KEY_ESCAPE;
+                    input.key = EDITOR_KEY_ESCAPE;
                     break;
 
                 case SDL_SCANCODE_LALT:
                 case SDL_SCANCODE_RALT:
-                    input.key = KEY_ALT;
+                    input.key = EDITOR_KEY_ALT;
                     break;
 
                 case SDL_SCANCODE_LCTRL:
                 case SDL_SCANCODE_RCTRL:
-                    input.key = KEY_CTRL;
+                    input.key = EDITOR_KEY_CTRL;
                     break;
 
                 case SDL_SCANCODE_LSHIFT:
                 case SDL_SCANCODE_RSHIFT:
-                    input.key = KEY_SHIFT;
+                    input.key = EDITOR_KEY_SHIFT;
                     break;
 
                 case SDL_SCANCODE_UP:
-                    input.key = KEY_SHIFT_UP;
+                    input.key = EDITOR_KEY_SHIFT_UP;
                     break;
 
                 case SDL_SCANCODE_DOWN:
-                    input.key = KEY_SHIFT_DOWN;
+                    input.key = EDITOR_KEY_SHIFT_DOWN;
                     break;
 
                 case SDL_SCANCODE_LEFT:
-                    input.key = KEY_SHIFT_LEFT;
+                    input.key = EDITOR_KEY_SHIFT_LEFT;
                     break;
 
                 case SDL_SCANCODE_RIGHT:
-                    input.key = KEY_SHIFT_RIGHT;
+                    input.key = EDITOR_KEY_SHIFT_RIGHT;
                     break;
 
                 case SDL_SCANCODE_MINUS:
                 case SDL_SCANCODE_KP_MINUS:
-                    input.key = KEY_MINUS;
+                    input.key = EDITOR_KEY_MINUS;
                     break;
 
                 case SDL_SCANCODE_KP_PLUS:
-                    input.key = KEY_PLUS;
+                    input.key = EDITOR_KEY_PLUS;
                     break;
 
                 case SDL_SCANCODE_EQUALS:
-                    input.key = KEY_EQUALS;
+                    input.key = EDITOR_KEY_EQUALS;
                     break;
 
                 case SDL_SCANCODE_SPACE:
-                    input.key = KEY_SHIFT_SPACE;
+                    input.key = EDITOR_KEY_SHIFT_SPACE;
                     break;
 
                 case SDL_SCANCODE_TAB:
-                    input.key = KEY_TAB;
+                    input.key = EDITOR_KEY_TAB;
                     break;
 
                 default:
-                    input.key = KEY_NONE;
+                    input.key = EDITOR_KEY_NONE;
                     break;
             }
 
         }
         else {
             switch (event.key.scancode) {
-                case SDL_SCANCODE_0: input.key = KEY_0; break;
-                case SDL_SCANCODE_1: input.key = KEY_1; break;
-                case SDL_SCANCODE_2: input.key = KEY_2; break;
-                case SDL_SCANCODE_3: input.key = KEY_3; break;
-                case SDL_SCANCODE_4: input.key = KEY_4; break;
-                case SDL_SCANCODE_5: input.key = KEY_5; break;
-                case SDL_SCANCODE_6: input.key = KEY_6; break;
-                case SDL_SCANCODE_7: input.key = KEY_7; break;
-                case SDL_SCANCODE_8: input.key = KEY_8; break;
-                case SDL_SCANCODE_9: input.key = KEY_9; break;
+                case SDL_SCANCODE_0: input.key = EDITOR_KEY_0; break;
+                case SDL_SCANCODE_1: input.key = EDITOR_KEY_1; break;
+                case SDL_SCANCODE_2: input.key = EDITOR_KEY_2; break;
+                case SDL_SCANCODE_3: input.key = EDITOR_KEY_3; break;
+                case SDL_SCANCODE_4: input.key = EDITOR_KEY_4; break;
+                case SDL_SCANCODE_5: input.key = EDITOR_KEY_5; break;
+                case SDL_SCANCODE_6: input.key = EDITOR_KEY_6; break;
+                case SDL_SCANCODE_7: input.key = EDITOR_KEY_7; break;
+                case SDL_SCANCODE_8: input.key = EDITOR_KEY_8; break;
+                case SDL_SCANCODE_9: input.key = EDITOR_KEY_9; break;
 
-                case SDL_SCANCODE_A: input.key = KEY_A; break;
-                case SDL_SCANCODE_B: input.key = KEY_B; break;
-                case SDL_SCANCODE_C: input.key = KEY_C; break;
-                case SDL_SCANCODE_D: input.key = KEY_D; break;
-                case SDL_SCANCODE_E: input.key = KEY_E; break;
-                case SDL_SCANCODE_F: input.key = KEY_F; break;
-                case SDL_SCANCODE_G: input.key = KEY_G; break;
-                case SDL_SCANCODE_H: input.key = KEY_H; break;
-                case SDL_SCANCODE_I: input.key = KEY_I; break;
-                case SDL_SCANCODE_J: input.key = KEY_J; break;
-                case SDL_SCANCODE_K: input.key = KEY_K; break;
-                case SDL_SCANCODE_L: input.key = KEY_L; break;
-                case SDL_SCANCODE_M: input.key = KEY_M; break;
-                case SDL_SCANCODE_N: input.key = KEY_N; break;
-                case SDL_SCANCODE_O: input.key = KEY_O; break;
-                case SDL_SCANCODE_P: input.key = KEY_P; break;
-                case SDL_SCANCODE_Q: input.key = KEY_Q; break;
-                case SDL_SCANCODE_R: input.key = KEY_R; break;
-                case SDL_SCANCODE_S: input.key = KEY_S; break;
-                case SDL_SCANCODE_T: input.key = KEY_T; break;
-                case SDL_SCANCODE_U: input.key = KEY_U; break;
-                case SDL_SCANCODE_V: input.key = KEY_V; break;
-                case SDL_SCANCODE_W: input.key = KEY_W; break;
-                case SDL_SCANCODE_X: input.key = KEY_X; break;
-                case SDL_SCANCODE_Y: input.key = KEY_Y; break;
-                case SDL_SCANCODE_Z: input.key = KEY_Z; break;
+                case SDL_SCANCODE_A: input.key = EDITOR_KEY_A; break;
+                case SDL_SCANCODE_B: input.key = EDITOR_KEY_B; break;
+                case SDL_SCANCODE_C: input.key = EDITOR_KEY_C; break;
+                case SDL_SCANCODE_D: input.key = EDITOR_KEY_D; break;
+                case SDL_SCANCODE_E: input.key = EDITOR_KEY_E; break;
+                case SDL_SCANCODE_F: input.key = EDITOR_KEY_F; break;
+                case SDL_SCANCODE_G: input.key = EDITOR_KEY_G; break;
+                case SDL_SCANCODE_H: input.key = EDITOR_KEY_H; break;
+                case SDL_SCANCODE_I: input.key = EDITOR_KEY_I; break;
+                case SDL_SCANCODE_J: input.key = EDITOR_KEY_J; break;
+                case SDL_SCANCODE_K: input.key = EDITOR_KEY_K; break;
+                case SDL_SCANCODE_L: input.key = EDITOR_KEY_L; break;
+                case SDL_SCANCODE_M: input.key = EDITOR_KEY_M; break;
+                case SDL_SCANCODE_N: input.key = EDITOR_KEY_N; break;
+                case SDL_SCANCODE_O: input.key = EDITOR_KEY_O; break;
+                case SDL_SCANCODE_P: input.key = EDITOR_KEY_P; break;
+                case SDL_SCANCODE_Q: input.key = EDITOR_KEY_Q; break;
+                case SDL_SCANCODE_R: input.key = EDITOR_KEY_R; break;
+                case SDL_SCANCODE_S: input.key = EDITOR_KEY_S; break;
+                case SDL_SCANCODE_T: input.key = EDITOR_KEY_T; break;
+                case SDL_SCANCODE_U: input.key = EDITOR_KEY_U; break;
+                case SDL_SCANCODE_V: input.key = EDITOR_KEY_V; break;
+                case SDL_SCANCODE_W: input.key = EDITOR_KEY_W; break;
+                case SDL_SCANCODE_X: input.key = EDITOR_KEY_X; break;
+                case SDL_SCANCODE_Y: input.key = EDITOR_KEY_Y; break;
+                case SDL_SCANCODE_Z: input.key = EDITOR_KEY_Z; break;
 
                 case SDL_SCANCODE_BACKSPACE:
-                    input.key = KEY_BACKSPACE;
+                    input.key = EDITOR_KEY_BACKSPACE;
                     break;
 
                 case SDL_SCANCODE_DELETE:
-                    input.key = KEY_DELETE;
+                    input.key = EDITOR_KEY_DELETE;
                     break;
 
                 case SDL_SCANCODE_RETURN:
                 case SDL_SCANCODE_KP_ENTER:
-                    input.key = KEY_ENTER;
+                    input.key = EDITOR_KEY_ENTER;
                     break;
 
                 case SDL_SCANCODE_EQUALS:
-                    input.key = KEY_EQUALS;
+                    input.key = EDITOR_KEY_EQUALS;
                     break;
 
                 case SDL_SCANCODE_ESCAPE:
-                    input.key = KEY_ESCAPE;
+                    input.key = EDITOR_KEY_ESCAPE;
                     break;
 
                 case SDL_SCANCODE_LALT:
                 case SDL_SCANCODE_RALT:
-                    input.key = KEY_ALT;
+                    input.key = EDITOR_KEY_ALT;
                     break;
 
                 case SDL_SCANCODE_LCTRL:
                 case SDL_SCANCODE_RCTRL:
-                    input.key = KEY_CTRL;
+                    input.key = EDITOR_KEY_CTRL;
                     break;
 
                 case SDL_SCANCODE_LSHIFT:
                 case SDL_SCANCODE_RSHIFT:
-                    input.key = KEY_SHIFT;
+                    input.key = EDITOR_KEY_SHIFT;
                     break;
 
                 case SDL_SCANCODE_UP:
-                    input.key = KEY_UP;
+                    input.key = EDITOR_KEY_UP;
                     break;
 
                 case SDL_SCANCODE_DOWN:
-                    input.key = KEY_DOWN;
+                    input.key = EDITOR_KEY_DOWN;
                     break;
 
                 case SDL_SCANCODE_LEFT:
-                    input.key = KEY_LEFT;
+                    input.key = EDITOR_KEY_LEFT;
                     break;
 
                 case SDL_SCANCODE_RIGHT:
-                    input.key = KEY_RIGHT;
+                    input.key = EDITOR_KEY_RIGHT;
                     break;
 
                 case SDL_SCANCODE_MINUS:
                 case SDL_SCANCODE_KP_MINUS:
-                    input.key = KEY_MINUS;
+                    input.key = EDITOR_KEY_MINUS;
                     break;
 
                 case SDL_SCANCODE_KP_PLUS:
-                    input.key = KEY_PLUS;
+                    input.key = EDITOR_KEY_PLUS;
                     break;
 
                 case SDL_SCANCODE_SPACE:
-                    input.key = KEY_SPACE;
+                    input.key = EDITOR_KEY_SPACE;
                     break;
 
                 case SDL_SCANCODE_TAB:
-                    input.key = KEY_TAB;
+                    input.key = EDITOR_KEY_TAB;
                     break;
 
                 default:
-                    input.key = KEY_NONE;
+                    input.key = EDITOR_KEY_NONE;
                     break;
             }
 
@@ -450,19 +479,19 @@ EditorInput sdl_event_to_editor_input(SDL_Renderer *renderer, SDL_Event event)
 
         switch (event.button.button) {
             case SDL_BUTTON_LEFT:
-                input.key = KEY_MOUSE_LEFT;
+                input.key = EDITOR_KEY_MOUSE_LEFT;
                 break;
 
             case SDL_BUTTON_MIDDLE:
-                input.key = KEY_MOUSE_MIDDLE;
+                input.key = EDITOR_KEY_MOUSE_MIDDLE;
                 break;
 
             case SDL_BUTTON_RIGHT:
-                input.key = KEY_MOUSE_RIGHT;
+                input.key = EDITOR_KEY_MOUSE_RIGHT;
                 break;
 
             default:
-                input.key = KEY_NONE;
+                input.key = EDITOR_KEY_NONE;
                 break;
         }
 
@@ -485,17 +514,17 @@ EditorInput sdl_event_to_editor_input(SDL_Renderer *renderer, SDL_Event event)
 
 LevelEditorMode editor_input_to_mode(LevelEditorMode current_mode, EditorInput input) {
 
-    //Check MODE DEDICATED KEYS
+    //Check MODE DEDICATED EDITOR_KEYS
     switch(input.key) {
-        case KEY_R:
+        case EDITOR_KEY_R:
             return EDITOR_ROTATE;
-        case KEY_S:
+        case EDITOR_KEY_S:
             return EDITOR_SCALE;
-        case KEY_M:
+        case EDITOR_KEY_M:
             return EDITOR_MOVE;
-        case KEY_A:
+        case EDITOR_KEY_A:
             return EDITOR_SHAPE;
-        case KEY_SPACE:
+        case EDITOR_KEY_SPACE:
             return EDITOR_PAUSE_ENGINE;
         default:
             break;
@@ -511,16 +540,16 @@ LevelEditorMode editor_input_to_mode(LevelEditorMode current_mode, EditorInput i
 
         case EDITOR_SELECT:
             switch (input.key) {
-                case KEY_M:
+                case EDITOR_KEY_M:
                     return EDITOR_MOVE;
 
-                case KEY_R:
+                case EDITOR_KEY_R:
                     return EDITOR_ROTATE;
 
-                case KEY_S:
+                case EDITOR_KEY_S:
                     return EDITOR_SCALE;
 
-                case KEY_A:
+                case EDITOR_KEY_A:
                     return EDITOR_SHAPE;
 
                 default:
@@ -529,31 +558,31 @@ LevelEditorMode editor_input_to_mode(LevelEditorMode current_mode, EditorInput i
 
         case EDITOR_MOVE:
             switch(input.key) {
-                case KEY_ESCAPE:
+                case EDITOR_KEY_ESCAPE:
                     return EDITOR_SELECT;
-                case KEY_UP:
+                case EDITOR_KEY_UP:
                     return EDITOR_MOVE_UP;
-                case KEY_DOWN:
+                case EDITOR_KEY_DOWN:
                     return EDITOR_MOVE_DOWN;
-                case KEY_LEFT:
+                case EDITOR_KEY_LEFT:
                     return EDITOR_MOVE_LEFT;
-                case KEY_RIGHT:
+                case EDITOR_KEY_RIGHT:
                     return EDITOR_MOVE_RIGHT;
 
-                case KEY_MOUSE_LEFT:
+                case EDITOR_KEY_MOUSE_LEFT:
                     return EDITOR_MOVE_MOUSE;
-                case KEY_R:
+                case EDITOR_KEY_R:
                     return EDITOR_ROTATE;
-                case KEY_S:
+                case EDITOR_KEY_S:
                     return EDITOR_SCALE;
-                case KEY_A:
+                case EDITOR_KEY_A:
                     return EDITOR_SHAPE;
                 default:
                     return EDITOR_MOVE;
             }
         case EDITOR_MOVE_MOUSE:
             switch(input.key) {
-                case KEY_ESCAPE:
+                case EDITOR_KEY_ESCAPE:
                     return EDITOR_MOVE;
                 default:
                     return EDITOR_MOVE_MOUSE;
@@ -582,28 +611,28 @@ LevelEditorMode editor_input_to_mode(LevelEditorMode current_mode, EditorInput i
 
         case EDITOR_ROTATE:
             switch(input.key) {
-                case KEY_ESCAPE:
+                case EDITOR_KEY_ESCAPE:
                     return EDITOR_SELECT;
-                case KEY_LEFT:
+                case EDITOR_KEY_LEFT:
                     return EDITOR_ROTATE_CCW;
-                case KEY_RIGHT:
+                case EDITOR_KEY_RIGHT:
                     return EDITOR_ROTATE_CW;
-                case KEY_SHIFT_UP:
+                case EDITOR_KEY_SHIFT_UP:
                     return EDITOR_ROTATE_UP;
-                case KEY_SHIFT_DOWN:
+                case EDITOR_KEY_SHIFT_DOWN:
                     return EDITOR_ROTATE_DOWN;
-                case KEY_SHIFT_RIGHT:
+                case EDITOR_KEY_SHIFT_RIGHT:
                     return EDITOR_ROTATE_RIGHT;
-                case KEY_SHIFT_LEFT:
+                case EDITOR_KEY_SHIFT_LEFT:
                     return EDITOR_ROTATE_LEFT;
 
-                case KEY_M:
+                case EDITOR_KEY_M:
                     return EDITOR_MOVE;
-                case KEY_R:
+                case EDITOR_KEY_R:
                     return EDITOR_ROTATE;
-                case KEY_S:
+                case EDITOR_KEY_S:
                     return EDITOR_SCALE;
-                case KEY_A:
+                case EDITOR_KEY_A:
                     return EDITOR_SHAPE;
 
                 default:
@@ -642,35 +671,35 @@ LevelEditorMode editor_input_to_mode(LevelEditorMode current_mode, EditorInput i
 
         case EDITOR_SCALE:
             switch(input.key) {
-                case KEY_ESCAPE:
+                case EDITOR_KEY_ESCAPE:
                     return EDITOR_SELECT;
-                case KEY_UP:
+                case EDITOR_KEY_UP:
                     return EDITOR_SCALE_Y_UP;
-                case KEY_DOWN:
+                case EDITOR_KEY_DOWN:
                     return EDITOR_SCALE_Y_UP;
-                case KEY_LEFT:
+                case EDITOR_KEY_LEFT:
                     return EDITOR_SCALE_X_UP;
-                case KEY_RIGHT:
+                case EDITOR_KEY_RIGHT:
                     return EDITOR_SCALE_X_UP;
-                case KEY_SHIFT_UP:
+                case EDITOR_KEY_SHIFT_UP:
                     return EDITOR_SCALE_Y_DOWN;
-                case KEY_SHIFT_DOWN:
+                case EDITOR_KEY_SHIFT_DOWN:
                     return EDITOR_SCALE_Y_DOWN;
-                case KEY_SHIFT_LEFT:
+                case EDITOR_KEY_SHIFT_LEFT:
                     return EDITOR_SCALE_X_DOWN;
-                case KEY_SHIFT_RIGHT:
+                case EDITOR_KEY_SHIFT_RIGHT:
                     return EDITOR_SCALE_X_DOWN;
 
-                case KEY_L:
+                case EDITOR_KEY_L:
                     return EDITOR_SCALE_LOCK;
 
-                case KEY_M:
+                case EDITOR_KEY_M:
                     return EDITOR_MOVE;
-                case KEY_R:
+                case EDITOR_KEY_R:
                     return EDITOR_ROTATE;
-                case KEY_S:
+                case EDITOR_KEY_S:
                     return EDITOR_SCALE;
-                case KEY_A:
+                case EDITOR_KEY_A:
                     return EDITOR_SHAPE;
 
                 default:
@@ -698,32 +727,32 @@ LevelEditorMode editor_input_to_mode(LevelEditorMode current_mode, EditorInput i
             }
         case EDITOR_SCALE_LOCK:
             switch(input.key) {
-                case KEY_ESCAPE:
+                case EDITOR_KEY_ESCAPE:
                     return EDITOR_SCALE;
-                case KEY_UP:
+                case EDITOR_KEY_UP:
                     return EDITOR_SCALE_ALL_UP;
-                case KEY_DOWN:
+                case EDITOR_KEY_DOWN:
                     return EDITOR_SCALE_ALL_UP;
-                case KEY_LEFT:
+                case EDITOR_KEY_LEFT:
                     return EDITOR_SCALE_ALL_UP;
-                case KEY_RIGHT:
+                case EDITOR_KEY_RIGHT:
                     return EDITOR_SCALE_ALL_UP;
-                case KEY_SHIFT_UP:
+                case EDITOR_KEY_SHIFT_UP:
                     return EDITOR_SCALE_ALL_DOWN;
-                case KEY_SHIFT_DOWN:
+                case EDITOR_KEY_SHIFT_DOWN:
                     return EDITOR_SCALE_ALL_DOWN;
-                case KEY_SHIFT_LEFT:
+                case EDITOR_KEY_SHIFT_LEFT:
                     return EDITOR_SCALE_ALL_DOWN;
-                case KEY_SHIFT_RIGHT:
+                case EDITOR_KEY_SHIFT_RIGHT:
                     return EDITOR_SCALE_ALL_DOWN;
 
-                case KEY_M:
+                case EDITOR_KEY_M:
                     return EDITOR_MOVE;
-                case KEY_R:
+                case EDITOR_KEY_R:
                     return EDITOR_ROTATE;
-                case KEY_S:
+                case EDITOR_KEY_S:
                     return EDITOR_SCALE;
-                case KEY_A:
+                case EDITOR_KEY_A:
                     return EDITOR_SHAPE;
 
                 default:
@@ -743,11 +772,11 @@ LevelEditorMode editor_input_to_mode(LevelEditorMode current_mode, EditorInput i
 
         case EDITOR_SHAPE:
             switch(input.key) {
-                case KEY_ESCAPE:
+                case EDITOR_KEY_ESCAPE:
                     return EDITOR_SELECT;
-                case KEY_UP:
+                case EDITOR_KEY_UP:
                     return EDITOR_SHAPE_ADD_VERTEX;
-                case KEY_DOWN:
+                case EDITOR_KEY_DOWN:
                     return EDITOR_SHAPE_REMOVE_VERTEX;
                 default:
                     return EDITOR_SHAPE;
@@ -944,8 +973,8 @@ void resolve_mode(LevelEditorMode mode, EditorInput input) {
     }
 }
 
-void bind_selection_to_mouse(SDL_Renderer *renderer) {
-    positions[selection] = graphics_screen_to_world(get_mouse_coordinates(renderer));
+void bind_selection_to_mouse() {
+    positions[selection] = graphics_screen_to_world(get_mouse_coordinates());
 }
 
 void print_mode(LevelEditorMode mode) {
@@ -1115,15 +1144,15 @@ void level_editor_init() {
     print_editor_controls();
 }
 
-void level_editor_update(SDL_Renderer *renderer) {
+void level_editor_update() {
         SDL_Event event = engine_poll_event();
-        EditorInput input = sdl_event_to_editor_input(renderer, event);
+        EditorInput input = sdl_event_to_editor_input(event);
         prev_mode = current_mode;
         current_mode = editor_input_to_mode(current_mode, input);
         //if(prev_mode != current_mode) {
         //    print_mode(current_mode);
         //}
-        bind_selection_to_mouse(renderer);
+        bind_selection_to_mouse();
         resolve_mode(current_mode, input);
 
 }
