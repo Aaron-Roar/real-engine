@@ -246,3 +246,195 @@ void print_keyboard_event(KeyboardEvent event)
         keyboard_state_name(event.state)
     );
 }
+
+Vec2D get_mouse_position() {
+    if (sdl_renderer == NULL) {
+        return (Vec2D){0};
+    }
+
+    float window_x;
+    float window_y;
+
+    SDL_GetMouseState(&window_x, &window_y);
+
+    float screen_x;
+    float screen_y;
+
+    if (!SDL_RenderCoordinatesFromWindow(
+            sdl_renderer,
+            window_x,
+            window_y,
+            &screen_x,
+            &screen_y)) {
+        return (Vec2D){0};
+    }
+
+    Position world_position =
+        graphics_screen_to_world((Position){
+            .x = screen_x,
+            .y = screen_y,
+        });
+
+    return (Vec2D){
+        .x = world_position.x,
+        .y = world_position.y,
+    };
+}
+MouseEvent capture_mouse_event(const SDL_Event *sdl_event) {
+    MouseEvent mouse_event = {
+        .button = MOUSE_BUTTON_NONE,
+        .state = MOUSE_BUTTON_STATE_NONE,
+        .position = {0,0},
+    };
+
+    if (sdl_event == NULL) {
+        return mouse_event;
+    }
+    if (sdl_event->type != SDL_EVENT_MOUSE_BUTTON_DOWN &&
+        sdl_event->type != SDL_EVENT_MOUSE_BUTTON_UP) {
+        return mouse_event;
+    }
+
+    if(sdl_event->type == SDL_EVENT_MOUSE_BUTTON_DOWN) {
+        switch(sdl_event->button.button) {
+            case SDL_BUTTON_LEFT:
+                mouse_event.button = MOUSE_BUTTON_LEFT;
+                mouse_event.state = MOUSE_BUTTON_STATE_PRESSED;
+                break;
+            case SDL_BUTTON_RIGHT:
+                mouse_event.button = MOUSE_BUTTON_RIGHT;
+                mouse_event.state = MOUSE_BUTTON_STATE_PRESSED;
+                break;
+            case SDL_BUTTON_MIDDLE:
+                mouse_event.button = MOUSE_BUTTON_MIDDLE;
+                mouse_event.state = MOUSE_BUTTON_STATE_PRESSED;
+                break;
+            default:
+                break;
+        }
+
+    }
+    else if(sdl_event->type == SDL_EVENT_MOUSE_BUTTON_UP) {
+        switch(sdl_event->button.button) {
+            case SDL_BUTTON_LEFT:
+                mouse_event.button = MOUSE_BUTTON_LEFT;
+                mouse_event.state = MOUSE_BUTTON_STATE_RELEASED;
+                break;
+            case SDL_BUTTON_RIGHT:
+                mouse_event.button = MOUSE_BUTTON_RIGHT;
+                mouse_event.state = MOUSE_BUTTON_STATE_RELEASED;
+                break;
+            case SDL_BUTTON_MIDDLE:
+                mouse_event.button = MOUSE_BUTTON_MIDDLE;
+                mouse_event.state = MOUSE_BUTTON_STATE_RELEASED;
+                break;
+            default:
+                break;
+        }
+    }
+    mouse_event.position = get_mouse_position();
+
+    return mouse_event;
+}
+
+void add_mouse_event(MouseState *mouse, MouseEvent mouse_event) {
+    if(mouse == NULL) {
+        return;
+    }
+    if(
+        mouse_event.button <= MOUSE_BUTTON_NONE ||
+        mouse_event.state == MOUSE_BUTTON_STATE_NONE ||
+        mouse_event.button >= MOUSE_BUTTON_COUNT) {
+        return;
+    }
+
+    MouseButtonState current_mouse_button_state = mouse->button_states[mouse_event.button];
+    if(mouse_event.state == MOUSE_BUTTON_STATE_PRESSED) {
+        if(current_mouse_button_state == MOUSE_BUTTON_STATE_DOWN || current_mouse_button_state == MOUSE_BUTTON_STATE_PRESSED) {
+            return;
+        }
+        mouse->button_states[mouse_event.button] = MOUSE_BUTTON_STATE_PRESSED;
+    }
+    if(mouse_event.state == MOUSE_BUTTON_STATE_RELEASED) {
+        if(current_mouse_button_state == MOUSE_BUTTON_STATE_UP || current_mouse_button_state == MOUSE_BUTTON_STATE_RELEASED) {
+            return;
+        }
+        mouse->button_states[mouse_event.button] = MOUSE_BUTTON_STATE_RELEASED;
+    }
+    mouse->position = mouse_event.position;
+}
+
+void update_mouse_states(MouseState *mouse) {
+    if(mouse == NULL) {
+        return;
+    }
+
+    for(int i = 0; i < MOUSE_BUTTON_COUNT; i += 1) {
+        if(mouse->button_states[i] == MOUSE_BUTTON_STATE_RELEASED) {
+            mouse->button_states[i] = MOUSE_BUTTON_STATE_UP;
+        }
+        else if(mouse->button_states[i] == MOUSE_BUTTON_STATE_PRESSED) {
+            mouse->button_states[i] = MOUSE_BUTTON_STATE_DOWN;
+        }
+    }
+    mouse->position = get_mouse_position();
+}
+const char *mouse_button_name(MouseButton button)
+{
+    switch (button) {
+        case MOUSE_BUTTON_NONE:
+            return "NONE";
+
+        case MOUSE_BUTTON_LEFT:
+            return "LEFT";
+
+        case MOUSE_BUTTON_MIDDLE:
+            return "MIDDLE";
+
+        case MOUSE_BUTTON_RIGHT:
+            return "RIGHT";
+
+        default:
+            return "INVALID_BUTTON";
+    }
+}
+
+const char *mouse_button_state_name(MouseButtonState state)
+{
+    switch (state) {
+        case MOUSE_BUTTON_STATE_NONE:
+            return "NONE";
+
+        case MOUSE_BUTTON_STATE_UP:
+            return "UP";
+
+        case MOUSE_BUTTON_STATE_DOWN:
+            return "DOWN";
+
+        case MOUSE_BUTTON_STATE_PRESSED:
+            return "PRESSED";
+
+        case MOUSE_BUTTON_STATE_RELEASED:
+            return "RELEASED";
+
+        default:
+            return "INVALID_STATE";
+    }
+}
+
+void print_mouse_event(MouseEvent event)
+{
+    if (event.button == MOUSE_BUTTON_NONE ||
+        event.state == MOUSE_BUTTON_STATE_NONE) {
+        return;
+    }
+
+    console_write(
+        LOG_ENGINE,
+        "MouseEvent { button: %s, state: %s, position: { x: %.2f, y: %.2f } }\n",
+        mouse_button_name(event.button),
+        mouse_button_state_name(event.state),
+        event.position.x,
+        event.position.y
+    );
+}

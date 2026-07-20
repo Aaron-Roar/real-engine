@@ -21,10 +21,9 @@ int main() {
     console_set_debug(CONSOLE_DEBUG_OFF);
     engine_init();
     KeyboardState keyboard = {0};
+    MouseState mouse = {0};
     //level_editor_init();
-    SDL_Renderer *renderer = NULL;
-    SDL_Window *window = NULL;
-    if (!graphics_start(&renderer, &window)) {
+    if (!graphics_start()) {
         engine_shutdown();
         return 1;
     }
@@ -39,7 +38,7 @@ int main() {
     physics_set_hitbox(water_smash, shape4);
     physics_set_friction(water_smash, 0.4);
     physics_set_dynamic(water_smash);
-    animation_orm = graphics_load_animation(renderer, orm_files);
+    animation_orm = graphics_load_animation(orm_files);
         sprite_orm = graphics_create_animated_sprite(animation_orm, (Scale){10,10});
         graphics_add_animated_sprite(water_smash, sprite_orm);
 
@@ -63,15 +62,17 @@ int main() {
         system_update_physics(engine_get_dt());
 
         //render
-        graphics_draw_background(renderer, background_color);
+        graphics_draw_background(background_color);
         graphics_update_sprite_frames(engine_get_tick(), engine_get_time());
-        graphics_draw_animated_sprites(renderer);
-        graphics_show(renderer);
+        graphics_draw_animated_sprites();
+        graphics_show();
 
         SDL_Event sdl_event = engine_poll_event();
         KeyboardEvent key_event = capture_keyboard_event(&sdl_event);
-        add_key_event(&keyboard, key_event);
+        MouseEvent mouse_event = capture_mouse_event(&sdl_event);
+
         update_key_states(&keyboard);
+        add_key_event(&keyboard, key_event);
         print_keyboard_event(key_event);
         if(
             keyboard.key_states[KEY_W] == KEY_STATE_UP &&
@@ -82,26 +83,60 @@ int main() {
             physics_set_velocity(water_smash, (Velocity){0, 0});
         }
 
-        if(keyboard.key_states[KEY_W] == KEY_STATE_DOWN) {
-            physics_set_velocity(water_smash, (Velocity){0, 50});
+        if(keyboard.key_states[KEY_A] == KEY_STATE_DOWN && keyboard.key_states[KEY_D] == KEY_STATE_DOWN) {
+            physics_set_velocity(water_smash, (Velocity){0, 0});
+
+        }
+        else if(keyboard.key_states[KEY_S] == KEY_STATE_DOWN && keyboard.key_states[KEY_D] == KEY_STATE_DOWN) {
+            physics_set_velocity(water_smash, (Velocity){100, -100});
+
+        }
+        else if(keyboard.key_states[KEY_S] == KEY_STATE_DOWN && keyboard.key_states[KEY_A] == KEY_STATE_DOWN) {
+            physics_set_velocity(water_smash, (Velocity){-100, -100});
+
+        }
+        else if(keyboard.key_states[KEY_W] == KEY_STATE_DOWN && keyboard.key_states[KEY_D] == KEY_STATE_DOWN) {
+            physics_set_velocity(water_smash, (Velocity){100, 100});
+
+        }
+        else if(keyboard.key_states[KEY_W] == KEY_STATE_DOWN && keyboard.key_states[KEY_A] == KEY_STATE_DOWN) {
+            physics_set_velocity(water_smash, (Velocity){-100, 100});
+
+        }
+        else if(keyboard.key_states[KEY_W] == KEY_STATE_DOWN && keyboard.key_states[KEY_S] == KEY_STATE_DOWN) {
+            physics_set_velocity(water_smash, (Velocity){0, 0});
+
+        }
+        else if(keyboard.key_states[KEY_W] == KEY_STATE_DOWN) {
+            physics_set_velocity(water_smash, (Velocity){0, 100});
 
         }
         else if(keyboard.key_states[KEY_A] == KEY_STATE_DOWN) {
-            physics_set_velocity(water_smash, (Velocity){-50, 0});
+            physics_set_velocity(water_smash, (Velocity){-100, 0});
 
         }
         else if(keyboard.key_states[KEY_S] == KEY_STATE_DOWN) {
-            physics_set_velocity(water_smash, (Velocity){0, -50});
+            physics_set_velocity(water_smash, (Velocity){0, -100});
 
         }
         else if(keyboard.key_states[KEY_D] == KEY_STATE_DOWN) {
-            physics_set_velocity(water_smash, (Velocity){50, 0});
+            physics_set_velocity(water_smash, (Velocity){100, 0});
 
+        }
+
+        update_mouse_states(&mouse);
+        add_mouse_event(&mouse, mouse_event);
+        print_mouse_event(mouse_event);
+        if(mouse.button_states[MOUSE_BUTTON_LEFT] == MOUSE_BUTTON_STATE_DOWN) {
+            positions[water_smash] = mouse.position;
+        }
+        if(mouse.button_states[MOUSE_BUTTON_RIGHT] == MOUSE_BUTTON_STATE_DOWN) {
+            orientations[water_smash] += 10*(2*PI_F/360);
         }
 
 
     }
-    graphics_end(renderer, window);
+    graphics_end();
     engine_shutdown();
 }
 

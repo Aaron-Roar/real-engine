@@ -195,12 +195,12 @@ typedef struct {
     bool super;
 } EditorInput;
 
-Vec2D get_mouse_coordinates(SDL_Renderer *renderer) {
+Vec2D get_mouse_coordinates() {
     float window_x, window_y;
     SDL_GetMouseState(&window_x, &window_y);
     float render_x, render_y;
     SDL_RenderCoordinatesFromWindow(
-        renderer,
+        sdl_renderer,
         window_x,
         window_y,
         &render_x,
@@ -209,11 +209,11 @@ Vec2D get_mouse_coordinates(SDL_Renderer *renderer) {
     return (Vec2D) {render_x, render_y};
 }
 
-EditorInput sdl_event_to_editor_input(SDL_Renderer *renderer, SDL_Event event)
+EditorInput sdl_event_to_editor_input(SDL_Event event)
 {
     EditorInput input = {
         .key = EDITOR_KEY_NONE,
-        .mouse_position = get_mouse_coordinates(renderer),
+        .mouse_position = get_mouse_coordinates(),
         .pressed = false,
         .shift = false,
         .ctrl = false,
@@ -973,8 +973,8 @@ void resolve_mode(LevelEditorMode mode, EditorInput input) {
     }
 }
 
-void bind_selection_to_mouse(SDL_Renderer *renderer) {
-    positions[selection] = graphics_screen_to_world(get_mouse_coordinates(renderer));
+void bind_selection_to_mouse() {
+    positions[selection] = graphics_screen_to_world(get_mouse_coordinates());
 }
 
 void print_mode(LevelEditorMode mode) {
@@ -1144,15 +1144,15 @@ void level_editor_init() {
     print_editor_controls();
 }
 
-void level_editor_update(SDL_Renderer *renderer) {
+void level_editor_update() {
         SDL_Event event = engine_poll_event();
-        EditorInput input = sdl_event_to_editor_input(renderer, event);
+        EditorInput input = sdl_event_to_editor_input(event);
         prev_mode = current_mode;
         current_mode = editor_input_to_mode(current_mode, input);
         //if(prev_mode != current_mode) {
         //    print_mode(current_mode);
         //}
-        bind_selection_to_mouse(renderer);
+        bind_selection_to_mouse();
         resolve_mode(current_mode, input);
 
 }

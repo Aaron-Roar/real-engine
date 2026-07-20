@@ -1,6 +1,7 @@
 #ifndef CONTROLLER_H
 #define CONTROLLER_H
 #include "graphics.h"
+#include "math2d.h"
 typedef enum KeyboardKey {
     KEY_NONE = 0,
 
@@ -66,7 +67,6 @@ typedef enum KeyboardKey {
 
     KEY_COUNT
 } KeyboardKey;
-
 typedef enum {
     KEY_STATE_UP = 0,
     KEY_STATE_DOWN,
@@ -74,20 +74,48 @@ typedef enum {
     KEY_STATE_RELEASED,
     KEY_STATE_NONE,
 } KeyboardKeyState;
-
-
 typedef struct {
     KeyboardKeyState key_states[KEY_COUNT];
 } KeyboardState;
-
 typedef struct {
     KeyboardKey key;
     KeyboardKeyState state;
 } KeyboardEvent;
+
+typedef enum {
+    MOUSE_BUTTON_NONE = 0,
+    MOUSE_BUTTON_LEFT,
+    MOUSE_BUTTON_RIGHT,
+    MOUSE_BUTTON_MIDDLE,
+    MOUSE_BUTTON_COUNT,
+} MouseButton;
+typedef enum {
+    MOUSE_BUTTON_STATE_UP = 0,
+    MOUSE_BUTTON_STATE_DOWN,
+    MOUSE_BUTTON_STATE_PRESSED,
+    MOUSE_BUTTON_STATE_RELEASED,
+    MOUSE_BUTTON_STATE_NONE,
+} MouseButtonState;
+typedef Vec2D MousePosition;
+typedef struct {
+    MouseButtonState button_states[MOUSE_BUTTON_COUNT];
+    MousePosition position;
+} MouseState;
+typedef struct {
+    MouseButton button;
+    MouseButtonState state;
+    MousePosition position;
+} MouseEvent;
+
 
 
 void print_keyboard_event(KeyboardEvent event);
 void update_key_states(KeyboardState *keyboard);
 void add_key_event(KeyboardState *keyboard, KeyboardEvent key_event);
 KeyboardEvent capture_keyboard_event(const SDL_Event *sdl_event);
+
+void print_mouse_event(MouseEvent event);
+void update_mouse_states(MouseState *mouse);
+void add_mouse_event(MouseState *mouse, MouseEvent mouse_event);
+MouseEvent capture_mouse_event(const SDL_Event *sdl_event);
 #endif
