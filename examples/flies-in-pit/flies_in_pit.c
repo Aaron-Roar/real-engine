@@ -98,9 +98,21 @@ int main() {
     engine_reset_clock();
     Time dt = engine_get_dt();
     //Game Loop
-    //graphics_recording_start("examples/flies-in-pit/recording.mp4",60);
+    graphics_recording_start("examples/flies-in-pit/recording.mp4",60);
+    bool phase_1 = false;
+    bool phase_2 = false;
+    bool phase_3 = false;
     while (console_is_active()) {
         system_clean_entities_past_lifetime();
+        if(!phase_1 && engine_get_time() > 3) {
+            phase_1 = true;
+        }
+        if(!phase_2 && engine_get_time() > 5) {
+            phase_2 = true;
+        }
+        if(!phase_3 && engine_get_time() > 7) {
+            phase_3 = true;
+        }
 
         //Console
         ConsoleLogString console_line = {0};
@@ -121,9 +133,16 @@ int main() {
         graphics_draw_hit_box(water_wall_3, GRAPHICS_FILLED);
         graphics_update_sprite_frames(engine_get_tick(), engine_get_time());
         graphics_draw_animated_sprites();
-        graphics_draw_hit_boxes();
-        graphics_draw_particles();
-        graphics_draw_grid();
+        if(phase_1) {
+            graphics_draw_hit_boxes();
+        }
+        if(phase_2) {
+            graphics_draw_particles();
+        }
+        if(phase_3) {
+            graphics_draw_grid();
+        }
+        graphics_draw_local_origins();
         graphics_show();
 
     }
