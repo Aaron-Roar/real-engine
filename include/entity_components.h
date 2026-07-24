@@ -67,9 +67,9 @@ typedef enum {
     /** Reserved time-window component bit. */
     TIMEWINDOW              = 1 << 10,
     /** Entity has a parent entity. */
-    HAS_PARENT                  = 1 << 11,
+    PARENT                      = 1 << 11,
     /** Entity has one or more child entities. */
-    HAS_CHILDREN                = 1 << 12,
+    CHILD                       = 1 << 12,
     /** Entity has a transform lock constraint. */
     TRANSFORM_LOCK              = 1 << 13,
     /** Entity represents a joint constraint. */
@@ -90,10 +90,13 @@ typedef Entity Parent;
 /** Child entity id alias. */
 typedef Entity Child;
 
-/** Fixed child entity table indexed by child EntityIndex. */
+/** Dynamic pool storing one parent entity's child ids. */
+MEMORY_DECLARE_OBJECT_POOL(ChildPool, Child);
+
+/** Dynamic child entity list owned by one parent entity component. */
 typedef struct Children {
-    /** Child entity ids, indexed by child EntityIndex. */
-    Entity entities[MAX_ENTITIES];
+    /** Pool of child entity ids. */
+    ChildPool entities;
 } Children;
 
 /** Result type for functions returning Children. */
