@@ -4,6 +4,7 @@
 #include "engine.h"
 #include "systems.h"
 #include "physics.h"
+#include "platform_process.h"
 #include <stdio.h>
 #include "grid.h"
 
@@ -123,7 +124,7 @@ static bool graphics_recording_open_ffmpeg(int width, int height) {
     );
 
     screen_recorder.ffmpeg_pipe =
-        popen(command, "w");
+        platform_process_open_write(command);
 
     if(screen_recorder.ffmpeg_pipe == NULL) {
         console_write(
@@ -281,7 +282,7 @@ void graphics_recording_stop(void) {
 
     if(screen_recorder.ffmpeg_pipe != NULL) {
         int result =
-            pclose(screen_recorder.ffmpeg_pipe);
+            platform_process_close(screen_recorder.ffmpeg_pipe);
 
         if(result != 0) {
             console_write(

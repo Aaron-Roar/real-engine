@@ -13,6 +13,7 @@ ENGINE_SRC := \
 	src/graphics.c \
 	src/math2d.c \
 	src/physics.c \
+	src/platform_process.c \
 	src/rohr.c \
 	src/systems.c \
 	src/tools.c \
