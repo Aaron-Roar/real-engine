@@ -160,6 +160,7 @@ bool rohr_graphics_poll_events(SDL_Event *event) { return graphics_poll_events(e
 void rohr_graphics_draw_background(Color color) { graphics_draw_background(color); }
 void rohr_graphics_show(void) { graphics_show(); }
 void rohr_graphics_draw_hit_box(Entity entity, Fill fill_type) { graphics_draw_hit_box(entity, fill_type); }
+void rohr_graphics_draw_hit_box_colored(Entity entity, Fill fill_type, Color color) { graphics_draw_hit_box_colored(entity, fill_type, color); }
 void rohr_graphics_draw_hit_boxes(void) { graphics_draw_hit_boxes(); }
 TextureAssetResult rohr_graphics_load_texture(TextureDescriptor text_desc) { return graphics_load_texture(text_desc); }
 AnimationAssetResult rohr_graphics_load_animation(AnimationDescriptor anim_desc) { return graphics_load_animation(anim_desc); }

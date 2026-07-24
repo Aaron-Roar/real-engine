@@ -1539,6 +1539,20 @@ Draws one entity hitbox.
 | `entity` | Entity whose hitbox should be drawn. |
 | `fill_type` | Fill mode for drawing. |
 
+### `rohr_graphics_draw_hit_box_colored`
+
+```c
+void rohr_graphics_draw_hit_box_colored(Entity entity, Fill fill_type, Color color);
+```
+
+Draws one entity hitbox with a caller supplied color.
+
+| Parameter | Description |
+| --- | --- |
+| `entity` | Entity whose hitbox should be drawn. |
+| `fill_type` | Fill mode for drawing. |
+| `color` | Color to draw with. |
+
 ### `rohr_graphics_draw_hit_boxes`
 
 ```c

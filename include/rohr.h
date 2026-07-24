@@ -866,6 +866,14 @@ void rohr_graphics_show(void);
 void rohr_graphics_draw_hit_box(Entity entity, Fill fill_type);
 
 /**
+ * @brief Draws one entity hitbox with a caller supplied color.
+ * @param entity Entity whose hitbox should be drawn.
+ * @param fill_type Fill mode for drawing.
+ * @param color Color to draw with.
+ */
+void rohr_graphics_draw_hit_box_colored(Entity entity, Fill fill_type, Color color);
+
+/**
  * @brief Draws hitboxes for all renderable hitbox entities.
  */
 void rohr_graphics_draw_hit_boxes(void);

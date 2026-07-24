@@ -615,6 +615,20 @@ void graphics_draw_hit_box(Entity entity, Fill fill_type) {
     }
 }
 
+void graphics_draw_hit_box_colored(Entity entity, Fill fill_type, Color color) {
+    ShapeResult shape_result = physics_get_global_hit_box(entity);
+    if(shape_result.kind == ERROR_RESULT_ERROR) {
+        return;
+    }
+    Shape shape = shape_result.result.value;
+    if(fill_type == GRAPHICS_FILLED) {
+        graphics_draw_shape_filled(shape, color);
+    }
+    else {
+        graphics_draw_shape_outline(shape, color);
+    }
+}
+
 void graphics_draw_hit_boxes(void) {
   for(int i = 0; i < MAX_ENTITIES; i += 1) {
     if(entity_index_is_alive(i)) {

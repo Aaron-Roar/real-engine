@@ -168,6 +168,9 @@ void graphics_show(void);
 /** Draw one entity hitbox. */
 void graphics_draw_hit_box(Entity entity, Fill fill_type);
 
+/** Draw one entity hitbox with a caller supplied color. */
+void graphics_draw_hit_box_colored(Entity entity, Fill fill_type, Color color);
+
 /** Draw every live entity hitbox. */
 void graphics_draw_hit_boxes(void);
 

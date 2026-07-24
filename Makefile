@@ -39,15 +39,16 @@ ASSET_SRC := \
 PIT_BINARY := build/examples/flies_in_pit
 BALL_BINARY := build/examples/flies_around_ball
 VIEW_BINARY := build/examples/view_port
+FINISH_BINARY := build/examples/fly_to_finish
 
-.PHONY: help all build build-engine build-example-pit build-example-ball run-pit run-ball docs clean-docs clean
+.PHONY: help all build build-engine build-example-pit build-example-ball build-example-view build-example-finish run-pit run-ball run-view run-finish docs clean-docs clean
 
 help:
 	@printf '%s\n' \
 		"Build targets:" \
 		"" \
 		"  build" \
-		"		  Builds all examples (flies_in_pit and flies_around_ball)" \
+		"		  Builds all examples" \
 		"		  Example source code is located in the examples/ directory" \
 		"		  Compiled binaries are output to build/examples/" \
 		"" \
@@ -69,6 +70,10 @@ help:
 		"		  Builds examples/view-port/view_port.c" \
 		"		  Outputs build/examples/view_port" \
 		"" \
+		"  build-example-finish" \
+		"		  Builds examples/fly-to-finish/fly_to_finish.c" \
+		"		  Outputs build/examples/fly_to_finish" \
+		"" \
 		"  run-pit" \
 		"		  Builds and runs the flies_in_pit example" \
 		"" \
@@ -77,6 +82,9 @@ help:
 		"" \
 		"  run-view" \
 		"		  Builds and runs the view_port example" \
+		"" \
+		"  run-finish" \
+		"		  Builds and runs the fly_to_finish example" \
 		"" \
 		"  docs" \
 		"		  Updates docs/public_api.md from include/rohr.h" \
@@ -93,7 +101,7 @@ help:
 
 all: build
 
-build: build-example-view build-example-pit build-example-ball
+build: build-example-view build-example-pit build-example-ball build-example-finish
 
 build-engine: $(ENGINE_LIB)
 
@@ -102,6 +110,8 @@ build-example-pit: $(PIT_BINARY)
 build-example-ball: $(BALL_BINARY)
 
 build-example-view: $(VIEW_BINARY)
+
+build-example-finish: $(FINISH_BINARY)
 
 $(ENGINE_LIB): $(ENGINE_OBJ)
 	@mkdir -p lib
@@ -123,6 +133,10 @@ $(VIEW_BINARY): examples/view-port/view_port.c $(ENGINE_LIB) $(ASSET_SRC)
 	@mkdir -p build/examples
 	$(CC) $^ $(CFLAGS) -o $@ $(LIBS)
 
+$(FINISH_BINARY): examples/fly-to-finish/fly_to_finish.c $(ENGINE_LIB) $(ASSET_SRC)
+	@mkdir -p build/examples
+	$(CC) $^ $(CFLAGS) -o $@ $(LIBS)
+
 run-pit: $(PIT_BINARY)
 	./$(PIT_BINARY)
 
@@ -131,6 +145,9 @@ run-ball: $(BALL_BINARY)
 
 run-view: $(VIEW_BINARY)
 	./$(VIEW_BINARY)
+
+run-finish: $(FINISH_BINARY)
+	./$(FINISH_BINARY)
 
 docs: $(API_MARKDOWN) $(README_HTML) $(STATIC_README_HTML)
 	$(DOXYGEN) $(DOCS_DOXYFILE)
