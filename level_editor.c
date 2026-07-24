@@ -803,14 +803,19 @@ LevelEditorMode editor_input_to_mode(LevelEditorMode current_mode, EditorInput i
 
 void editor_select(EditorInput input) {
     if(input.pressed) {
+        EntityIndex selection_index;
+
+        if(!entity_get_index(selection, &selection_index)) {
+            return;
+        }
         //Do something here??
         console_write(LOG_APP, "Pressed\n");
         for(int i = 0; i < MAX_ENTITIES; i += 1) {
-            if(i == selection) {
+            if(i == selection_index) {
                 continue;
             }
-            if(collision_reports[selection].collisions[i]) {
-                selected_entity = i;
+            if(collision_reports[selection_index].collisions[i]) {
+                selected_entity = entity_from_index(i);
                 console_write(LOG_APP, "Selected Entity: %d\n", i);
             }
         }
@@ -818,79 +823,130 @@ void editor_select(EditorInput input) {
 }
 
 void editor_move_mouse(EditorInput input) {
-    positions[selected_entity] = positions[selection];
+    EntityIndex selection_index;
+
+    if(!entity_get_index(selection, &selection_index)) {
+        return;
+    }
+    physics_set_position(selected_entity, positions[selection_index]);
 }
 
 //Rotation
 void editor_rotate_cw(EditorInput input) {
-    physics_set_orientation(selected_entity, orientations[selected_entity] - 1*2*PI_F/360);
+    EntityIndex selected_index;
+    if(entity_get_index(selected_entity, &selected_index)) {
+        physics_set_orientation(selected_entity, orientations[selected_index] - 1*2*PI_F/360);
+    }
 }
 void editor_rotate_ccw(EditorInput input) {
-    physics_set_orientation(selected_entity, orientations[selected_entity] + 1*2*PI_F/360);
+    EntityIndex selected_index;
+    if(entity_get_index(selected_entity, &selected_index)) {
+        physics_set_orientation(selected_entity, orientations[selected_index] + 1*2*PI_F/360);
+    }
 }
 void editor_rotate_up(EditorInput input) {
-    physics_set_orientation(selected_entity, orientations[selected_entity] - 180*2*PI_F/360);
+    EntityIndex selected_index;
+    if(entity_get_index(selected_entity, &selected_index)) {
+        physics_set_orientation(selected_entity, orientations[selected_index] - 180*2*PI_F/360);
+    }
 }
 void editor_rotate_down(EditorInput input) {
-    physics_set_orientation(selected_entity, orientations[selected_entity] + 180*2*PI_F/360);
+    EntityIndex selected_index;
+    if(entity_get_index(selected_entity, &selected_index)) {
+        physics_set_orientation(selected_entity, orientations[selected_index] + 180*2*PI_F/360);
+    }
 }
 void editor_rotate_right(EditorInput input) {
-    physics_set_orientation(selected_entity, orientations[selected_entity] - 90*2*PI_F/360);
+    EntityIndex selected_index;
+    if(entity_get_index(selected_entity, &selected_index)) {
+        physics_set_orientation(selected_entity, orientations[selected_index] - 90*2*PI_F/360);
+    }
 }
 void editor_rotate_left(EditorInput input) {
-    physics_set_orientation(selected_entity, orientations[selected_entity] + 90*2*PI_F/360);
+    EntityIndex selected_index;
+    if(entity_get_index(selected_entity, &selected_index)) {
+        physics_set_orientation(selected_entity, orientations[selected_index] + 90*2*PI_F/360);
+    }
 }
 
 void editor_scale_all_up(EditorInput input) {
-    Shape shape = math_scale_shape(hit_boxes[selected_entity], 1 + SCALE_INCREMENT);
+    EntityIndex selected_index;
+    if(!entity_get_index(selected_entity, &selected_index)) { return; }
+    Shape shape = math_scale_shape(hit_boxes[selected_index], 1 + SCALE_INCREMENT);
     physics_set_hitbox(selected_entity, shape);
     graphics_scale_textures(selected_entity, (Scale){1 + SCALE_INCREMENT,1 + SCALE_INCREMENT});
 }
 void editor_scale_all_down(EditorInput input) {
-    Shape shape = math_scale_shape(hit_boxes[selected_entity], 1 - SCALE_INCREMENT);
+    EntityIndex selected_index;
+    if(!entity_get_index(selected_entity, &selected_index)) { return; }
+    Shape shape = math_scale_shape(hit_boxes[selected_index], 1 - SCALE_INCREMENT);
     physics_set_hitbox(selected_entity, shape);
     graphics_scale_textures(selected_entity, (Scale){1 - SCALE_INCREMENT,1 - SCALE_INCREMENT});
 }
 void editor_scale_x_up(EditorInput input) {
-    Shape shape = math_scale_shape_x(hit_boxes[selected_entity], 1 + SCALE_INCREMENT);
+    EntityIndex selected_index;
+    if(!entity_get_index(selected_entity, &selected_index)) { return; }
+    Shape shape = math_scale_shape_x(hit_boxes[selected_index], 1 + SCALE_INCREMENT);
     physics_set_hitbox(selected_entity, shape);
     graphics_scale_textures(selected_entity, (Scale){1 + SCALE_INCREMENT,1});
 }
 void editor_scale_x_down(EditorInput input) {
-    Shape shape = math_scale_shape_x(hit_boxes[selected_entity], 1 - SCALE_INCREMENT);
+    EntityIndex selected_index;
+    if(!entity_get_index(selected_entity, &selected_index)) { return; }
+    Shape shape = math_scale_shape_x(hit_boxes[selected_index], 1 - SCALE_INCREMENT);
     physics_set_hitbox(selected_entity, shape);
     graphics_scale_textures(selected_entity, (Scale){1 - SCALE_INCREMENT,1});
 }
 void editor_scale_y_up(EditorInput input) {
-    Shape shape = math_scale_shape_y(hit_boxes[selected_entity], 1 + SCALE_INCREMENT);
+    EntityIndex selected_index;
+    if(!entity_get_index(selected_entity, &selected_index)) { return; }
+    Shape shape = math_scale_shape_y(hit_boxes[selected_index], 1 + SCALE_INCREMENT);
     physics_set_hitbox(selected_entity, shape);
     graphics_scale_textures(selected_entity, (Scale){1,1 + SCALE_INCREMENT});
 }
 void editor_scale_y_down(EditorInput input) {
-    Shape shape = math_scale_shape_y(hit_boxes[selected_entity], 1 - SCALE_INCREMENT);
+    EntityIndex selected_index;
+    if(!entity_get_index(selected_entity, &selected_index)) { return; }
+    Shape shape = math_scale_shape_y(hit_boxes[selected_index], 1 - SCALE_INCREMENT);
     physics_set_hitbox(selected_entity, shape);
     graphics_scale_textures(selected_entity, (Scale){1,1 - SCALE_INCREMENT});
 }
 
 void editor_shape_add_vertex(EditorInput input) {
-    Shape new_shape = math_add_vertex(hit_boxes[selected_entity]);
+    EntityIndex selected_index;
+    if(!entity_get_index(selected_entity, &selected_index)) { return; }
+    Shape new_shape = math_add_vertex(hit_boxes[selected_index]);
     physics_set_hitbox(selected_entity, new_shape);
 }
 void editor_shape_remove_vertex(EditorInput input) {
-    Shape new_shape = math_delete_vertex(hit_boxes[selected_entity]);
+    EntityIndex selected_index;
+    if(!entity_get_index(selected_entity, &selected_index)) { return; }
+    Shape new_shape = math_delete_vertex(hit_boxes[selected_index]);
     physics_set_hitbox(selected_entity, new_shape);
 }
 void editor_move_up(EditorInput input) {
-    positions[selected_entity].y += MOVE_INCREMENT;
+    EntityIndex selected_index;
+    if(entity_get_index(selected_entity, &selected_index)) {
+        physics_set_position(selected_entity, (Position){positions[selected_index].x, positions[selected_index].y + MOVE_INCREMENT});
+    }
 }
 void editor_move_down(EditorInput input) {
-    positions[selected_entity].y -= MOVE_INCREMENT;
+    EntityIndex selected_index;
+    if(entity_get_index(selected_entity, &selected_index)) {
+        physics_set_position(selected_entity, (Position){positions[selected_index].x, positions[selected_index].y - MOVE_INCREMENT});
+    }
 }
 void editor_move_left(EditorInput input) {
-    positions[selected_entity].x -= MOVE_INCREMENT;
+    EntityIndex selected_index;
+    if(entity_get_index(selected_entity, &selected_index)) {
+        physics_set_position(selected_entity, (Position){positions[selected_index].x - MOVE_INCREMENT, positions[selected_index].y});
+    }
 }
 void editor_move_right(EditorInput input) {
-    positions[selected_entity].x += MOVE_INCREMENT;
+    EntityIndex selected_index;
+    if(entity_get_index(selected_entity, &selected_index)) {
+        physics_set_position(selected_entity, (Position){positions[selected_index].x + MOVE_INCREMENT, positions[selected_index].y});
+    }
 }
 
 void editor_pause_engine(EditorInput input) {
@@ -974,7 +1030,7 @@ void resolve_mode(LevelEditorMode mode, EditorInput input) {
 }
 
 void bind_selection_to_mouse() {
-    positions[selection] = graphics_screen_to_world(get_mouse_coordinates());
+    physics_set_position(selection, graphics_screen_to_world(get_mouse_coordinates()));
 }
 
 void print_mode(LevelEditorMode mode) {

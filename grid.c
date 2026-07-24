@@ -21,15 +21,24 @@ bool grid_tables_init(void) {
 }
 
 bool grid_tables_ensure_capacity(size_t capacity) {
+    size_t new_capacity;
+
     if(capacity > MAX_ENTITIES) {
         return false;
     }
     if(capacity <= aabbs_pool.capacity) {
         return true;
     }
+    new_capacity = aabbs_pool.capacity == 0 ? 16 : aabbs_pool.capacity;
+    while(new_capacity < capacity) {
+        new_capacity *= 2;
+    }
+    if(new_capacity > MAX_ENTITIES) {
+        new_capacity = MAX_ENTITIES;
+    }
     if(AABBPool_expand(
         &aabbs_pool,
-        capacity - aabbs_pool.capacity
+        new_capacity - aabbs_pool.capacity
     ).kind == RESULT_ERROR) {
         return false;
     }

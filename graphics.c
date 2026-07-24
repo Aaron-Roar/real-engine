@@ -40,15 +40,24 @@ bool graphics_tables_init(void) {
 }
 
 bool graphics_tables_ensure_capacity(size_t capacity) {
+    size_t new_capacity;
+
     if(capacity > MAX_ENTITIES) {
         return false;
     }
     if(capacity <= animated_sprites_pool.capacity) {
         return true;
     }
+    new_capacity = animated_sprites_pool.capacity == 0 ? 16 : animated_sprites_pool.capacity;
+    while(new_capacity < capacity) {
+        new_capacity *= 2;
+    }
+    if(new_capacity > MAX_ENTITIES) {
+        new_capacity = MAX_ENTITIES;
+    }
     if(AnimatedSpritePool_expand(
         &animated_sprites_pool,
-        capacity - animated_sprites_pool.capacity
+        new_capacity - animated_sprites_pool.capacity
     ).kind == RESULT_ERROR) {
         return false;
     }
@@ -376,12 +385,14 @@ void graphics_draw_grid() {
 }
 
 void graphics_scale_textures(Entity entity, Scale scale) {
-    if(entity >= MAX_ENTITIES || !entity_has_components(entity, ANIMATED_SPRITE)) {
+    EntityIndex index;
+
+    if(!entity_get_index(entity, &index) || !entity_has_components(entity, ANIMATED_SPRITE)) {
         return;
     }
     for(int i = 0; i < MAX_TEXTURES; i += 1) {
-        animated_sprites[entity].animation.texture_list.textures[i].size.x *= scale.x;
-        animated_sprites[entity].animation.texture_list.textures[i].size.y *= scale.y;
+        animated_sprites[index].animation.texture_list.textures[i].size.x *= scale.x;
+        animated_sprites[index].animation.texture_list.textures[i].size.y *= scale.y;
     }
 }
 
@@ -583,19 +594,24 @@ void graphics_draw_hit_box(Entity entity, Fill fill_type) {
 
 void graphics_draw_hit_boxes() {
   for(int i = 0; i < MAX_ENTITIES; i += 1) {
-    if(entity_is_alive(i)) {
+    if(entity_index_is_alive(i)) {
         if( (entity_mask[i] & HIT_BOX) == HIT_BOX) {
-            graphics_draw_hit_box(i, GRAPHICS_OUTLINE);
+            graphics_draw_hit_box(entity_from_index(i), GRAPHICS_OUTLINE);
         }
     }
   }
 }
 
 void graphics_draw_particle(Entity entity, Fill fill_type) {
+    EntityIndex index;
+
+    if(!entity_get_index(entity, &index)) {
+        return;
+    }
     Shape shape = physics_get_global_hit_box(entity);
     float radius = math_circle_radius(shape,math_polygon_centroid(shape));
     Shape circle = math_create_circle(radius, 10);
-    Shape world_circle = physics_shape_world_translate(circle, positions[entity], 0);
+    Shape world_circle = physics_shape_world_translate(circle, positions[index], 0);
     if(fill_type == GRAPHICS_FILLED) {
         graphics_draw_shape_filled(world_circle, particle_color);
     }
@@ -605,10 +621,10 @@ void graphics_draw_particle(Entity entity, Fill fill_type) {
 }
 void graphics_draw_particles() {
   for(int i = 0; i < MAX_ENTITIES; i += 1) {
-    if(entity_is_alive(i)) {
+    if(entity_index_is_alive(i)) {
         if( (entity_mask[i] & HIT_BOX) == HIT_BOX) {
           if( (entity_mask[i] & PARTICLE) == PARTICLE) {
-              graphics_draw_particle(i, GRAPHICS_OUTLINE);
+              graphics_draw_particle(entity_from_index(i), GRAPHICS_OUTLINE);
           }
         }
     }
@@ -704,17 +720,19 @@ void graphics_draw_sprite(AnimatedSprite sprite, Position pos, Orientation ort) 
 }
 
 void graphics_add_animated_sprite(Entity entity, AnimatedSprite sprite) {
-    if(entity >= MAX_ENTITIES || !entity_is_alive(entity)) {
+    EntityIndex index;
+
+    if(!entity_get_index(entity, &index) || !entity_index_is_alive(index)) {
         return;
     }
-    (void)AnimatedSpritePool_store_at(&animated_sprites_pool, entity, sprite);
+    (void)AnimatedSpritePool_store_at(&animated_sprites_pool, index, sprite);
     entity_add_components(entity, ANIMATED_SPRITE);
 }
 
 void graphics_draw_animated_sprites() {
     CMask filter = ANIMATED_SPRITE;
     for(int i = 0; i < MAX_ENTITIES; i += 1) {
-        if(entity_has_components(i, filter)) {
+        if(entity_index_is_alive(i) && (entity_mask[i] & filter) == filter) {
             graphics_draw_sprite(animated_sprites[i], positions[i], orientations[i]);
         }
     }
@@ -723,13 +741,18 @@ void graphics_draw_animated_sprites() {
 void graphics_update_sprite_frames(Tick current_tick, Time current_time) {
     CMask filter = ANIMATED_SPRITE;
     for(int i = 0; i < MAX_ENTITIES; i += 1) {
-        if(entity_has_components(i, filter)) {
+        if(entity_index_is_alive(i) && (entity_mask[i] & filter) == filter) {
             graphics_update_sprite_frame(&animated_sprites[i], current_tick, current_time);
         }
     }
 }
 
 void graphics_draw_local_origin(Entity entity) {
+    EntityIndex index;
+
+    if(!entity_get_index(entity, &index)) {
+        return;
+    }
     if (!entity_has_components(entity, HIT_BOX)) {
         return;
     }
@@ -740,8 +763,8 @@ void graphics_draw_local_origin(Entity entity) {
         return;
     }
 
-    Position origin = positions[entity];
-    Orientation angle = orientations[entity];
+    Position origin = positions[index];
+    Orientation angle = orientations[index];
 
     float cos_angle = cosf(angle);
     float sin_angle = sinf(angle);
@@ -832,12 +855,12 @@ void graphics_draw_local_origin(Entity entity) {
 
 void graphics_draw_local_origins() {
     for(int i = 0; i < MAX_ENTITIES; i += 1) {
-        if(!entity_is_alive(i)) {
+        if(!entity_index_is_alive(i)) {
             continue;
         }
-        if (!entity_has_components(i, HIT_BOX)) {
+        if ((entity_mask[i] & HIT_BOX) != HIT_BOX) {
             continue;
         }
-        graphics_draw_local_origin(i);
+        graphics_draw_local_origin(entity_from_index(i));
     }
 }

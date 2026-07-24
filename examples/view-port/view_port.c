@@ -128,10 +128,13 @@ int main() {
         add_mouse_event(&mouse, mouse_event);
         print_mouse_event(mouse_event);
         if(mouse.button_states[MOUSE_BUTTON_LEFT] == MOUSE_BUTTON_STATE_DOWN) {
-            positions[water_smash] = mouse.position;
+            physics_set_position(water_smash, mouse.position);
         }
         if(mouse.button_states[MOUSE_BUTTON_RIGHT] == MOUSE_BUTTON_STATE_DOWN) {
-            orientations[water_smash] += 10*(2*PI_F/360);
+            EntityIndex water_smash_index;
+            if(entity_get_index(water_smash, &water_smash_index)) {
+                physics_set_orientation(water_smash, orientations[water_smash_index] + 10*(2*PI_F/360));
+            }
         }
 
 
@@ -139,5 +142,4 @@ int main() {
     graphics_end();
     engine_shutdown();
 }
-
 

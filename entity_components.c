@@ -20,6 +20,9 @@ MEMORY_DEFINE_OBJECT_POOL(LifeTimePool, LifeTime)
 EntityAlivePool entity_alive_pool = {0};
 EntityMaskPool entity_mask_pool = {0};
 EntityIdPool entity_id_pool = {0};
+static EntityIndex entity_to_index[MAX_ENTITIES + 1] = {0};
+static Entity index_to_entity[MAX_ENTITIES] = {0};
+static uint16_t entity_generations[MAX_ENTITIES + 1] = {0};
 
 //Moveable Objects
 TargetPool targets_pool = {0};
@@ -29,8 +32,15 @@ LifeTimePool life_times_pool = {0};
 
 static void entity_id_pool_init(void) {
     memset(entity_id_pool.free_ids, 0, sizeof(entity_id_pool.free_ids));
+    memset(entity_id_pool.free_indices, 0, sizeof(entity_id_pool.free_indices));
+    memset(entity_to_index, 0, sizeof(entity_to_index));
+    memset(index_to_entity, 0, sizeof(index_to_entity));
+    memset(entity_generations, 0, sizeof(entity_generations));
     entity_id_pool.free_count = 0;
+    entity_id_pool.free_index_count = 0;
     entity_id_pool.live_count = 0;
+    entity_id_pool.next_id = 1;
+    entity_id_pool.next_index = 0;
 }
 
 bool entity_tables_init(void) {
@@ -61,15 +71,27 @@ fail:
 }
 
 bool entity_tables_ensure_capacity(size_t capacity) {
+    size_t new_capacity;
+
     if(capacity > MAX_ENTITIES) {
         return false;
     }
-    if(capacity > entity_alive_pool.capacity && EntityAlivePool_expand(&entity_alive_pool, capacity - entity_alive_pool.capacity).kind == RESULT_ERROR) { return false; }
-    if(capacity > entity_mask_pool.capacity && EntityMaskPool_expand(&entity_mask_pool, capacity - entity_mask_pool.capacity).kind == RESULT_ERROR) { return false; }
-    if(capacity > targets_pool.capacity && TargetPool_expand(&targets_pool, capacity - targets_pool.capacity).kind == RESULT_ERROR) { return false; }
-    if(capacity > parents_pool.capacity && ParentPool_expand(&parents_pool, capacity - parents_pool.capacity).kind == RESULT_ERROR) { return false; }
-    if(capacity > children_pool.capacity && ChildrenPool_expand(&children_pool, capacity - children_pool.capacity).kind == RESULT_ERROR) { return false; }
-    if(capacity > life_times_pool.capacity && LifeTimePool_expand(&life_times_pool, capacity - life_times_pool.capacity).kind == RESULT_ERROR) { return false; }
+    if(capacity <= entity_alive_pool.capacity) {
+        return true;
+    }
+    new_capacity = entity_alive_pool.capacity == 0 ? 16 : entity_alive_pool.capacity;
+    while(new_capacity < capacity) {
+        new_capacity *= 2;
+    }
+    if(new_capacity > MAX_ENTITIES) {
+        new_capacity = MAX_ENTITIES;
+    }
+    if(new_capacity > entity_alive_pool.capacity && EntityAlivePool_expand(&entity_alive_pool, new_capacity - entity_alive_pool.capacity).kind == RESULT_ERROR) { return false; }
+    if(new_capacity > entity_mask_pool.capacity && EntityMaskPool_expand(&entity_mask_pool, new_capacity - entity_mask_pool.capacity).kind == RESULT_ERROR) { return false; }
+    if(new_capacity > targets_pool.capacity && TargetPool_expand(&targets_pool, new_capacity - targets_pool.capacity).kind == RESULT_ERROR) { return false; }
+    if(new_capacity > parents_pool.capacity && ParentPool_expand(&parents_pool, new_capacity - parents_pool.capacity).kind == RESULT_ERROR) { return false; }
+    if(new_capacity > children_pool.capacity && ChildrenPool_expand(&children_pool, new_capacity - children_pool.capacity).kind == RESULT_ERROR) { return false; }
+    if(new_capacity > life_times_pool.capacity && LifeTimePool_expand(&life_times_pool, new_capacity - life_times_pool.capacity).kind == RESULT_ERROR) { return false; }
     return true;
 }
 
@@ -83,42 +105,116 @@ void entity_tables_destroy(void) {
     entity_id_pool = (EntityIdPool){0};
 }
 
-static bool entity_index_valid(Entity entity) {
-    return entity < MAX_ENTITIES;
+static bool entity_id_valid(Entity entity) {
+    Entity slot = entity & 0xFFFFu;
+    uint16_t generation = (uint16_t)(entity >> 16);
+
+    return slot > ENTITY_INVALID && slot <= MAX_ENTITIES && generation > 0;
+}
+
+static bool entity_table_index_valid(EntityIndex index) {
+    return index < MAX_ENTITIES;
+}
+
+static Entity entity_make(uint32_t slot, uint16_t generation) {
+    return ((Entity)generation << 16) | slot;
+}
+
+static uint32_t entity_slot(Entity entity) {
+    return entity & 0xFFFFu;
+}
+
+static uint16_t entity_generation(Entity entity) {
+    return (uint16_t)(entity >> 16);
 }
 
 bool entity_is_alive(Entity entity) {
-    if(!entity_index_valid(entity)) {
+    EntityIndex index;
+
+    if(!entity_get_index(entity, &index)) {
         return false;
     }
-    if(entity >= entity_alive_pool.capacity) {
+    return entity_index_is_alive(index);
+}
+
+bool entity_index_is_alive(EntityIndex index) {
+    if(!entity_table_index_valid(index)) {
+        return false;
+    }
+    if(index >= entity_alive_pool.capacity) {
         return false;
     }
     if(entity_alive_pool.objects == NULL || entity_alive_pool.used == NULL) {
         return false;
     }
-    if(entity_alive_pool.used[entity] == 0) {
+    if(entity_alive_pool.used[index] == 0) {
         return false;
     }
-    return entity_alive_pool.objects[entity];
+    return entity_alive_pool.objects[index];
+}
+
+bool entity_get_index(Entity entity, EntityIndex *index) {
+    uint32_t slot;
+
+    if(index == NULL || !entity_id_valid(entity)) {
+        return false;
+    }
+    slot = entity_slot(entity);
+    if(entity_generations[slot] != entity_generation(entity)) {
+        return false;
+    }
+    if(entity_to_index[slot] >= MAX_ENTITIES) {
+        return false;
+    }
+    if(index_to_entity[entity_to_index[slot]] != entity) {
+        return false;
+    }
+    *index = entity_to_index[slot];
+    return true;
+}
+
+Entity entity_from_index(EntityIndex index) {
+    if(!entity_table_index_valid(index)) {
+        return ENTITY_INVALID;
+    }
+    return index_to_entity[index];
 }
 
 Entity entity_add() {
     Entity entity;
+    uint32_t slot;
+    EntityIndex index;
     size_t required_capacity;
+    bool reused_slot = false;
+    bool reused_index = false;
 
     if(entity_id_pool.free_count > 0) {
         entity_id_pool.free_count -= 1;
-        entity = entity_id_pool.free_ids[entity_id_pool.free_count];
+        slot = entity_id_pool.free_ids[entity_id_pool.free_count];
+        reused_slot = true;
     } else {
-        if(entity_alive_pool.capacity >= MAX_ENTITIES) {
+        if(entity_id_pool.next_id > MAX_ENTITIES) {
             console_write(LOG_ENGINE, "Error: failed to add entity, MAX_ENTITIES exceeded\n");
-            return 0; //Unused location
+            return ENTITY_INVALID;
         }
-        entity = (Entity)entity_alive_pool.capacity;
+        slot = entity_id_pool.next_id;
+        entity_id_pool.next_id += 1;
     }
 
-    required_capacity = (size_t)entity + 1;
+    if(entity_id_pool.free_index_count > 0) {
+        entity_id_pool.free_index_count -= 1;
+        index = entity_id_pool.free_indices[entity_id_pool.free_index_count];
+        reused_index = true;
+    } else {
+        if(entity_id_pool.next_index >= MAX_ENTITIES) {
+            console_write(LOG_ENGINE, "Error: failed to add entity, MAX_ENTITIES exceeded\n");
+            return ENTITY_INVALID;
+        }
+        index = entity_id_pool.next_index;
+        entity_id_pool.next_index += 1;
+    }
+
+    required_capacity = (size_t)index + 1;
     if(
         !entity_tables_ensure_capacity(required_capacity) ||
         !physics_tables_ensure_capacity(required_capacity) ||
@@ -126,58 +222,88 @@ Entity entity_add() {
         !grid_tables_ensure_capacity(required_capacity)
     ) {
         console_write(LOG_ENGINE, "Error: failed to add entity, table expansion failed\n");
-        if(entity_id_pool.free_count < MAX_ENTITIES) {
-            entity_id_pool.free_ids[entity_id_pool.free_count] = entity;
+        if(reused_slot && entity_id_pool.free_count < MAX_ENTITIES) {
+            entity_id_pool.free_ids[entity_id_pool.free_count] = slot;
             entity_id_pool.free_count += 1;
         }
-        return 0; //Unused location
+        else if(!reused_slot && entity_id_pool.next_id > 1) {
+            entity_id_pool.next_id -= 1;
+        }
+        if(reused_index && entity_id_pool.free_index_count < MAX_ENTITIES) {
+            entity_id_pool.free_indices[entity_id_pool.free_index_count] = index;
+            entity_id_pool.free_index_count += 1;
+        }
+        else if(!reused_index && entity_id_pool.next_index > 0) {
+            entity_id_pool.next_index -= 1;
+        }
+        return ENTITY_INVALID;
     }
 
+    if(entity_generations[slot] == 0) {
+        entity_generations[slot] = 1;
+    }
+    entity = entity_make(slot, entity_generations[slot]);
     entity_id_pool.live_count += 1;
+    entity_to_index[slot] = index;
+    index_to_entity[index] = entity;
 
-    (void)EntityAlivePool_store_at(&entity_alive_pool, entity, true);
-    (void)EntityMaskPool_store_at(&entity_mask_pool, entity, 0);
+    (void)EntityAlivePool_store_at(&entity_alive_pool, index, true);
+    (void)EntityMaskPool_store_at(&entity_mask_pool, index, 0);
     return entity;
 }
 
-void entity_clear(Entity entity) {
-    if(!entity_index_valid(entity)) {
+static void entity_clear_index(EntityIndex index) {
+    if(!entity_table_index_valid(index)) {
         return;
     }
-    if(entity_alive_pool.used[entity]) {
-        (void)EntityAlivePool_release_at(&entity_alive_pool, entity);
+    if(index < entity_alive_pool.capacity && entity_alive_pool.used[index]) {
+        (void)EntityAlivePool_release_at(&entity_alive_pool, index);
     }
-    if(entity_mask_pool.used[entity]) {
-        (void)EntityMaskPool_release_at(&entity_mask_pool, entity);
+    if(index < entity_mask_pool.capacity && entity_mask_pool.used[index]) {
+        (void)EntityMaskPool_release_at(&entity_mask_pool, index);
     }
-    if(targets_pool.used[entity]) {
-        (void)TargetPool_release_at(&targets_pool, entity);
+    if(index < targets_pool.capacity && targets_pool.used[index]) {
+        (void)TargetPool_release_at(&targets_pool, index);
     }
-    if(parents_pool.used[entity]) {
-        (void)ParentPool_release_at(&parents_pool, entity);
+    if(index < parents_pool.capacity && parents_pool.used[index]) {
+        (void)ParentPool_release_at(&parents_pool, index);
     }
-    if(children_pool.used[entity]) {
-        (void)ChildrenPool_release_at(&children_pool, entity);
+    if(index < children_pool.capacity && children_pool.used[index]) {
+        (void)ChildrenPool_release_at(&children_pool, index);
     }
-    if(life_times_pool.used[entity]) {
-        (void)LifeTimePool_release_at(&life_times_pool, entity);
+    if(index < life_times_pool.capacity && life_times_pool.used[index]) {
+        (void)LifeTimePool_release_at(&life_times_pool, index);
     }
 }
 
 void entity_delete(Entity entity) {
-    if(!entity_index_valid(entity)) {
+    EntityIndex index;
+    uint32_t slot;
+
+    if(!entity_id_valid(entity)) {
         console_write(LOG_ENGINE, "Error: failed to delete entity %u, entity exceeds MAX_ENTITIES\n", entity);
         return;
     }
-    if(!entity_is_alive(entity)) {
+    if(!entity_get_index(entity, &index) || !entity_index_is_alive(index)) {
         console_write(LOG_ENGINE, "Error: failed to delete entity %u, entity does not exist\n", entity);
         return;
     }
-    entity_clear(entity);
+    entity_clear_index(index);
+    slot = entity_slot(entity);
+    entity_to_index[slot] = 0;
+    index_to_entity[index] = ENTITY_INVALID;
+    entity_generations[slot] += 1;
+    if(entity_generations[slot] == 0) {
+        entity_generations[slot] = 1;
+    }
 
     if(entity_id_pool.free_count < MAX_ENTITIES) {
-        entity_id_pool.free_ids[entity_id_pool.free_count] = entity;
+        entity_id_pool.free_ids[entity_id_pool.free_count] = slot;
         entity_id_pool.free_count += 1;
+    }
+    if(entity_id_pool.free_index_count < MAX_ENTITIES) {
+        entity_id_pool.free_indices[entity_id_pool.free_index_count] = index;
+        entity_id_pool.free_index_count += 1;
     }
     if(entity_id_pool.live_count > 0) {
         entity_id_pool.live_count -= 1;
@@ -185,37 +311,43 @@ void entity_delete(Entity entity) {
 }
 
 void entity_add_components(Entity entity, CMask mask) {
-    if(!entity_index_valid(entity)) {
+    EntityIndex index;
+
+    if(!entity_id_valid(entity)) {
         console_write(LOG_ENGINE, "Error: failed to add components to entity %u, entity exceeds MAX_ENTITIES\n", entity);
         return;
     }
-    if(!entity_is_alive(entity)) {
+    if(!entity_get_index(entity, &index) || !entity_index_is_alive(index)) {
         console_write(LOG_ENGINE, "Error: failed to add components to entity %u, entity does not exist\n", entity);
         return;
     }
-    (void)EntityMaskPool_store_at(&entity_mask_pool, entity, entity_mask[entity] | mask);
+    (void)EntityMaskPool_store_at(&entity_mask_pool, index, entity_mask[index] | mask);
 }
 
 void entity_delete_components(Entity entity, CMask mask) {
-    if(!entity_index_valid(entity)) {
+    EntityIndex index;
+
+    if(!entity_id_valid(entity)) {
         console_write(LOG_ENGINE, "Error: failed to delete components from entity %u, entity exceeds MAX_ENTITIES\n", entity);
         return;
     }
-    if(!entity_is_alive(entity)) {
+    if(!entity_get_index(entity, &index) || !entity_index_is_alive(index)) {
         console_write(LOG_ENGINE, "Error: failed to delete components from entity %u, entity does not exist\n", entity);
         return;
     }
-    (void)EntityMaskPool_store_at(&entity_mask_pool, entity, entity_mask[entity] & ~mask);
+    (void)EntityMaskPool_store_at(&entity_mask_pool, index, entity_mask[index] & ~mask);
 }
 
 bool entity_has_components(Entity entity, Component components) {
-  if(!entity_index_valid(entity)) {
+  EntityIndex index;
+
+  if(!entity_get_index(entity, &index)) {
     return false;
   }
-  if(!entity_is_alive(entity)) {
+  if(!entity_index_is_alive(index)) {
     return false;
   }
-  if( (entity_mask[entity] & components) == components) {
+  if( (entity_mask[index] & components) == components) {
     return true;
   }
   return false;
@@ -223,105 +355,116 @@ bool entity_has_components(Entity entity, Component components) {
 
 
 void entity_set_child(Entity parent, Entity child) {
-    if(!entity_index_valid(parent) || !entity_index_valid(child)) {
+    EntityIndex parent_index;
+    EntityIndex child_index;
+
+    if(!entity_get_index(parent, &parent_index) || !entity_get_index(child, &child_index)) {
         return;
     }
-    if(!entity_is_alive(parent) || !entity_is_alive(child)) {
+    if(!entity_index_is_alive(parent_index) || !entity_index_is_alive(child_index)) {
         //Error parent or child not alive
         return;
     }
     entity_add_components(parent, HAS_CHILDREN);
     entity_add_components(child, HAS_PARENT);
-    (void)ChildrenPool_store_at(&children_pool, parent, children[parent]);
-    children[parent].entities[child] = child;
-    (void)ParentPool_store_at(&parents_pool, child, parent);
+    (void)ChildrenPool_store_at(&children_pool, parent_index, children[parent_index]);
+    children[parent_index].entities[child_index] = child;
+    (void)ParentPool_store_at(&parents_pool, child_index, parent);
 }
 
 void entity_set_parent(Entity child, Entity parent) {
-    if(!entity_index_valid(parent) || !entity_index_valid(child)) {
+    EntityIndex parent_index;
+    EntityIndex child_index;
+
+    if(!entity_get_index(parent, &parent_index) || !entity_get_index(child, &child_index)) {
         return;
     }
-    if(!entity_is_alive(parent) || !entity_is_alive(child)) {
+    if(!entity_index_is_alive(parent_index) || !entity_index_is_alive(child_index)) {
         //Error parent or child not alive
         return;
     }
     entity_add_components(parent, HAS_CHILDREN);
     entity_add_components(child, HAS_PARENT);
-    (void)ChildrenPool_store_at(&children_pool, parent, children[parent]);
-    children[parent].entities[child] = child;
-    (void)ParentPool_store_at(&parents_pool, child, parent);
+    (void)ChildrenPool_store_at(&children_pool, parent_index, children[parent_index]);
+    children[parent_index].entities[child_index] = child;
+    (void)ParentPool_store_at(&parents_pool, child_index, parent);
 }
 
 void entity_remove_parent(Entity child) {
-    if(!entity_index_valid(child)) {
-        return;
-    }
-    if(!entity_is_alive(child)) {
+    EntityIndex child_index;
+    Entity parent;
+    EntityIndex parent_index;
+
+    if(!entity_get_index(child, &child_index) || !entity_index_is_alive(child_index)) {
         //Error
         return;
     }
-    if(!entity_is_alive(parents[child])) {
+    parent = parents[child_index];
+    if(!entity_get_index(parent, &parent_index) || !entity_index_is_alive(parent_index)) {
         //Warning no parent is currently set
+        return;
     }
     //Removing this child from the parent
-    children[parents[child]].entities[child] = 0;
+    children[parent_index].entities[child_index] = ENTITY_INVALID;
     //If the parent has no more children remove the flag
     for(int i = 0; i < MAX_ENTITIES; i += 1) {
-        if(children[parents[child]].entities[i] != 0) {
-            entity_delete_components(parents[child], HAS_CHILDREN);
+        if(children[parent_index].entities[i] != ENTITY_INVALID) {
+            entity_delete_components(parent, HAS_CHILDREN);
         }
     }
 
     //Remove the parent from the child
-    if(parents_pool.used[child]) {
-        (void)ParentPool_release_at(&parents_pool, child);
+    if(child_index < parents_pool.capacity && parents_pool.used[child_index]) {
+        (void)ParentPool_release_at(&parents_pool, child_index);
     }
     entity_delete_components(child, HAS_PARENT);
 }
 
 void entity_remove_child(Entity parent, Entity child) {
-    if(!entity_index_valid(parent) || !entity_index_valid(child)) {
-        return;
-    }
-    if(!entity_is_alive(parent)) {
+    EntityIndex parent_index;
+    EntityIndex child_index;
+
+    if(!entity_get_index(parent, &parent_index) || !entity_index_is_alive(parent_index)) {
         //Error
         return;
     }
-    if(!entity_is_alive(child)) {
+    if(!entity_get_index(child, &child_index) || !entity_index_is_alive(child_index)) {
         //Warning this child is currently not alive
+        return;
     }
     //Removing the child from the parent
-    children[parent].entities[child] = 0;
+    children[parent_index].entities[child_index] = ENTITY_INVALID;
     //If the parent has no more children remove the flag
     for(int i = 0; i < MAX_ENTITIES; i += 1) {
-        if(children[parent].entities[i] != 0) {
-            entity_delete_components(parents[child], HAS_CHILDREN);
+        if(children[parent_index].entities[i] != ENTITY_INVALID) {
+            entity_delete_components(parent, HAS_CHILDREN);
         }
     }
 
     //Removing the parent from the child
-    if(parents_pool.used[child]) {
-        (void)ParentPool_release_at(&parents_pool, child);
+    if(child_index < parents_pool.capacity && parents_pool.used[child_index]) {
+        (void)ParentPool_release_at(&parents_pool, child_index);
     }
     entity_delete_components(child, HAS_PARENT);
 
 }
 
 Children entity_get_children(Entity entity) {
-    if(!entity_index_valid(entity)) {
-        return (Children){0};
-    }
-    if(!entity_is_alive(entity)) {
+    EntityIndex index;
+
+    if(!entity_get_index(entity, &index) || !entity_index_is_alive(index)) {
         //Error
         return (Children){0};
     }
-    return children[entity];
+    return children[index];
 }
 Parent entity_get_parent(Entity entity) {
-    if(!entity_index_valid(entity)) {
-        return 0;
+    EntityIndex index;
+
+    if(!entity_get_index(entity, &index)) {
+        return ENTITY_INVALID;
     }
-    return parents[entity];
+    return parents[index];
 }
 
 
@@ -329,27 +472,28 @@ Parent entity_get_parent(Entity entity) {
 
 
 void entity_set_life_time(Entity entity, Time expirey_time, Tick expirey_tick) {
-    if(!entity_index_valid(entity)) {
-        return;
-    }
-    if(!entity_is_alive(entity)) {
+    EntityIndex index;
+
+    if(!entity_get_index(entity, &index) || !entity_index_is_alive(index)) {
         //Error
         return;
     }
 
     entity_add_components(entity, LIFETIME);
-    (void)LifeTimePool_store_at(&life_times_pool, entity, (LifeTime){
+    (void)LifeTimePool_store_at(&life_times_pool, index, (LifeTime){
         .expirey_time = expirey_time,
         .expirey_tick = expirey_tick
     });
 }
 
 void entity_remove_life_time(Entity entity) {
-    if(!entity_index_valid(entity)) {
+    EntityIndex index;
+
+    if(!entity_get_index(entity, &index)) {
         return;
     }
     entity_delete_components(entity, LIFETIME);
-    if(life_times_pool.used[entity]) {
-        (void)LifeTimePool_release_at(&life_times_pool, entity);
+    if(index < life_times_pool.capacity && life_times_pool.used[index]) {
+        (void)LifeTimePool_release_at(&life_times_pool, index);
     }
 }

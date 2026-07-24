@@ -42,7 +42,10 @@ int main() {
     physics_set_hitbox(magnet_smash, shape4);
     physics_set_friction(magnet_smash, 0.4);
     physics_set_dynamic(magnet_smash);
-    physics_set_axis_lock(magnet_smash, (Axis){1,0}, positions[magnet_smash]);
+    EntityIndex magnet_smash_index;
+    if(entity_get_index(magnet_smash, &magnet_smash_index)) {
+        physics_set_axis_lock(magnet_smash, (Axis){1,0}, positions[magnet_smash_index]);
+    }
     //set_angle_lock(magnet_smash, 0, 0);
 
     time_t seed = 1003463;
@@ -82,7 +85,7 @@ int main() {
         //Game Code
         if(engine_get_tick() % 1000 == 0) {
             for(int i = 0; i < MAX_ENTITIES; i += 1) {
-                if(!entity_is_alive(i)) {
+                if(!entity_index_is_alive(i)) {
                     continue;
                 }
                 if( (entity_mask[i] & JOINT) == JOINT) {

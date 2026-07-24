@@ -10,12 +10,18 @@
 
 //Entities
 typedef uint32_t Entity; //An id for an entity
+typedef uint32_t EntityIndex; //An index into component tables
+#define ENTITY_INVALID 0
 #define MAX_ENTITIES 10000
 #define MAX_COMPONENTS 100
 typedef struct EntityIdPool {
     Entity free_ids[MAX_ENTITIES];
+    EntityIndex free_indices[MAX_ENTITIES];
     size_t free_count;
+    size_t free_index_count;
     size_t live_count;
+    Entity next_id;
+    EntityIndex next_index;
 } EntityIdPool;
 extern EntityIdPool entity_id_pool;
 typedef struct EntityList {
@@ -94,6 +100,9 @@ bool entity_tables_init(void);
 bool entity_tables_ensure_capacity(size_t capacity);
 void entity_tables_destroy(void);
 bool entity_is_alive(Entity entity);
+bool entity_index_is_alive(EntityIndex index);
+bool entity_get_index(Entity entity, EntityIndex *index);
+Entity entity_from_index(EntityIndex index);
 Entity entity_add();
 void entity_delete(Entity entity);
 void entity_add_components(Entity entity, CMask mask);
