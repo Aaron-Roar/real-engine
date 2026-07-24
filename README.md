@@ -16,9 +16,13 @@ These GIFs are generated from the example programs in `examples/`.
 
 ![Flies in Pit example](docs/assets/flies_in_pit.gif)
 
+[Higher-quality MP4](docs/assets/flies_in_pit.mp4)
+
 ### Flies Around Ball Example
 
 ![Flies Around Ball example](docs/assets/flies_around_ball.gif)
+
+[Higher-quality MP4](docs/assets/flies_around_ball.mp4)
 
 ## What It Does
 

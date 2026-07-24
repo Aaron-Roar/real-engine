@@ -20,6 +20,7 @@ int main() {
         rohr_console_write(LOG_ENGINE, rohr_error_default_message(result.result.error));
         return 1;
     }
+    rohr_engine_set_dt(1/(float)120);
     if(rohr_error_check(result = rohr_level_editor_init())) {
         rohr_console_write(LOG_ENGINE, rohr_error_default_message(result.result.error));
         rohr_engine_shutdown();
@@ -95,9 +96,23 @@ int main() {
 
 
     //Game Loop
+    rohr_engine_reset_clock();
     rohr_graphics_recording_start("examples/flies-around-ball/recording.mp4", 60);
+    bool phase_1 = false;
+    bool phase_2 = false;
+    bool phase_3 = false;
     while (rohr_console_is_active()) {
         rohr_system_clean_entities_past_lifetime();
+        if(!phase_1 && rohr_engine_get_time() > 3) {
+            phase_1 = true;
+        }
+        if(!phase_2 && rohr_engine_get_time() > 5) {
+            phase_2 = true;
+        }
+        if(!phase_3 && rohr_engine_get_time() > 7) {
+            phase_3 = true;
+        }
+
         //Console
         ConsoleLogString console_line = {0};
         if(rohr_console_read(&console_line)) {
@@ -132,9 +147,18 @@ int main() {
 
         //render
         rohr_graphics_draw_background(background_color);
-        rohr_graphics_draw_hit_boxes();
         rohr_graphics_update_sprite_frames(rohr_engine_get_tick(), rohr_engine_get_time());
         rohr_graphics_draw_animated_sprites();
+        if(phase_1) {
+            rohr_graphics_draw_hit_boxes();
+        }
+        if(phase_2) {
+            rohr_graphics_draw_particles();
+        }
+        if(phase_3) {
+            rohr_graphics_draw_grid();
+            rohr_graphics_draw_local_origins();
+        }
         rohr_graphics_show();
 
     }
