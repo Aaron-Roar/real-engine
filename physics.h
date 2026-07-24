@@ -130,7 +130,6 @@ void physics_tables_destroy(void);
 Shape physics_shape_world_translate(Shape shape, Position position, Orientation angle);
 float physics_polygon_moment_of_inertia(Shape shape, Mass mass_value);
 Collision physics_sat_collision(Shape shape_1, Shape shape_2);
-Position physics_approximate_contact_point(Position p1, Position p2);
 Vec1D physics_circle_moment_of_inertia(Shape circle, Mass mass_value);
 EngineResult physics_set_acceleration(Entity entity, Acceleration a);
 EngineResult physics_set_velocity(Entity entity, Velocity v);

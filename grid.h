@@ -18,10 +18,6 @@ typedef struct {
 typedef struct {
     bool pairs[MAX_ENTITIES][MAX_ENTITIES];
 } BooleanPairs;
-MEMORY_DECLARE_OBJECT_POOL(AABBPool, AABB);
-extern AABBPool aabbs_pool;
-#define aabbs aabbs_pool.objects
-uint32_t world_y_to_row(Vec1D y);
 EngineResult grid_tables_init(void);
 EngineResult grid_tables_ensure_capacity(size_t capacity);
 void grid_tables_destroy(void);

@@ -1,5 +1,10 @@
 #include "memory.h"
 
+typedef struct TestObject {
+    int value;
+} TestObject;
+
+MEMORY_DECLARE_OBJECT_POOL(TestPool, TestObject);
 MEMORY_DEFINE_OBJECT_POOL(TestPool, TestObject)
 
 void run_pool_test(void) {

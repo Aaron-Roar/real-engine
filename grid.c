@@ -5,9 +5,11 @@
 #include "console.h"
 #include "math.h"
 
+MEMORY_DECLARE_OBJECT_POOL(AABBPool, AABB);
 MEMORY_DEFINE_OBJECT_POOL(AABBPool, AABB)
 
-AABBPool aabbs_pool = {0};
+static AABBPool aabbs_pool = {0};
+#define aabbs aabbs_pool.objects
 
 Grid grid = {0};
 BooleanPairs pair_checked = {0};

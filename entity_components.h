@@ -15,20 +15,6 @@ typedef uint32_t EntityIndex; //An index into component tables
 #define MAX_ENTITIES 10000
 #define MAX_COMPONENTS 100
 ERROR_DECLARE_RESULT_TYPE(EntityResult, Entity);
-typedef struct EntityIdPool {
-    Entity free_ids[MAX_ENTITIES];
-    EntityIndex free_indices[MAX_ENTITIES];
-    size_t free_count;
-    size_t free_index_count;
-    size_t live_count;
-    Entity next_id;
-    EntityIndex next_index;
-} EntityIdPool;
-extern EntityIdPool entity_id_pool;
-typedef struct EntityList {
-    uint32_t entity_amount;
-    Entity concerned_entities[MAX_ENTITIES];
-} EntityList;
 typedef uint32_t CMask; //The bit mask for an entities components
 MEMORY_DECLARE_OBJECT_POOL(EntityMaskPool, CMask);
 extern EntityMaskPool entity_mask_pool;
@@ -57,21 +43,6 @@ typedef enum {
     PARTICLE                    = 1 << 16,
     ANIMATED_SPRITE             = 1 << 17,
 } Component;
-
-
-static const char* component_names[] = {
-    "NONE",
-    "POSITION",
-    "VELOCITY",
-    "ACCELERATION",
-    "FORCE",
-    "MASS",
-    "TIMEWINDOW",
-    "MOVEABLE",
-    "TARGETABLE",
-    "COLLISION",
-};
-extern const int component_count;
 
 typedef Entity Parent;
 typedef Entity Child;

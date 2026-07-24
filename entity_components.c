@@ -17,9 +17,19 @@ MEMORY_DEFINE_OBJECT_POOL(ParentPool, Parent)
 MEMORY_DEFINE_OBJECT_POOL(ChildrenPool, Children)
 MEMORY_DEFINE_OBJECT_POOL(LifeTimePool, LifeTime)
 
+typedef struct EntityIdPool {
+    Entity free_ids[MAX_ENTITIES];
+    EntityIndex free_indices[MAX_ENTITIES];
+    size_t free_count;
+    size_t free_index_count;
+    size_t live_count;
+    Entity next_id;
+    EntityIndex next_index;
+} EntityIdPool;
+
 EntityAlivePool entity_alive_pool = {0};
 EntityMaskPool entity_mask_pool = {0};
-EntityIdPool entity_id_pool = {0};
+static EntityIdPool entity_id_pool = {0};
 static EntityIndex entity_to_index[MAX_ENTITIES + 1] = {0};
 static Entity index_to_entity[MAX_ENTITIES] = {0};
 static uint16_t entity_generations[MAX_ENTITIES + 1] = {0};

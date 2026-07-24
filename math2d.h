@@ -48,7 +48,6 @@ float math_dot_product(Vec2D vector_1, Vec2D vector_2);
 Shape math_create_square(float width, float height);
 Shape math_create_circle(float radius, uint8_t verticies);
 Projection math_project_shape_on_axis(Shape shape, Axis axis);
-bool math_shape_overlap(Shape shape_1, Shape shape_2);
 float math_cross_2d(Vec2D a, Vec2D b);
 Vec2D math_angular_velocity_cross_vec(float omega, Vec2D r);
 Vec2D math_project_onto_axis(Vec2D v, Axis axis);
@@ -66,5 +65,4 @@ Vec2D math_polygon_centroid(Shape shape);
 Shape math_add_vertex(Shape shape);
 Shape math_delete_vertex(Shape shape);
 AABB math_create_aabb(Shape world_shape);
-bool math_aabb_overlap(AABB a, AABB b);
 #endif

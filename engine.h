@@ -16,7 +16,6 @@ Tick engine_get_tick();
 void engine_pause();
 void engine_resume();
 void engine_update_tick();
-Tick engine_get_tick();
 SDL_Event engine_poll_event();
 bool engine_is_paused();
 Time engine_get_dt();

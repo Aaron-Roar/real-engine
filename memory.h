@@ -366,11 +366,4 @@
         return MEMORY_POOL_VALUE(PoolType##Result, true); \
     }
 
-typedef struct TestObject {
-    int value;
-} TestObject;
-
-MEMORY_DECLARE_OBJECT_POOL(TestPool, TestObject);
-void run_pool_test(void);
-
 #endif
