@@ -2,11 +2,23 @@
 
 Real Engine is a small 2D game engine written in C with SDL3.
 
-I am building this as a solo developer. I am not a school-taught programmer; I am learning by building the systems myself, making mistakes, fixing them, and trying to keep the code understandable as it grows. The goal is not to compete with large engines. The goal is to make a simple, hackable C engine where the core pieces are visible and worth studying.
+This project grew out of a passion for systems development, which gradually led me toward exploring engine design. It is a hands-on side project where I can experiment with low-level concepts, build each component from the ground up, and refine the design as it develops.
 
-Pull requests are welcome. If you want to add features, improve examples, fix bugs, clean up documentation, or point out better ways to structure something, I would appreciate the help.
+The aim is not to compete with large, established engines. Instead, the goal is to create a small, approachable, and hackable C engine whose core systems remain visible, understandable, and useful for experimentation.
 
-![Flies in Pit demo](docs/assets/flies_in_pit.gif)
+Pull requests are welcome. Contributions such as new features, improved examples, bug fixes, documentation updates, and suggestions for cleaner design or structure are all appreciated.
+
+## Example Demos
+
+These GIFs are generated from the example programs in `examples/`.
+
+### Flies in Pit Example
+
+![Flies in Pit example](docs/assets/flies_in_pit.gif)
+
+### Flies Around Ball Example
+
+![Flies Around Ball example](docs/assets/flies_around_ball.gif)
 
 ## What It Does
 
@@ -26,7 +38,8 @@ Real Engine currently focuses on data-oriented 2D simulation:
 * A terminal console exists for engine logs and debugging.
 * Doxygen comments are used for API documentation.
 
-The engine is still early, but the interesting part is that the systems are real engine systems: entity lifetime, stale id protection, table growth, physics stepping, rendering, input, errors, examples, and docs are all being worked through directly in C.
+The engine is still early and in development so your mileage may vary.
+I look forward to releasing a game with Rohr Engine in the soon future.
 
 ## Public API
 

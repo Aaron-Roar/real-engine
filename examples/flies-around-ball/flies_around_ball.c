@@ -95,6 +95,7 @@ int main() {
 
 
     //Game Loop
+    rohr_graphics_recording_start("examples/flies-around-ball/recording.mp4", 60);
     while (rohr_console_is_active()) {
         rohr_system_clean_entities_past_lifetime();
         //Console

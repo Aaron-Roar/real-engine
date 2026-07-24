@@ -74,6 +74,7 @@
         nativeBuildInputs = with pkgs; [
           clang
           doxygen
+          pandoc
           gnumake
           pkg-config
           ffmpeg

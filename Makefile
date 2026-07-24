@@ -23,8 +23,10 @@ ENGINE_SRC := \
 ENGINE_OBJ := $(patsubst src/%.c,build/obj/%.o,$(ENGINE_SRC))
 ENGINE_LIB := lib/libreal_engine.a
 DOXYGEN := doxygen
+PANDOC := pandoc
 DOCS_DOXYFILE := docs/Doxyfile
 DOCS_OUTPUT := build/docs
+README_HTML := $(DOCS_OUTPUT)/readme.html
 
 ASSET_SRC := \
 	examples/test-assets/elder-fly/elderfly_descriptors.c
@@ -73,6 +75,7 @@ help:
 		"" \
 		"  docs" \
 		"		  Builds Doxygen HTML docs into build/docs/html" \
+		"		  Renders README.md into build/docs/readme.html" \
 		"" \
 		"  clean-docs" \
 		"		  Removes generated documentation" \
@@ -121,8 +124,12 @@ run-ball: $(BALL_BINARY)
 run-view: $(VIEW_BINARY)
 	./$(VIEW_BINARY)
 
-docs:
+docs: $(README_HTML)
 	$(DOXYGEN) $(DOCS_DOXYFILE)
+
+$(README_HTML): README.md docs/assets/flies_in_pit.gif docs/assets/flies_around_ball.gif
+	@mkdir -p $(DOCS_OUTPUT)
+	$(PANDOC) README.md --standalone --embed-resources --metadata title="Real Engine" -o $@
 
 clean-docs:
 	rm -rf $(DOCS_OUTPUT)
