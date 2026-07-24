@@ -106,6 +106,13 @@ Build the engine and examples:
 make build
 ```
 
+Or build the runtime targets with CMake:
+
+```sh
+cmake -S . -B build/cmake
+cmake --build build/cmake
+```
+
 Run the pit example:
 
 ```sh

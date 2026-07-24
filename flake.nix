@@ -71,6 +71,7 @@
       devShells.${system}.default = pkgs.mkShell {
         nativeBuildInputs = with pkgs; [
           clang
+          cmake
           doxygen
           pandoc
           gnumake

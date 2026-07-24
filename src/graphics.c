@@ -33,6 +33,18 @@ typedef struct ScreenRecorder {
 
 static ScreenRecorder screen_recorder = {0};
 
+static void graphics_recording_disable(const char *reason) {
+    if(reason != NULL) {
+        console_write(LOG_ENGINE, "%s\n", reason);
+    }
+
+    if(screen_recorder.ffmpeg_pipe != NULL) {
+        (void)platform_process_close(screen_recorder.ffmpeg_pipe);
+    }
+
+    screen_recorder = (ScreenRecorder){0};
+}
+
 EngineResult graphics_tables_init(void) {
     if(AnimatedSpritePool_init(&animated_sprites_pool, 0).kind == ERROR_RESULT_ERROR) {
         graphics_tables_destroy();
@@ -76,6 +88,14 @@ bool graphics_recording_start(const char *output_path, int fps) {
     }
 
     if(output_path == NULL || fps <= 0) {
+        return false;
+    }
+
+    if(!platform_process_command_exists("ffmpeg")) {
+        console_write(
+            LOG_ENGINE,
+            "FFmpeg was not found; recording disabled\n"
+        );
         return false;
     }
 
@@ -127,11 +147,7 @@ static bool graphics_recording_open_ffmpeg(int width, int height) {
         platform_process_open_write(command);
 
     if(screen_recorder.ffmpeg_pipe == NULL) {
-        console_write(
-            LOG_ENGINE,
-            "Failed to start FFmpeg recording\n"
-        );
-
+        graphics_recording_disable("Failed to start FFmpeg recording; recording disabled");
         return false;
     }
 
@@ -161,13 +177,8 @@ static bool graphics_record_frame(void)
         sdl_renderer,
         &presentation_frect
     )) {
-        console_write(
-            LOG_ENGINE,
-            "Failed to get presentation rect: %s\n",
-            SDL_GetError()
-        );
-
-        return false;
+        graphics_recording_disable("Failed to get presentation rect; recording disabled");
+        return true;
     }
 
     SDL_Rect presentation_rect = {
@@ -189,13 +200,8 @@ static bool graphics_record_frame(void)
         );
 
     if(captured == NULL) {
-        console_write(
-            LOG_ENGINE,
-            "Failed to capture frame: %s\n",
-            SDL_GetError()
-        );
-
-        return false;
+        graphics_recording_disable("Failed to capture frame; recording disabled");
+        return true;
     }
 
     SDL_Surface *scaled =
@@ -209,13 +215,8 @@ static bool graphics_record_frame(void)
     SDL_DestroySurface(captured);
 
     if(scaled == NULL) {
-        console_write(
-            LOG_ENGINE,
-            "Failed to scale recorded frame: %s\n",
-            SDL_GetError()
-        );
-
-        return false;
+        graphics_recording_disable("Failed to scale recorded frame; recording disabled");
+        return true;
     }
 
     SDL_Surface *rgba_surface =
@@ -227,13 +228,8 @@ static bool graphics_record_frame(void)
     SDL_DestroySurface(scaled);
 
     if(rgba_surface == NULL) {
-        console_write(
-            LOG_ENGINE,
-            "Failed to convert recorded frame: %s\n",
-            SDL_GetError()
-        );
-
-        return false;
+        graphics_recording_disable("Failed to convert recorded frame; recording disabled");
+        return true;
     }
 
     if(screen_recorder.ffmpeg_pipe == NULL) {
@@ -242,7 +238,7 @@ static bool graphics_record_frame(void)
             RECORDING_HEIGHT
         )) {
             SDL_DestroySurface(rgba_surface);
-            return false;
+            return true;
         }
     }
 
@@ -262,13 +258,9 @@ static bool graphics_record_frame(void)
             bytes_per_row,
             screen_recorder.ffmpeg_pipe
         ) != bytes_per_row) {
-            console_write(
-                LOG_ENGINE,
-                "Failed writing recorded frame\n"
-            );
-
             SDL_DestroySurface(rgba_surface);
-            return false;
+            graphics_recording_disable("Failed writing recorded frame; recording disabled");
+            return true;
         }
     }
 
