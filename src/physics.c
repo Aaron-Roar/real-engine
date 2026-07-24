@@ -326,6 +326,22 @@ static EngineResult physics_get_live_index(Entity entity, EntityIndex *index) {
     return error_result_value(true);
 }
 
+static Vec2D physics_direction_between_positions(Position from, Position to) {
+    Vec2D delta = {
+        .x = to.x - from.x,
+        .y = to.y - from.y
+    };
+    float distance = math_vector_magnitude(delta);
+
+    if(distance <= 0.00001f) {
+        return (Vec2D){0};
+    }
+    return (Vec2D){
+        .x = delta.x / distance,
+        .y = delta.y / distance
+    };
+}
+
 //Entity
 EngineResult physics_set_velocity(Entity entity, Velocity v) {
     EntityIndex index;
@@ -338,6 +354,75 @@ EngineResult physics_set_velocity(Entity entity, Velocity v) {
     console_debug_write(LOG_ENGINE, "Set Entity: %d Velocity: {x: %f, y: %f}\n", entity, v.x, v.y);
     return error_result_value(true);
 }
+
+EngineResult physics_set_velocity_toward_position(Entity entity, float speed, Position position) {
+    EntityIndex index;
+    Vec2D direction;
+    EngineResult result = physics_get_live_index(entity, &index);
+
+    if(result.kind == ERROR_RESULT_ERROR) {
+        return result;
+    }
+    direction = physics_direction_between_positions(positions[index], position);
+    return physics_set_velocity(entity, (Velocity){
+        .x = direction.x * speed,
+        .y = direction.y * speed
+    });
+}
+
+EngineResult physics_set_velocity_toward_entity(Entity entity, float speed, Entity target) {
+    EntityIndex target_index;
+    EngineResult result = physics_get_live_index(target, &target_index);
+
+    if(result.kind == ERROR_RESULT_ERROR) {
+        return result;
+    }
+    return physics_set_velocity_toward_position(entity, speed, positions[target_index]);
+}
+
+EngineResult physics_set_velocity_away_from_position(Entity entity, float speed, Position position) {
+    return physics_set_velocity_toward_position(entity, -speed, position);
+}
+
+EngineResult physics_set_velocity_away_from_entity(Entity entity, float speed, Entity target) {
+    return physics_set_velocity_toward_entity(entity, -speed, target);
+}
+
+EngineResult physics_stop_entity(Entity entity) {
+    return physics_set_velocity(entity, (Velocity){0});
+}
+
+EngineResult physics_apply_impulse(Entity entity, Vec2D impulse) {
+    EntityIndex index;
+    Velocity velocity;
+    EngineResult result = physics_get_live_index(entity, &index);
+
+    if(result.kind == ERROR_RESULT_ERROR) {
+        return result;
+    }
+    if(!entity_index_has_components(index, MASS)) {
+        return error_result_error(ERROR_ENGINE_COMPONENT_MISSING);
+    }
+    if(mass[index] == 0.0f) {
+        return error_result_value(true);
+    }
+    velocity = (Velocity){
+        .x = velocities[index].x + impulse.x / mass[index],
+        .y = velocities[index].y + impulse.y / mass[index]
+    };
+    (void)VelocityPool_store_at(&velocities_pool, index, velocity);
+    console_debug_write(
+        LOG_ENGINE,
+        "Apply Entity: %d Impulse: {x: %f, y: %f} Velocity: {x: %f, y: %f}\n",
+        entity,
+        impulse.x,
+        impulse.y,
+        velocity.x,
+        velocity.y
+    );
+    return error_result_value(true);
+}
+
 EngineResult physics_set_position(Entity entity, Position p) {
     EntityIndex index;
     EngineResult result = physics_get_live_index(entity, &index);
@@ -397,11 +482,9 @@ EngineResult physics_set_acceleration(Entity entity, Acceleration a) {
     return error_result_value(true);
 }
 
-EngineResult physics_accelerate_toward_position(Entity entity, float acceleration_magnitude, Position position) {
+EngineResult physics_set_acceleration_toward_position(Entity entity, float acceleration_magnitude, Position position) {
     EntityIndex index;
-    Position current_position;
-    Vec2D delta;
-    float distance;
+    Vec2D direction;
     Acceleration acceleration;
     EngineResult result = physics_get_live_index(entity, &index);
 
@@ -409,21 +492,11 @@ EngineResult physics_accelerate_toward_position(Entity entity, float acceleratio
         return result;
     }
 
-    current_position = positions[index];
-    delta = (Vec2D){
-        .x = position.x - current_position.x,
-        .y = position.y - current_position.y
+    direction = physics_direction_between_positions(positions[index], position);
+    acceleration = (Acceleration){
+        .x = direction.x * acceleration_magnitude,
+        .y = direction.y * acceleration_magnitude
     };
-    distance = math_vector_magnitude(delta);
-
-    if(distance > 0.00001f) {
-        acceleration = (Acceleration){
-            .x = (delta.x / distance) * acceleration_magnitude,
-            .y = (delta.y / distance) * acceleration_magnitude
-        };
-    } else {
-        acceleration = (Acceleration){0};
-    }
 
     (void)AccelerationPool_store_at(&accelerations_pool, index, acceleration);
     console_debug_write(
@@ -439,14 +512,22 @@ EngineResult physics_accelerate_toward_position(Entity entity, float acceleratio
     return error_result_value(true);
 }
 
-EngineResult physics_accelerate_toward_entity(Entity entity, float acceleration_magnitude, Entity target) {
+EngineResult physics_set_acceleration_toward_entity(Entity entity, float acceleration_magnitude, Entity target) {
     EntityIndex target_index;
     EngineResult result = physics_get_live_index(target, &target_index);
 
     if(result.kind == ERROR_RESULT_ERROR) {
         return result;
     }
-    return physics_accelerate_toward_position(entity, acceleration_magnitude, positions[target_index]);
+    return physics_set_acceleration_toward_position(entity, acceleration_magnitude, positions[target_index]);
+}
+
+EngineResult physics_set_acceleration_away_from_position(Entity entity, float acceleration_magnitude, Position position) {
+    return physics_set_acceleration_toward_position(entity, -acceleration_magnitude, position);
+}
+
+EngineResult physics_set_acceleration_away_from_entity(Entity entity, float acceleration_magnitude, Entity target) {
+    return physics_set_acceleration_toward_entity(entity, -acceleration_magnitude, target);
 }
 
 EntityResult physics_set_torque(Entity entity, Torque t) {
@@ -558,7 +639,7 @@ EngineResult physics_set_dynamic(Entity entity) {
     if(result.kind == ERROR_RESULT_ERROR) {
         return result;
     }
-    console_debug_write(LOG_ENGINE, "Set Entity: %d to STATIC\n", entity);
+    console_debug_write(LOG_ENGINE, "Set Entity: %d to DYNAMIC\n", entity);
     return error_result_value(true);
 }
 EngineResult physics_set_static(Entity entity) {
@@ -576,9 +657,40 @@ EngineResult physics_set_static(Entity entity) {
     if(result.kind == ERROR_RESULT_ERROR) {
         return result;
     }
-    console_debug_write(LOG_ENGINE, "Set Entity: %d to DYNAMIC\n", entity);
+    console_debug_write(LOG_ENGINE, "Set Entity: %d to STATIC\n", entity);
     return error_result_value(true);
 }
+
+EngineResult physics_hold_entity(Entity entity) {
+    EntityIndex index;
+    EngineResult result = physics_get_live_index(entity, &index);
+
+    if(result.kind == ERROR_RESULT_ERROR) {
+        return result;
+    }
+    result = entity_add_components(entity, HOLD);
+    if(result.kind == ERROR_RESULT_ERROR) {
+        return result;
+    }
+    console_debug_write(LOG_ENGINE, "Hold Entity: %d\n", entity);
+    return error_result_value(true);
+}
+
+EngineResult physics_unhold_entity(Entity entity) {
+    EntityIndex index;
+    EngineResult result = physics_get_live_index(entity, &index);
+
+    if(result.kind == ERROR_RESULT_ERROR) {
+        return result;
+    }
+    result = entity_delete_components(entity, HOLD);
+    if(result.kind == ERROR_RESULT_ERROR) {
+        return result;
+    }
+    console_debug_write(LOG_ENGINE, "Unhold Entity: %d\n", entity);
+    return error_result_value(true);
+}
+
 EngineResult physics_set_angle_lock(Entity entity, Orientation min, Orientation max) {
     EntityIndex index;
     EngineResult result = physics_get_live_index(entity, &index);

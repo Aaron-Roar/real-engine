@@ -80,6 +80,8 @@ typedef enum {
     PARTICLE                    = 1 << 16,
     /** Entity has an animated sprite. */
     ANIMATED_SPRITE             = 1 << 17,
+    /** Entity keeps physics values but skips physics updates. */
+    HOLD                        = 1 << 18,
 } Component;
 
 /** Parent entity id alias. */

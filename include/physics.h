@@ -239,11 +239,27 @@ Vec1D physics_circle_moment_of_inertia(Shape circle, Mass mass_value);
 /** Set an entity's base linear acceleration. */
 EngineResult physics_set_acceleration(Entity entity, Acceleration a);
 /** Set acceleration toward a world position using a scalar magnitude. */
-EngineResult physics_accelerate_toward_position(Entity entity, float acceleration_magnitude, Position position);
+EngineResult physics_set_acceleration_toward_position(Entity entity, float acceleration_magnitude, Position position);
 /** Set acceleration toward another entity's current world position. */
-EngineResult physics_accelerate_toward_entity(Entity entity, float acceleration_magnitude, Entity target);
+EngineResult physics_set_acceleration_toward_entity(Entity entity, float acceleration_magnitude, Entity target);
+/** Set acceleration away from a world position using a scalar magnitude. */
+EngineResult physics_set_acceleration_away_from_position(Entity entity, float acceleration_magnitude, Position position);
+/** Set acceleration away from another entity's current world position. */
+EngineResult physics_set_acceleration_away_from_entity(Entity entity, float acceleration_magnitude, Entity target);
 /** Set an entity's linear velocity. */
 EngineResult physics_set_velocity(Entity entity, Velocity v);
+/** Set velocity toward a world position using a scalar speed. */
+EngineResult physics_set_velocity_toward_position(Entity entity, float speed, Position position);
+/** Set velocity toward another entity's current world position. */
+EngineResult physics_set_velocity_toward_entity(Entity entity, float speed, Entity target);
+/** Set velocity away from a world position using a scalar speed. */
+EngineResult physics_set_velocity_away_from_position(Entity entity, float speed, Position position);
+/** Set velocity away from another entity's current world position. */
+EngineResult physics_set_velocity_away_from_entity(Entity entity, float speed, Entity target);
+/** Set an entity's velocity to zero. */
+EngineResult physics_stop_entity(Entity entity);
+/** Apply an immediate linear impulse to an entity's velocity. */
+EngineResult physics_apply_impulse(Entity entity, Vec2D impulse);
 /** Set an entity's world position. */
 EngineResult physics_set_position(Entity entity, Position p);
 /** Set an entity's mass and add the MASS component. */
@@ -266,6 +282,10 @@ EngineResult physics_set_restitution(Entity entity, Restitution restitution);
 EngineResult physics_set_dynamic(Entity entity);
 /** Mark an entity static and remove DYNAMIC. */
 EngineResult physics_set_static(Entity entity);
+/** Add HOLD so physics update stages preserve current values. */
+EngineResult physics_hold_entity(Entity entity);
+/** Remove HOLD without changing STATIC or DYNAMIC state. */
+EngineResult physics_unhold_entity(Entity entity);
 /** Add or update an angle lock constraint. */
 EngineResult physics_set_angle_lock(Entity entity, Orientation min, Orientation max);
 /** Add or update an axis lock constraint. */

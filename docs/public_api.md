@@ -684,10 +684,10 @@ Sets an entity acceleration component value.
 
 **Returns:** EngineResult describing success or failure.
 
-### `rohr_physics_accelerate_toward_position`
+### `rohr_physics_set_acceleration_toward_position`
 
 ```c
-EngineResult rohr_physics_accelerate_toward_position(Entity entity, float acceleration_magnitude, Position position);
+EngineResult rohr_physics_set_acceleration_toward_position(Entity entity, float acceleration_magnitude, Position position);
 ```
 
 Sets entity acceleration toward a world position.
@@ -700,10 +700,10 @@ Sets entity acceleration toward a world position.
 
 **Returns:** EngineResult describing success or failure.
 
-### `rohr_physics_accelerate_toward_entity`
+### `rohr_physics_set_acceleration_toward_entity`
 
 ```c
-EngineResult rohr_physics_accelerate_toward_entity(Entity entity, float acceleration_magnitude, Entity target);
+EngineResult rohr_physics_set_acceleration_toward_entity(Entity entity, float acceleration_magnitude, Entity target);
 ```
 
 Sets entity acceleration toward another entity's current world position.
@@ -713,6 +713,38 @@ Sets entity acceleration toward another entity's current world position.
 | `entity` | Entity to modify. |
 | `acceleration_magnitude` | Acceleration magnitude to apply along the direction to target. |
 | `target` | Target entity. |
+
+**Returns:** EngineResult describing success or failure.
+
+### `rohr_physics_set_acceleration_away_from_position`
+
+```c
+EngineResult rohr_physics_set_acceleration_away_from_position(Entity entity, float acceleration_magnitude, Position position);
+```
+
+Sets entity acceleration away from a world position.
+
+| Parameter | Description |
+| --- | --- |
+| `entity` | Entity to modify. |
+| `acceleration_magnitude` | Acceleration magnitude to apply away from position. |
+| `position` | Source world position. |
+
+**Returns:** EngineResult describing success or failure.
+
+### `rohr_physics_set_acceleration_away_from_entity`
+
+```c
+EngineResult rohr_physics_set_acceleration_away_from_entity(Entity entity, float acceleration_magnitude, Entity target);
+```
+
+Sets entity acceleration away from another entity's current world position.
+
+| Parameter | Description |
+| --- | --- |
+| `entity` | Entity to modify. |
+| `acceleration_magnitude` | Acceleration magnitude to apply away from target. |
+| `target` | Source entity. |
 
 **Returns:** EngineResult describing success or failure.
 
@@ -728,6 +760,99 @@ Sets an entity velocity component value.
 | --- | --- |
 | `entity` | Entity to modify. |
 | `v` | Velocity value. |
+
+**Returns:** EngineResult describing success or failure.
+
+### `rohr_physics_set_velocity_toward_position`
+
+```c
+EngineResult rohr_physics_set_velocity_toward_position(Entity entity, float speed, Position position);
+```
+
+Sets entity velocity toward a world position.
+
+| Parameter | Description |
+| --- | --- |
+| `entity` | Entity to modify. |
+| `speed` | Speed to apply along the direction to position. |
+| `position` | Target world position. |
+
+**Returns:** EngineResult describing success or failure.
+
+### `rohr_physics_set_velocity_toward_entity`
+
+```c
+EngineResult rohr_physics_set_velocity_toward_entity(Entity entity, float speed, Entity target);
+```
+
+Sets entity velocity toward another entity's current world position.
+
+| Parameter | Description |
+| --- | --- |
+| `entity` | Entity to modify. |
+| `speed` | Speed to apply along the direction to target. |
+| `target` | Target entity. |
+
+**Returns:** EngineResult describing success or failure.
+
+### `rohr_physics_set_velocity_away_from_position`
+
+```c
+EngineResult rohr_physics_set_velocity_away_from_position(Entity entity, float speed, Position position);
+```
+
+Sets entity velocity away from a world position.
+
+| Parameter | Description |
+| --- | --- |
+| `entity` | Entity to modify. |
+| `speed` | Speed to apply away from position. |
+| `position` | Source world position. |
+
+**Returns:** EngineResult describing success or failure.
+
+### `rohr_physics_set_velocity_away_from_entity`
+
+```c
+EngineResult rohr_physics_set_velocity_away_from_entity(Entity entity, float speed, Entity target);
+```
+
+Sets entity velocity away from another entity's current world position.
+
+| Parameter | Description |
+| --- | --- |
+| `entity` | Entity to modify. |
+| `speed` | Speed to apply away from target. |
+| `target` | Source entity. |
+
+**Returns:** EngineResult describing success or failure.
+
+### `rohr_physics_stop_entity`
+
+```c
+EngineResult rohr_physics_stop_entity(Entity entity);
+```
+
+Sets an entity velocity to zero.
+
+| Parameter | Description |
+| --- | --- |
+| `entity` | Entity to modify. |
+
+**Returns:** EngineResult describing success or failure.
+
+### `rohr_physics_apply_impulse`
+
+```c
+EngineResult rohr_physics_apply_impulse(Entity entity, Vec2D impulse);
+```
+
+Applies an immediate linear impulse to an entity velocity.
+
+| Parameter | Description |
+| --- | --- |
+| `entity` | Entity to modify. |
+| `impulse` | Impulse vector. |
 
 **Returns:** EngineResult describing success or failure.
 
@@ -886,6 +1011,34 @@ EngineResult rohr_physics_set_static(Entity entity);
 ```
 
 Marks an entity as static for physics simulation.
+
+| Parameter | Description |
+| --- | --- |
+| `entity` | Entity to modify. |
+
+**Returns:** EngineResult describing success or failure.
+
+### `rohr_physics_hold_entity`
+
+```c
+EngineResult rohr_physics_hold_entity(Entity entity);
+```
+
+Adds HOLD so physics update stages preserve current values.
+
+| Parameter | Description |
+| --- | --- |
+| `entity` | Entity to modify. |
+
+**Returns:** EngineResult describing success or failure.
+
+### `rohr_physics_unhold_entity`
+
+```c
+EngineResult rohr_physics_unhold_entity(Entity entity);
+```
+
+Removes HOLD without changing STATIC or DYNAMIC state.
 
 | Parameter | Description |
 | --- | --- |

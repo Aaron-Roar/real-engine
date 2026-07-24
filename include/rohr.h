@@ -387,7 +387,7 @@ EngineResult rohr_physics_set_acceleration(Entity entity, Acceleration a);
  * @param position Target world position.
  * @return EngineResult describing success or failure.
  */
-EngineResult rohr_physics_accelerate_toward_position(Entity entity, float acceleration_magnitude, Position position);
+EngineResult rohr_physics_set_acceleration_toward_position(Entity entity, float acceleration_magnitude, Position position);
 
 /**
  * @brief Sets entity acceleration toward another entity's current world position.
@@ -396,7 +396,25 @@ EngineResult rohr_physics_accelerate_toward_position(Entity entity, float accele
  * @param target Target entity.
  * @return EngineResult describing success or failure.
  */
-EngineResult rohr_physics_accelerate_toward_entity(Entity entity, float acceleration_magnitude, Entity target);
+EngineResult rohr_physics_set_acceleration_toward_entity(Entity entity, float acceleration_magnitude, Entity target);
+
+/**
+ * @brief Sets entity acceleration away from a world position.
+ * @param entity Entity to modify.
+ * @param acceleration_magnitude Acceleration magnitude to apply away from position.
+ * @param position Source world position.
+ * @return EngineResult describing success or failure.
+ */
+EngineResult rohr_physics_set_acceleration_away_from_position(Entity entity, float acceleration_magnitude, Position position);
+
+/**
+ * @brief Sets entity acceleration away from another entity's current world position.
+ * @param entity Entity to modify.
+ * @param acceleration_magnitude Acceleration magnitude to apply away from target.
+ * @param target Source entity.
+ * @return EngineResult describing success or failure.
+ */
+EngineResult rohr_physics_set_acceleration_away_from_entity(Entity entity, float acceleration_magnitude, Entity target);
 
 /**
  * @brief Sets an entity velocity component value.
@@ -405,6 +423,57 @@ EngineResult rohr_physics_accelerate_toward_entity(Entity entity, float accelera
  * @return EngineResult describing success or failure.
  */
 EngineResult rohr_physics_set_velocity(Entity entity, Velocity v);
+
+/**
+ * @brief Sets entity velocity toward a world position.
+ * @param entity Entity to modify.
+ * @param speed Speed to apply along the direction to position.
+ * @param position Target world position.
+ * @return EngineResult describing success or failure.
+ */
+EngineResult rohr_physics_set_velocity_toward_position(Entity entity, float speed, Position position);
+
+/**
+ * @brief Sets entity velocity toward another entity's current world position.
+ * @param entity Entity to modify.
+ * @param speed Speed to apply along the direction to target.
+ * @param target Target entity.
+ * @return EngineResult describing success or failure.
+ */
+EngineResult rohr_physics_set_velocity_toward_entity(Entity entity, float speed, Entity target);
+
+/**
+ * @brief Sets entity velocity away from a world position.
+ * @param entity Entity to modify.
+ * @param speed Speed to apply away from position.
+ * @param position Source world position.
+ * @return EngineResult describing success or failure.
+ */
+EngineResult rohr_physics_set_velocity_away_from_position(Entity entity, float speed, Position position);
+
+/**
+ * @brief Sets entity velocity away from another entity's current world position.
+ * @param entity Entity to modify.
+ * @param speed Speed to apply away from target.
+ * @param target Source entity.
+ * @return EngineResult describing success or failure.
+ */
+EngineResult rohr_physics_set_velocity_away_from_entity(Entity entity, float speed, Entity target);
+
+/**
+ * @brief Sets an entity velocity to zero.
+ * @param entity Entity to modify.
+ * @return EngineResult describing success or failure.
+ */
+EngineResult rohr_physics_stop_entity(Entity entity);
+
+/**
+ * @brief Applies an immediate linear impulse to an entity velocity.
+ * @param entity Entity to modify.
+ * @param impulse Impulse vector.
+ * @return EngineResult describing success or failure.
+ */
+EngineResult rohr_physics_apply_impulse(Entity entity, Vec2D impulse);
 
 /**
  * @brief Sets an entity position component value.
@@ -490,6 +559,20 @@ EngineResult rohr_physics_set_dynamic(Entity entity);
  * @return EngineResult describing success or failure.
  */
 EngineResult rohr_physics_set_static(Entity entity);
+
+/**
+ * @brief Adds HOLD so physics update stages preserve current values.
+ * @param entity Entity to modify.
+ * @return EngineResult describing success or failure.
+ */
+EngineResult rohr_physics_hold_entity(Entity entity);
+
+/**
+ * @brief Removes HOLD without changing STATIC or DYNAMIC state.
+ * @param entity Entity to modify.
+ * @return EngineResult describing success or failure.
+ */
+EngineResult rohr_physics_unhold_entity(Entity entity);
 
 /**
  * @brief Locks an entity orientation between minimum and maximum angles.
