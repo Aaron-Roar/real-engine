@@ -1193,19 +1193,24 @@ void print_editor_controls(void)
 }
 
 
-void level_editor_init() {
+EngineResult level_editor_init() {
     EntityResult selection_result = entity_add();
+    EngineResult result;
+
     if(selection_result.kind == ERROR_RESULT_ERROR) {
-        console_write(LOG_ENGINE, "Error: failed to initialize level editor selection: %s\n", error_string(selection_result.result.error));
-        return;
+        return error_result_error(selection_result.result.error);
     }
     selection = selection_result.result.value;
     physics_set_static(selection);
     physics_set_position(selection, (Vec2D){80, 390});
     Shape selection_hit_box = math_create_circle(0.1, 5);
     physics_set_hitbox(selection, selection_hit_box);
-    entity_delete_components(selection, COLLISION);
+    result = entity_delete_components(selection, COLLISION);
+    if(result.kind == ERROR_RESULT_ERROR) {
+        return result;
+    }
     print_editor_controls();
+    return error_result_value(true);
 }
 
 void level_editor_update() {

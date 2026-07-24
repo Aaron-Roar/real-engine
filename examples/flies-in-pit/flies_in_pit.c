@@ -56,7 +56,12 @@ int main() {
         return 1;
     }
     engine_set_dt(1/(float)120);
-    level_editor_init();
+    EngineResult level_editor_result = level_editor_init();
+    if(level_editor_result.kind == ERROR_RESULT_ERROR) {
+        console_write(LOG_ENGINE, "Error: failed to initialize level editor: %s\n", error_string(level_editor_result.result.error));
+        engine_shutdown();
+        return 1;
+    }
     EngineResult graphics_result = graphics_start();
     if(graphics_result.kind == ERROR_RESULT_ERROR) {
         console_write(LOG_ENGINE, "Error: failed to initialize graphics: %s\n", error_string(graphics_result.result.error));

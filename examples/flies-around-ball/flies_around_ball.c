@@ -52,7 +52,12 @@ int main() {
         console_write(LOG_ENGINE, "Error: failed to initialize engine: %s\n", error_string(engine_result.result.error));
         return 1;
     }
-    level_editor_init();
+    EngineResult level_editor_result = level_editor_init();
+    if(level_editor_result.kind == ERROR_RESULT_ERROR) {
+        console_write(LOG_ENGINE, "Error: failed to initialize level editor: %s\n", error_string(level_editor_result.result.error));
+        engine_shutdown();
+        return 1;
+    }
     SDL_Event event = {0};
     EngineResult graphics_result = graphics_start();
     if(graphics_result.kind == ERROR_RESULT_ERROR) {

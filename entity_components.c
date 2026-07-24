@@ -198,7 +198,6 @@ EntityResult entity_add() {
         reused_slot = true;
     } else {
         if(entity_id_pool.next_id > MAX_ENTITIES) {
-            console_write(LOG_ENGINE, "Error: failed to add entity, MAX_ENTITIES exceeded\n");
             return ERROR_RESULT_MAKE_ERROR(EntityResult, ERROR_ENGINE_MAX_ENTITIES_EXCEEDED);
         }
         slot = entity_id_pool.next_id;
@@ -211,7 +210,6 @@ EntityResult entity_add() {
         reused_index = true;
     } else {
         if(entity_id_pool.next_index >= MAX_ENTITIES) {
-            console_write(LOG_ENGINE, "Error: failed to add entity, MAX_ENTITIES exceeded\n");
             return ERROR_RESULT_MAKE_ERROR(EntityResult, ERROR_ENGINE_MAX_ENTITIES_EXCEEDED);
         }
         index = entity_id_pool.next_index;
@@ -230,7 +228,6 @@ EntityResult entity_add() {
         result = grid_tables_ensure_capacity(required_capacity);
     }
     if(result.kind == ERROR_RESULT_ERROR) {
-        console_write(LOG_ENGINE, "Error: failed to add entity, table expansion failed\n");
         if(reused_slot && entity_id_pool.free_count < MAX_ENTITIES) {
             entity_id_pool.free_ids[entity_id_pool.free_count] = slot;
             entity_id_pool.free_count += 1;
@@ -285,17 +282,15 @@ static void entity_clear_index(EntityIndex index) {
     }
 }
 
-void entity_delete(Entity entity) {
+EngineResult entity_delete(Entity entity) {
     EntityIndex index;
     uint32_t slot;
 
     if(!entity_id_valid(entity)) {
-        console_write(LOG_ENGINE, "Error: failed to delete entity %u, entity exceeds MAX_ENTITIES\n", entity);
-        return;
+        return error_result_error(ERROR_ENGINE_INVALID_ENTITY);
     }
     if(!entity_get_index(entity, &index) || !entity_index_is_alive(index)) {
-        console_write(LOG_ENGINE, "Error: failed to delete entity %u, entity does not exist\n", entity);
-        return;
+        return error_result_error(ERROR_ENGINE_ENTITY_NOT_FOUND);
     }
     entity_clear_index(index);
     slot = entity_slot(entity);
@@ -317,34 +312,33 @@ void entity_delete(Entity entity) {
     if(entity_id_pool.live_count > 0) {
         entity_id_pool.live_count -= 1;
     }
+    return error_result_value(true);
 }
 
-void entity_add_components(Entity entity, CMask mask) {
+EngineResult entity_add_components(Entity entity, CMask mask) {
     EntityIndex index;
 
     if(!entity_id_valid(entity)) {
-        console_write(LOG_ENGINE, "Error: failed to add components to entity %u, entity exceeds MAX_ENTITIES\n", entity);
-        return;
+        return error_result_error(ERROR_ENGINE_INVALID_ENTITY);
     }
     if(!entity_get_index(entity, &index) || !entity_index_is_alive(index)) {
-        console_write(LOG_ENGINE, "Error: failed to add components to entity %u, entity does not exist\n", entity);
-        return;
+        return error_result_error(ERROR_ENGINE_ENTITY_NOT_FOUND);
     }
     (void)EntityMaskPool_store_at(&entity_mask_pool, index, entity_mask[index] | mask);
+    return error_result_value(true);
 }
 
-void entity_delete_components(Entity entity, CMask mask) {
+EngineResult entity_delete_components(Entity entity, CMask mask) {
     EntityIndex index;
 
     if(!entity_id_valid(entity)) {
-        console_write(LOG_ENGINE, "Error: failed to delete components from entity %u, entity exceeds MAX_ENTITIES\n", entity);
-        return;
+        return error_result_error(ERROR_ENGINE_INVALID_ENTITY);
     }
     if(!entity_get_index(entity, &index) || !entity_index_is_alive(index)) {
-        console_write(LOG_ENGINE, "Error: failed to delete components from entity %u, entity does not exist\n", entity);
-        return;
+        return error_result_error(ERROR_ENGINE_ENTITY_NOT_FOUND);
     }
     (void)EntityMaskPool_store_at(&entity_mask_pool, index, entity_mask[index] & ~mask);
+    return error_result_value(true);
 }
 
 bool entity_has_components(Entity entity, CMask components) {
@@ -370,62 +364,79 @@ bool entity_index_has_components(EntityIndex index, CMask components) {
 }
 
 
-void entity_set_child(Entity parent, Entity child) {
+EngineResult entity_set_child(Entity parent, Entity child) {
     EntityIndex parent_index;
     EntityIndex child_index;
+    EngineResult result;
 
     if(!entity_get_index(parent, &parent_index) || !entity_get_index(child, &child_index)) {
-        return;
+        return error_result_error(ERROR_ENGINE_INVALID_ENTITY);
     }
     if(!entity_index_is_alive(parent_index) || !entity_index_is_alive(child_index)) {
-        //Error parent or child not alive
-        return;
+        return error_result_error(ERROR_ENGINE_ENTITY_NOT_FOUND);
     }
-    entity_add_components(parent, HAS_CHILDREN);
-    entity_add_components(child, HAS_PARENT);
+    result = entity_add_components(parent, HAS_CHILDREN);
+    if(result.kind == ERROR_RESULT_ERROR) {
+        return result;
+    }
+    result = entity_add_components(child, HAS_PARENT);
+    if(result.kind == ERROR_RESULT_ERROR) {
+        return result;
+    }
     (void)ChildrenPool_store_at(&children_pool, parent_index, children[parent_index]);
     children[parent_index].entities[child_index] = child;
     (void)ParentPool_store_at(&parents_pool, child_index, parent);
+    return error_result_value(true);
 }
 
-void entity_set_parent(Entity child, Entity parent) {
+EngineResult entity_set_parent(Entity child, Entity parent) {
     EntityIndex parent_index;
     EntityIndex child_index;
+    EngineResult result;
 
     if(!entity_get_index(parent, &parent_index) || !entity_get_index(child, &child_index)) {
-        return;
+        return error_result_error(ERROR_ENGINE_INVALID_ENTITY);
     }
     if(!entity_index_is_alive(parent_index) || !entity_index_is_alive(child_index)) {
-        //Error parent or child not alive
-        return;
+        return error_result_error(ERROR_ENGINE_ENTITY_NOT_FOUND);
     }
-    entity_add_components(parent, HAS_CHILDREN);
-    entity_add_components(child, HAS_PARENT);
+    result = entity_add_components(parent, HAS_CHILDREN);
+    if(result.kind == ERROR_RESULT_ERROR) {
+        return result;
+    }
+    result = entity_add_components(child, HAS_PARENT);
+    if(result.kind == ERROR_RESULT_ERROR) {
+        return result;
+    }
     (void)ChildrenPool_store_at(&children_pool, parent_index, children[parent_index]);
     children[parent_index].entities[child_index] = child;
     (void)ParentPool_store_at(&parents_pool, child_index, parent);
+    return error_result_value(true);
 }
 
-void entity_remove_parent(Entity child) {
+EngineResult entity_remove_parent(Entity child) {
     EntityIndex child_index;
     Entity parent;
     EntityIndex parent_index;
+    EngineResult result;
 
     if(!entity_get_index(child, &child_index) || !entity_index_is_alive(child_index)) {
-        //Error
-        return;
+        return error_result_error(ERROR_ENGINE_INVALID_ENTITY);
     }
     parent = parents[child_index];
     if(!entity_get_index(parent, &parent_index) || !entity_index_is_alive(parent_index)) {
         //Warning no parent is currently set
-        return;
+        return error_result_value(true);
     }
     //Removing this child from the parent
     children[parent_index].entities[child_index] = ENTITY_INVALID;
     //If the parent has no more children remove the flag
     for(int i = 0; i < MAX_ENTITIES; i += 1) {
         if(children[parent_index].entities[i] != ENTITY_INVALID) {
-            entity_delete_components(parent, HAS_CHILDREN);
+            result = entity_delete_components(parent, HAS_CHILDREN);
+            if(result.kind == ERROR_RESULT_ERROR) {
+                return result;
+            }
         }
     }
 
@@ -433,27 +444,34 @@ void entity_remove_parent(Entity child) {
     if(child_index < parents_pool.capacity && parents_pool.used[child_index]) {
         (void)ParentPool_release_at(&parents_pool, child_index);
     }
-    entity_delete_components(child, HAS_PARENT);
+    result = entity_delete_components(child, HAS_PARENT);
+    if(result.kind == ERROR_RESULT_ERROR) {
+        return result;
+    }
+    return error_result_value(true);
 }
 
-void entity_remove_child(Entity parent, Entity child) {
+EngineResult entity_remove_child(Entity parent, Entity child) {
     EntityIndex parent_index;
     EntityIndex child_index;
+    EngineResult result;
 
     if(!entity_get_index(parent, &parent_index) || !entity_index_is_alive(parent_index)) {
-        //Error
-        return;
+        return error_result_error(ERROR_ENGINE_INVALID_ENTITY);
     }
     if(!entity_get_index(child, &child_index) || !entity_index_is_alive(child_index)) {
         //Warning this child is currently not alive
-        return;
+        return error_result_value(true);
     }
     //Removing the child from the parent
     children[parent_index].entities[child_index] = ENTITY_INVALID;
     //If the parent has no more children remove the flag
     for(int i = 0; i < MAX_ENTITIES; i += 1) {
         if(children[parent_index].entities[i] != ENTITY_INVALID) {
-            entity_delete_components(parent, HAS_CHILDREN);
+            result = entity_delete_components(parent, HAS_CHILDREN);
+            if(result.kind == ERROR_RESULT_ERROR) {
+                return result;
+            }
         }
     }
 
@@ -461,55 +479,67 @@ void entity_remove_child(Entity parent, Entity child) {
     if(child_index < parents_pool.capacity && parents_pool.used[child_index]) {
         (void)ParentPool_release_at(&parents_pool, child_index);
     }
-    entity_delete_components(child, HAS_PARENT);
+    result = entity_delete_components(child, HAS_PARENT);
+    if(result.kind == ERROR_RESULT_ERROR) {
+        return result;
+    }
 
+    return error_result_value(true);
 }
 
-Children entity_get_children(Entity entity) {
+ChildrenResult entity_get_children(Entity entity) {
     EntityIndex index;
 
     if(!entity_get_index(entity, &index) || !entity_index_is_alive(index)) {
-        //Error
-        return (Children){0};
+        return ERROR_RESULT_MAKE_ERROR(ChildrenResult, ERROR_ENGINE_INVALID_ENTITY);
     }
-    return children[index];
+    return ERROR_RESULT_MAKE_VALUE(ChildrenResult, children[index]);
 }
-Parent entity_get_parent(Entity entity) {
-    EntityIndex index;
-
-    if(!entity_get_index(entity, &index)) {
-        return ENTITY_INVALID;
-    }
-    return parents[index];
-}
-
-
-
-
-
-void entity_set_life_time(Entity entity, Time expirey_time, Tick expirey_tick) {
+ParentResult entity_get_parent(Entity entity) {
     EntityIndex index;
 
     if(!entity_get_index(entity, &index) || !entity_index_is_alive(index)) {
-        //Error
-        return;
+        return ERROR_RESULT_MAKE_ERROR(ParentResult, ERROR_ENGINE_INVALID_ENTITY);
+    }
+    return ERROR_RESULT_MAKE_VALUE(ParentResult, parents[index]);
+}
+
+
+
+
+
+EngineResult entity_set_life_time(Entity entity, Time expirey_time, Tick expirey_tick) {
+    EntityIndex index;
+    EngineResult result;
+
+    if(!entity_get_index(entity, &index) || !entity_index_is_alive(index)) {
+        return error_result_error(ERROR_ENGINE_INVALID_ENTITY);
     }
 
-    entity_add_components(entity, LIFETIME);
+    result = entity_add_components(entity, LIFETIME);
+    if(result.kind == ERROR_RESULT_ERROR) {
+        return result;
+    }
     (void)LifeTimePool_store_at(&life_times_pool, index, (LifeTime){
         .expirey_time = expirey_time,
         .expirey_tick = expirey_tick
     });
+    return error_result_value(true);
 }
 
-void entity_remove_life_time(Entity entity) {
+EngineResult entity_remove_life_time(Entity entity) {
     EntityIndex index;
+    EngineResult result;
 
     if(!entity_get_index(entity, &index)) {
-        return;
+        return error_result_error(ERROR_ENGINE_INVALID_ENTITY);
     }
-    entity_delete_components(entity, LIFETIME);
+    result = entity_delete_components(entity, LIFETIME);
+    if(result.kind == ERROR_RESULT_ERROR) {
+        return result;
+    }
     if(index < life_times_pool.capacity && life_times_pool.used[index]) {
         (void)LifeTimePool_release_at(&life_times_pool, index);
     }
+    return error_result_value(true);
 }

@@ -111,7 +111,7 @@ AnimatedSprite graphics_create_animated_sprite(AnimationAsset asset_ptr, Scale s
 void graphics_update_sprite_frame(AnimatedSprite *sprite, Tick current_tick, Time current_time);
 void graphics_draw_texture(TextureAsset texture_asset, Position pos, Orientation ort);
 void graphics_draw_sprite(AnimatedSprite sprite, Position pos, Orientation ort);
-void graphics_add_animated_sprite(Entity entity, AnimatedSprite sprite);
+EngineResult graphics_add_animated_sprite(Entity entity, AnimatedSprite sprite);
 void graphics_draw_animated_sprites();
 void graphics_update_sprite_frames(Tick current_tick, Time current_time);
 void graphics_scale_textures(Entity entity, Scale scale);

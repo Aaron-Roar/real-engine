@@ -741,14 +741,19 @@ void graphics_draw_sprite(AnimatedSprite sprite, Position pos, Orientation ort) 
     graphics_draw_texture(asset, pos, ort);
 }
 
-void graphics_add_animated_sprite(Entity entity, AnimatedSprite sprite) {
+EngineResult graphics_add_animated_sprite(Entity entity, AnimatedSprite sprite) {
     EntityIndex index;
+    EngineResult result;
 
     if(!entity_get_index(entity, &index) || !entity_index_is_alive(index)) {
-        return;
+        return error_result_error(ERROR_ENGINE_INVALID_ENTITY);
     }
     (void)AnimatedSpritePool_store_at(&animated_sprites_pool, index, sprite);
-    entity_add_components(entity, ANIMATED_SPRITE);
+    result = entity_add_components(entity, ANIMATED_SPRITE);
+    if(result.kind == ERROR_RESULT_ERROR) {
+        return result;
+    }
+    return error_result_value(true);
 }
 
 void graphics_draw_animated_sprites() {
