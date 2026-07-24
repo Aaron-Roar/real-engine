@@ -11,5 +11,5 @@ a.out
 .cache/
 build/
 *.mp4
-#!docs/assets/*.mp4
+!docs/assets/*.mp4
 AGENTS.md

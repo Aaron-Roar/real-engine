@@ -27,6 +27,8 @@ PANDOC := pandoc
 DOCS_DOXYFILE := docs/Doxyfile
 DOCS_OUTPUT := build/docs
 README_HTML := $(DOCS_OUTPUT)/readme.html
+STATIC_OUTPUT := build/static
+STATIC_README_HTML := $(STATIC_OUTPUT)/readme.html
 
 ASSET_SRC := \
 	examples/test-assets/elder-fly/elderfly_descriptors.c
@@ -35,7 +37,7 @@ PIT_BINARY := build/examples/flies_in_pit
 BALL_BINARY := build/examples/flies_around_ball
 VIEW_BINARY := build/examples/view_port
 
-.PHONY: help all build build-engine build-example-pit build-example-ball run-pit run-ball docs clean-docs clean
+.PHONY: help all build build-engine build-example-pit build-example-ball run-pit run-ball docs static-readme clean-docs clean
 
 help:
 	@printf '%s\n' \
@@ -76,6 +78,10 @@ help:
 		"  docs" \
 		"		  Builds Doxygen HTML docs into build/docs/html" \
 		"		  Renders README.md into build/docs/readme.html" \
+		"" \
+		"  static-readme" \
+		"		  Renders a standalone README preview into build/static/readme.html" \
+		"		  Copies linked README MP4 assets into build/static/docs/assets/" \
 		"" \
 		"  clean-docs" \
 		"		  Removes generated documentation" \
@@ -130,6 +136,14 @@ docs: $(README_HTML)
 $(README_HTML): README.md docs/assets/flies_in_pit.gif docs/assets/flies_around_ball.gif
 	@mkdir -p $(DOCS_OUTPUT)
 	$(PANDOC) README.md --standalone --embed-resources --metadata title="Rohr Engine" -o $@
+
+static-readme: $(STATIC_README_HTML)
+
+$(STATIC_README_HTML): README.md docs/assets/flies_in_pit.gif docs/assets/flies_around_ball.gif docs/assets/flies_in_pit.mp4 docs/assets/flies_around_ball.mp4
+	@mkdir -p $(STATIC_OUTPUT)/docs/assets
+	$(PANDOC) README.md --standalone --embed-resources --metadata title="Rohr Engine" -o $@
+	cp docs/assets/flies_in_pit.mp4 $(STATIC_OUTPUT)/docs/assets/
+	cp docs/assets/flies_around_ball.mp4 $(STATIC_OUTPUT)/docs/assets/
 
 clean-docs:
 	rm -rf $(DOCS_OUTPUT)

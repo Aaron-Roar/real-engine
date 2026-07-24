@@ -34,6 +34,7 @@ configuration.
 
 ## Useful Pages
 
-- @ref architecture
-- @ref entity_ids
-- @ref errors
+- [Architecture](architecture.md)
+- [Entity ids](entity_ids.md)
+- [Error handling](errors.md)
+- [Public API header](../include/rohr.h)

@@ -146,6 +146,7 @@ Readable Markdown docs are committed in the repo:
 * [Architecture notes](docs/architecture.md)
 * [Entity ids](docs/entity_ids.md)
 * [Error handling](docs/errors.md)
+* [Public API header](include/rohr.h)
 
 Generate the Doxygen docs with:
 
@@ -160,6 +161,15 @@ build/docs/html/index.html
 ```
 
 Documentation source lives in `docs/`, and API comments live mainly in `include/`. Generated HTML under `build/docs/` is not committed.
+
+For a movable standalone README preview, run:
+
+```sh
+make static-readme
+```
+
+That writes `build/static/readme.html` and stages linked video assets under
+`build/static/docs/assets/`.
 
 ## Examples
 
