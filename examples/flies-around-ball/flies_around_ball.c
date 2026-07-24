@@ -16,6 +16,34 @@ const Color background_color = (Color){255,255,255,255};
 AnimationAsset animation = {0};
 AnimatedSprite sprite = {0};
 
+static bool example_add_entity(Entity *entity) {
+    EntityResult result = entity_add();
+
+    if(entity == NULL) {
+        return false;
+    }
+    if(result.kind == ERROR_RESULT_ERROR) {
+        console_write(LOG_ENGINE, "Error: failed to add entity: %s\n", error_string(result.result.error));
+        return false;
+    }
+    *entity = result.result.value;
+    return true;
+}
+
+static bool example_load_animation(AnimationDescriptor descriptor, AnimationAsset *asset) {
+    AnimationAssetResult result = graphics_load_animation(descriptor);
+
+    if(asset == NULL) {
+        return false;
+    }
+    if(result.kind == ERROR_RESULT_ERROR) {
+        console_write(LOG_ENGINE, "Error: failed to load animation: %s\n", error_string(result.result.error));
+        return false;
+    }
+    *asset = result.result.value;
+    return true;
+}
+
 int main() {
     console_init();
     console_set_debug(CONSOLE_DEBUG_OFF);
@@ -33,10 +61,17 @@ int main() {
         return 1;
     }
 
-    animation = graphics_load_animation(elderfly_fly_files);
+    if(!example_load_animation(elderfly_fly_files, &animation)) {
+        engine_shutdown();
+        return 1;
+    }
     sprite = graphics_create_animated_sprite(animation, (Scale){3,3});
 
-    Entity magnet_smash = entity_add();
+    Entity magnet_smash;
+    if(!example_add_entity(&magnet_smash)) {
+        engine_shutdown();
+        return 1;
+    }
     physics_set_position(magnet_smash, (Position){.x = 0, .y = 100});
     physics_set_orientation(magnet_smash, 1);
     physics_set_mass(magnet_smash, 5000);
@@ -57,7 +92,11 @@ int main() {
     time_t seed = 1003463;
     srand(seed);
     for(int i = 0; i < amount_of_entities; i += 1) {
-        Entity ball = entity_add();
+        Entity ball;
+        if(!example_add_entity(&ball)) {
+            engine_shutdown();
+            return 1;
+        }
         physics_set_position(ball, (Position){.x = tools_random_range(100, 400), .y = tools_random_range(0, 300)});
         physics_set_orientation(ball, tools_random_range(0, 2*PI_F));
         physics_set_mass(ball, 10);
@@ -70,7 +109,12 @@ int main() {
         physics_set_friction(ball, 0.4);
         physics_set_dynamic(ball);
         //set_transform_lock(ball, water_smash, (Vec2D){tools_random_range(100, 400), tools_random_range(100, 400)}, tools_random_range(0, 10), true, true, false);
-        physics_set_joint(ball, magnet_smash, JOINT_DISTANCE, (Vec2D){0}, (Vec2D){0}, 10, 0);
+        EntityResult joint_result = physics_set_joint(ball, magnet_smash, JOINT_DISTANCE, (Vec2D){0}, (Vec2D){0}, 10, 0);
+        if(joint_result.kind == ERROR_RESULT_ERROR) {
+            console_write(LOG_ENGINE, "Error: failed to create joint: %s\n", error_string(joint_result.result.error));
+            engine_shutdown();
+            return 1;
+        }
         sprite = graphics_create_animated_sprite(animation, (Scale){size/10, size/10});
         sprite.animation.time_per_frame = tools_random_range_float(0.005, 0.5);
         graphics_add_animated_sprite(ball, sprite);

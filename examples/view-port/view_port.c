@@ -16,6 +16,35 @@
 const Color background_color = (Color){255,255,255,255};
 AnimationAsset animation_orm = {0};
 AnimatedSprite sprite_orm = {0};
+
+static bool example_add_entity(Entity *entity) {
+    EntityResult result = entity_add();
+
+    if(entity == NULL) {
+        return false;
+    }
+    if(result.kind == ERROR_RESULT_ERROR) {
+        console_write(LOG_ENGINE, "Error: failed to add entity: %s\n", error_string(result.result.error));
+        return false;
+    }
+    *entity = result.result.value;
+    return true;
+}
+
+static bool example_load_animation(AnimationDescriptor descriptor, AnimationAsset *asset) {
+    AnimationAssetResult result = graphics_load_animation(descriptor);
+
+    if(asset == NULL) {
+        return false;
+    }
+    if(result.kind == ERROR_RESULT_ERROR) {
+        console_write(LOG_ENGINE, "Error: failed to load animation: %s\n", error_string(result.result.error));
+        return false;
+    }
+    *asset = result.result.value;
+    return true;
+}
+
 int main() {
     console_init();
     console_set_debug(CONSOLE_DEBUG_OFF);
@@ -34,7 +63,11 @@ int main() {
         return 1;
     }
 
-    Entity water_smash = entity_add();
+    Entity water_smash;
+    if(!example_add_entity(&water_smash)) {
+        engine_shutdown();
+        return 1;
+    }
     physics_set_position(water_smash, (Position){.x = 0, .y = 0});
     physics_set_orientation(water_smash, 0);
     physics_set_mass(water_smash, 50);
@@ -44,7 +77,10 @@ int main() {
     physics_set_hitbox(water_smash, shape4);
     physics_set_friction(water_smash, 0.4);
     physics_set_dynamic(water_smash);
-    animation_orm = graphics_load_animation(orm_files);
+    if(!example_load_animation(orm_files, &animation_orm)) {
+        engine_shutdown();
+        return 1;
+    }
         sprite_orm = graphics_create_animated_sprite(animation_orm, (Scale){10,10});
         graphics_add_animated_sprite(water_smash, sprite_orm);
 

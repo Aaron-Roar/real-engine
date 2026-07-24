@@ -9,6 +9,55 @@
 #include <time.h>
 #include "grid.h"
 
+Shape system_generate_global_hitbox(Entity entity);
+
+static bool system_entity_from_index(EntityIndex index, Entity *entity) {
+    EntityResult result = entity_from_index(index);
+
+    if(entity == NULL || result.kind == ERROR_RESULT_ERROR) {
+        return false;
+    }
+    *entity = result.result.value;
+    return true;
+}
+
+static void system_set_collision_report_by_index(EntityIndex entity_1, EntityIndex entity_2, bool state) {
+    Entity entity_1_id;
+    Entity entity_2_id;
+
+    if(!system_entity_from_index(entity_1, &entity_1_id) || !system_entity_from_index(entity_2, &entity_2_id)) {
+        return;
+    }
+    physics_set_collision_report(entity_1_id, entity_2_id, state);
+}
+
+static void system_generate_global_hitbox_by_index(EntityIndex index) {
+    Entity entity;
+
+    if(!system_entity_from_index(index, &entity)) {
+        return;
+    }
+    system_generate_global_hitbox(entity);
+}
+
+static void system_delete_by_index(EntityIndex index) {
+    Entity entity;
+
+    if(!system_entity_from_index(index, &entity)) {
+        return;
+    }
+    entity_delete(entity);
+}
+
+static void system_remove_transform_lock_by_index(EntityIndex index) {
+    Entity entity;
+
+    if(!system_entity_from_index(index, &entity)) {
+        return;
+    }
+    physics_remove_transform_lock(entity);
+}
+
 void system_generate_global_hitboxes() {
     CMask filter = HIT_BOX;
 
@@ -611,21 +660,21 @@ void system_apply_collisions_tuned() {
                             add_pair(entity_1,entity_2);
                             Collision collision = system_get_entity_collision(entity_1, entity_2);
                             if(collision.overlap == true) {
-                                physics_set_collision_report(entity_from_index(entity_1), entity_from_index(entity_2), true);
-                                physics_set_collision_report(entity_from_index(entity_2), entity_from_index(entity_1), true);
+                                system_set_collision_report_by_index(entity_1, entity_2, true);
+                                system_set_collision_report_by_index(entity_2, entity_1, true);
                                 if(entity_index_has_components(entity_1, COLLISION) && entity_index_has_components(entity_2, COLLISION)) {
                                     system_resolve_collision(entity_1, entity_2, collision);
                                     system_separate_entities(entity_1,entity_2, collision);
 
-                                    system_generate_global_hitbox(entity_from_index(entity_1));
-                                    system_generate_global_hitbox(entity_from_index(entity_2));
+                                    system_generate_global_hitbox_by_index(entity_1);
+                                    system_generate_global_hitbox_by_index(entity_2);
                                     grid_update_aabb(entity_1);
                                     grid_update_aabb(entity_2);
                                 }
 
                             } else {
-                                physics_set_collision_report(entity_from_index(entity_1), entity_from_index(entity_2), false);
-                                physics_set_collision_report(entity_from_index(entity_2), entity_from_index(entity_1), false);
+                                system_set_collision_report_by_index(entity_1, entity_2, false);
+                                system_set_collision_report_by_index(entity_2, entity_1, false);
 
                             }
 
@@ -661,16 +710,16 @@ void system_apply_collisions() {
 
 
             if(collision.overlap == true) {
-                physics_set_collision_report(entity_from_index(i), entity_from_index(j), true);
-                physics_set_collision_report(entity_from_index(j), entity_from_index(i), true);
+                system_set_collision_report_by_index(i, j, true);
+                system_set_collision_report_by_index(j, i, true);
                 if(entity_index_has_components(i, COLLISION) && entity_index_has_components(j, COLLISION)) {
                     system_resolve_collision(i, j, collision);
                 }
 
             }
             else {
-                physics_set_collision_report(entity_from_index(i), entity_from_index(j), false);
-                physics_set_collision_report(entity_from_index(j), entity_from_index(i), false);
+                system_set_collision_report_by_index(i, j, false);
+                system_set_collision_report_by_index(j, i, false);
 
             }
         }
@@ -803,7 +852,7 @@ void system_apply_transform_locks() {
         EntityIndex driver_index;
 
         if(!entity_get_index(driver, &driver_index) || !entity_index_is_alive(driver_index)) {
-            physics_remove_transform_lock(entity_from_index(driven));
+            system_remove_transform_lock_by_index(driven);
             continue;
         }
 
@@ -848,10 +897,10 @@ void system_clean_entities_past_lifetime() {
         if( entity_index_has_components(i, LIFETIME) ) {
 
             if( (life_times[i].expirey_time != 0 && life_times[i].expirey_time <= engine_get_time()) ) {
-                entity_delete(entity_from_index(i));
+                system_delete_by_index(i);
             }
             else if( (life_times[i].expirey_tick != 0 && life_times[i].expirey_tick <= engine_get_tick()) ) {
-                entity_delete(entity_from_index(i));
+                system_delete_by_index(i);
             }
         }
     }
@@ -924,10 +973,10 @@ static void system_add_joint_force_at_point_for_one_tick(Entity target, Position
         return;
     }
 
-    Entity force_entity = physics_set_force(target, force);
+    EntityResult force_result = physics_set_force(target, force);
 
-    if(force_entity != 0) {
-        entity_set_life_time(force_entity, 0.0, engine_get_tick() + 1);
+    if(force_result.kind == ERROR_RESULT_VALUE) {
+        entity_set_life_time(force_result.result.value, 0.0, engine_get_tick() + 1);
     }
 
     Vec2D r = {
@@ -937,10 +986,10 @@ static void system_add_joint_force_at_point_for_one_tick(Entity target, Position
 
     Torque torque = math_cross_2d(r, force);
 
-    Entity torque_entity = physics_set_torque(target, torque);
+    EntityResult torque_result = physics_set_torque(target, torque);
 
-    if(torque_entity != 0) {
-        entity_set_life_time(torque_entity, 0.0, engine_get_tick() + 1);
+    if(torque_result.kind == ERROR_RESULT_VALUE) {
+        entity_set_life_time(torque_result.result.value, 0.0, engine_get_tick() + 1);
     }
 }
 
@@ -953,7 +1002,7 @@ static void system_apply_pin_joint(Entity joint_entity) {
     EntityIndex b_index;
 
     if(!entity_get_index(a, &a_index) || !entity_index_is_alive(a_index) || !entity_get_index(b, &b_index) || !entity_index_is_alive(b_index)) {
-        entity_delete(entity_from_index(joint_entity));
+        system_delete_by_index(joint_entity);
         return;
     }
 
@@ -1025,7 +1074,7 @@ void system_apply_distance_joint(Entity joint_entity) {
         EntityIndex b_index;
 
         if(!entity_get_index(a, &a_index) || !entity_index_is_alive(a_index) || !entity_get_index(b, &b_index) || !entity_index_is_alive(b_index)) {
-            entity_delete(entity_from_index(joint_entity));
+            system_delete_by_index(joint_entity);
             return;
         }
 

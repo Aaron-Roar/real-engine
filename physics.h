@@ -2,6 +2,7 @@
 #define PHYSICS_H
 #include "math2d.h"
 #include "entity_components.h"
+ERROR_DECLARE_RESULT_TYPE(ShapeResult, Shape);
 typedef struct Collision {
     bool overlap;
     Axis normal;
@@ -135,12 +136,12 @@ void physics_set_acceleration(Entity entity, Acceleration a);
 void physics_set_velocity(Entity entity, Velocity v);
 void physics_set_position(Entity entity, Position p);
 void physics_set_mass(Entity entity, Mass m);
-Entity physics_set_force(Entity entity, Force f);
-Entity physics_set_torque(Entity entity, Torque t);
+EntityResult physics_set_force(Entity entity, Force f);
+EntityResult physics_set_torque(Entity entity, Torque t);
 void physics_set_hitbox(Entity entity, Shape hitbox);
 void physics_set_orientation(Entity entity, Orientation angle);
 void physics_set_angular_velocity(Entity entity, AngularVelocity v);
-Shape physics_get_global_hit_box(Entity entity);
+ShapeResult physics_get_global_hit_box(Entity entity);
 void physics_set_restitution(Entity entity, Restitution restitution);
 void physics_set_dynamic(Entity entity);
 void physics_set_static(Entity entity);
@@ -164,7 +165,7 @@ void physics_set_transform_lock_current_transform(
         bool lock_orientation,
         bool inherit_velocity
 );
-Entity physics_set_joint(
+EntityResult physics_set_joint(
     Entity a,
     Entity b,
     JointType type,

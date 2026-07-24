@@ -50,6 +50,16 @@ const char *error_string(EngineError error) {
             return "maximum entity count exceeded";
         case ERROR_ENGINE_TABLE_EXPANSION_FAILED:
             return "engine table expansion failed";
+        case ERROR_ENGINE_INVALID_ENTITY:
+            return "invalid entity";
+        case ERROR_ENGINE_ENTITY_NOT_FOUND:
+            return "entity not found";
+        case ERROR_ENGINE_COMPONENT_MISSING:
+            return "component missing";
+        case ERROR_ENGINE_TEXTURE_LOAD_FAILED:
+            return "texture load failed";
+        case ERROR_ENGINE_ANIMATION_LOAD_FAILED:
+            return "animation load failed";
         default:
             return "unknown error";
     }

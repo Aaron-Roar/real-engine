@@ -19,6 +19,34 @@ AnimationAsset animation_orm = {0};
 AnimatedSprite sprite_orm = {0};
 #define amount_of_entities 500
 
+static bool example_add_entity(Entity *entity) {
+    EntityResult result = entity_add();
+
+    if(entity == NULL) {
+        return false;
+    }
+    if(result.kind == ERROR_RESULT_ERROR) {
+        console_write(LOG_ENGINE, "Error: failed to add entity: %s\n", error_string(result.result.error));
+        return false;
+    }
+    *entity = result.result.value;
+    return true;
+}
+
+static bool example_load_animation(AnimationDescriptor descriptor, AnimationAsset *asset) {
+    AnimationAssetResult result = graphics_load_animation(descriptor);
+
+    if(asset == NULL) {
+        return false;
+    }
+    if(result.kind == ERROR_RESULT_ERROR) {
+        console_write(LOG_ENGINE, "Error: failed to load animation: %s\n", error_string(result.result.error));
+        return false;
+    }
+    *asset = result.result.value;
+    return true;
+}
+
 int main() {
     console_init();
     console_set_debug(CONSOLE_DEBUG_OFF);
@@ -36,7 +64,11 @@ int main() {
         return 1;
     }
 
-    Entity water_wall_1 = entity_add();
+    Entity water_wall_1;
+    if(!example_add_entity(&water_wall_1)) {
+        engine_shutdown();
+        return 1;
+    }
     physics_set_static(water_wall_1);
     physics_set_position(water_wall_1, (Position){0, -80});
     physics_set_orientation(water_wall_1, 120*(PI_F/180));
@@ -45,7 +77,11 @@ int main() {
     Shape shape_1 = math_create_square(40, 400);
     physics_set_hitbox(water_wall_1, shape_1);
 
-    Entity water_wall_2 = entity_add();
+    Entity water_wall_2;
+    if(!example_add_entity(&water_wall_2)) {
+        engine_shutdown();
+        return 1;
+    }
     physics_set_static(water_wall_2);
     physics_set_position(water_wall_2, (Position){-180, -10});
     physics_set_orientation(water_wall_2, 0*(PI_F/180));
@@ -54,7 +90,11 @@ int main() {
     Shape shape_2 = math_create_square(40, 60);
     physics_set_hitbox(water_wall_2, shape_2);
 
-    Entity water_wall_3 = entity_add();
+    Entity water_wall_3;
+    if(!example_add_entity(&water_wall_3)) {
+        engine_shutdown();
+        return 1;
+    }
     physics_set_static(water_wall_3);
     physics_set_position(water_wall_3, (Position){180, -10});
     physics_set_orientation(water_wall_3, 0*(PI_F/180));
@@ -63,7 +103,11 @@ int main() {
     Shape shape_3 = math_create_square(40, 60);
     physics_set_hitbox(water_wall_3, shape_3);
 
-    Entity water_smash = entity_add();
+    Entity water_smash;
+    if(!example_add_entity(&water_smash)) {
+        engine_shutdown();
+        return 1;
+    }
     physics_set_position(water_smash, (Position){.x = 0, .y = 300});
     physics_set_orientation(water_smash, 0);
     physics_set_mass(water_smash, 50);
@@ -74,16 +118,26 @@ int main() {
     physics_set_hitbox(water_smash, shape4);
     physics_set_friction(water_smash, 0.4);
     physics_set_dynamic(water_smash);
-    animation_orm = graphics_load_animation(orm_files);
+    if(!example_load_animation(orm_files, &animation_orm)) {
+        engine_shutdown();
+        return 1;
+    }
         sprite_orm = graphics_create_animated_sprite(animation_orm, (Scale){10,10});
         graphics_add_animated_sprite(water_smash, sprite_orm);
     //set_axis_lock(water_smash, (Axis){0,1}, positions[smash]);
 
-    animation_elderfly = graphics_load_animation(elderfly_fly_files);
+    if(!example_load_animation(elderfly_fly_files, &animation_elderfly)) {
+        engine_shutdown();
+        return 1;
+    }
     time_t seed = 1003463;
     srand(seed);
     for(int i = 0; i < amount_of_entities - 1; i += 1) {
-        Entity ball = entity_add();
+        Entity ball;
+        if(!example_add_entity(&ball)) {
+            engine_shutdown();
+            return 1;
+        }
         physics_set_position(ball, (Position){.x = tools_random_range(-10, 10), .y = tools_random_range(100, 200)});
         physics_set_orientation(ball, tools_random_range(0, 2*PI_F));
         physics_set_mass(ball, 1);

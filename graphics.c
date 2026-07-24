@@ -582,7 +582,11 @@ bool graphics_draw_shape_filled(Shape shape, Color color)
 }
 
 void graphics_draw_hit_box(Entity entity, Fill fill_type) {
-    Shape shape = physics_get_global_hit_box(entity);
+    ShapeResult shape_result = physics_get_global_hit_box(entity);
+    if(shape_result.kind == ERROR_RESULT_ERROR) {
+        return;
+    }
+    Shape shape = shape_result.result.value;
     if(fill_type == GRAPHICS_FILLED) {
         graphics_draw_shape_filled(shape, hit_box_color);
     }
@@ -595,7 +599,10 @@ void graphics_draw_hit_boxes() {
   for(int i = 0; i < MAX_ENTITIES; i += 1) {
     if(entity_index_is_alive(i)) {
         if( entity_index_has_components(i, HIT_BOX)) {
-            graphics_draw_hit_box(entity_from_index(i), GRAPHICS_OUTLINE);
+            EntityResult entity_result = entity_from_index(i);
+            if(entity_result.kind == ERROR_RESULT_VALUE) {
+                graphics_draw_hit_box(entity_result.result.value, GRAPHICS_OUTLINE);
+            }
         }
     }
   }
@@ -607,7 +614,11 @@ void graphics_draw_particle(Entity entity, Fill fill_type) {
     if(!entity_get_index(entity, &index)) {
         return;
     }
-    Shape shape = physics_get_global_hit_box(entity);
+    ShapeResult shape_result = physics_get_global_hit_box(entity);
+    if(shape_result.kind == ERROR_RESULT_ERROR) {
+        return;
+    }
+    Shape shape = shape_result.result.value;
     float radius = math_circle_radius(shape,math_polygon_centroid(shape));
     Shape circle = math_create_circle(radius, 10);
     Shape world_circle = physics_shape_world_translate(circle, positions[index], 0);
@@ -623,13 +634,16 @@ void graphics_draw_particles() {
     if(entity_index_is_alive(i)) {
         if( entity_index_has_components(i, HIT_BOX)) {
           if( entity_index_has_components(i, PARTICLE)) {
-              graphics_draw_particle(entity_from_index(i), GRAPHICS_OUTLINE);
+              EntityResult entity_result = entity_from_index(i);
+              if(entity_result.kind == ERROR_RESULT_VALUE) {
+                  graphics_draw_particle(entity_result.result.value, GRAPHICS_OUTLINE);
+              }
           }
         }
     }
   }
 }
-TextureAsset graphics_load_texture(TextureDescriptor text_desc) {
+TextureAssetResult graphics_load_texture(TextureDescriptor text_desc) {
         SDL_Surface *surface = NULL;
         char *png_path = NULL;
         TextureAsset asset = {0};
@@ -641,25 +655,34 @@ TextureAsset graphics_load_texture(TextureDescriptor text_desc) {
         SDL_asprintf(&png_path, "%s", text_desc.file);
         surface = SDL_LoadPNG(png_path);
         SDL_free(png_path);
+        if(surface == NULL) {
+            return ERROR_RESULT_MAKE_ERROR(TextureAssetResult, ERROR_ENGINE_TEXTURE_LOAD_FAILED);
+        }
 
         asset.texture = SDL_CreateTextureFromSurface(sdl_renderer, surface);
         SDL_DestroySurface(surface);  /* done with this, the texture has a copy of the pixels now. */
+        if(asset.texture == NULL) {
+            return ERROR_RESULT_MAKE_ERROR(TextureAssetResult, ERROR_ENGINE_TEXTURE_LOAD_FAILED);
+        }
 
-        return asset;
+        return ERROR_RESULT_MAKE_VALUE(TextureAssetResult, asset);
 }
 
-AnimationAsset graphics_load_animation(AnimationDescriptor anim_desc) {
+AnimationAssetResult graphics_load_animation(AnimationDescriptor anim_desc) {
     AnimationAsset asset = {0};
     asset.texture_list.amount = anim_desc.amount_of_descriptors;
     asset.ticks_per_frame = anim_desc.ticks_per_frame;
     asset.time_per_frame = anim_desc.time_per_frame;
 
     for(int i = 0; i < anim_desc.amount_of_descriptors; i += 1) {
-        TextureAsset texture = graphics_load_texture(anim_desc.texture_descriptors[i]);
-        asset.texture_list.textures[i] = texture;
+        TextureAssetResult texture_result = graphics_load_texture(anim_desc.texture_descriptors[i]);
+        if(texture_result.kind == ERROR_RESULT_ERROR) {
+            return ERROR_RESULT_MAKE_ERROR(AnimationAssetResult, texture_result.result.error);
+        }
+        asset.texture_list.textures[i] = texture_result.result.value;
     }
 
-    return asset;
+    return ERROR_RESULT_MAKE_VALUE(AnimationAssetResult, asset);
 }
 
 AnimatedSprite graphics_create_animated_sprite(AnimationAsset asset_ptr, Scale scale) {
@@ -756,7 +779,11 @@ void graphics_draw_local_origin(Entity entity) {
         return;
     }
 
-    Shape global_shape = physics_get_global_hit_box(entity);
+    ShapeResult shape_result = physics_get_global_hit_box(entity);
+    if(shape_result.kind == ERROR_RESULT_ERROR) {
+        return;
+    }
+    Shape global_shape = shape_result.result.value;
 
     if (global_shape.amount_of_vertices <= 0) {
         return;
@@ -860,6 +887,9 @@ void graphics_draw_local_origins() {
         if (!entity_index_has_components(i, HIT_BOX)) {
             continue;
         }
-        graphics_draw_local_origin(entity_from_index(i));
+        EntityResult entity_result = entity_from_index(i);
+        if(entity_result.kind == ERROR_RESULT_VALUE) {
+            graphics_draw_local_origin(entity_result.result.value);
+        }
     }
 }

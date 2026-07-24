@@ -44,6 +44,7 @@ typedef struct {
     Texture texture;
     Scale size;
 } TextureAsset;
+ERROR_DECLARE_RESULT_TYPE(TextureAssetResult, TextureAsset);
 
 typedef struct {
     TextureAsset textures[MAX_TEXTURES];
@@ -55,6 +56,7 @@ typedef struct {
     Tick ticks_per_frame;
     Time time_per_frame;
 } AnimationAsset;
+ERROR_DECLARE_RESULT_TYPE(AnimationAssetResult, AnimationAsset);
 
 typedef enum {DIRECTION_LEFT, DIRECTION_RIGHT} Direction;
 
@@ -103,8 +105,8 @@ bool graphics_draw_shape_outline(Shape shape, Color color);
 bool graphics_draw_shape_filled(Shape shape, Color color);
 void graphics_draw_hit_box(Entity entity, Fill fill_type);
 void graphics_draw_hit_boxes();
-TextureAsset graphics_load_texture(TextureDescriptor text_desc);
-AnimationAsset graphics_load_animation(AnimationDescriptor anim_desc);
+TextureAssetResult graphics_load_texture(TextureDescriptor text_desc);
+AnimationAssetResult graphics_load_animation(AnimationDescriptor anim_desc);
 AnimatedSprite graphics_create_animated_sprite(AnimationAsset asset_ptr, Scale scale);
 void graphics_update_sprite_frame(AnimatedSprite *sprite, Tick current_tick, Time current_time);
 void graphics_draw_texture(TextureAsset texture_asset, Position pos, Orientation ort);

@@ -14,6 +14,7 @@ typedef uint32_t EntityIndex; //An index into component tables
 #define ENTITY_INVALID 0
 #define MAX_ENTITIES 10000
 #define MAX_COMPONENTS 100
+ERROR_DECLARE_RESULT_TYPE(EntityResult, Entity);
 typedef struct EntityIdPool {
     Entity free_ids[MAX_ENTITIES];
     EntityIndex free_indices[MAX_ENTITIES];
@@ -102,8 +103,8 @@ void entity_tables_destroy(void);
 bool entity_is_alive(Entity entity);
 bool entity_index_is_alive(EntityIndex index);
 bool entity_get_index(Entity entity, EntityIndex *index);
-Entity entity_from_index(EntityIndex index);
-Entity entity_add();
+EntityResult entity_from_index(EntityIndex index);
+EntityResult entity_add();
 void entity_delete(Entity entity);
 void entity_add_components(Entity entity, CMask mask);
 bool entity_has_components(Entity entity, CMask components);

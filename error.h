@@ -28,6 +28,11 @@ typedef enum EngineError {
     ERROR_ENGINE_GRAPHICS_INIT_FAILED,
     ERROR_ENGINE_MAX_ENTITIES_EXCEEDED,
     ERROR_ENGINE_TABLE_EXPANSION_FAILED,
+    ERROR_ENGINE_INVALID_ENTITY,
+    ERROR_ENGINE_ENTITY_NOT_FOUND,
+    ERROR_ENGINE_COMPONENT_MISSING,
+    ERROR_ENGINE_TEXTURE_LOAD_FAILED,
+    ERROR_ENGINE_ANIMATION_LOAD_FAILED,
 } EngineError;
 
 /*
@@ -47,6 +52,18 @@ typedef enum EngineError {
         ErrorResultKind kind; \
         Result##ResultType result; \
     } ResultType
+
+#define ERROR_RESULT_MAKE_VALUE(ResultType, Value) \
+    ((ResultType){ \
+        .kind = ERROR_RESULT_VALUE, \
+        .result.value = (Value) \
+    })
+
+#define ERROR_RESULT_MAKE_ERROR(ResultType, ErrorValue) \
+    ((ResultType){ \
+        .kind = ERROR_RESULT_ERROR, \
+        .result.error = (ErrorValue) \
+    })
 
 ERROR_DECLARE_RESULT_TYPE(EngineResult, bool);
 

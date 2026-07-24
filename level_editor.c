@@ -815,8 +815,11 @@ void editor_select(EditorInput input) {
                 continue;
             }
             if(collision_reports[selection_index].collisions[i]) {
-                selected_entity = entity_from_index(i);
-                console_write(LOG_APP, "Selected Entity: %d\n", i);
+                EntityResult selected_result = entity_from_index(i);
+                if(selected_result.kind == ERROR_RESULT_VALUE) {
+                    selected_entity = selected_result.result.value;
+                    console_write(LOG_APP, "Selected Entity: %d\n", i);
+                }
             }
         }
     }
@@ -1191,7 +1194,12 @@ void print_editor_controls(void)
 
 
 void level_editor_init() {
-    selection = entity_add();
+    EntityResult selection_result = entity_add();
+    if(selection_result.kind == ERROR_RESULT_ERROR) {
+        console_write(LOG_ENGINE, "Error: failed to initialize level editor selection: %s\n", error_string(selection_result.result.error));
+        return;
+    }
+    selection = selection_result.result.value;
     physics_set_static(selection);
     physics_set_position(selection, (Vec2D){80, 390});
     Shape selection_hit_box = math_create_circle(0.1, 5);

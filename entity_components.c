@@ -173,18 +173,22 @@ bool entity_get_index(Entity entity, EntityIndex *index) {
     return true;
 }
 
-Entity entity_from_index(EntityIndex index) {
+EntityResult entity_from_index(EntityIndex index) {
     if(!entity_table_index_valid(index)) {
-        return ENTITY_INVALID;
+        return ERROR_RESULT_MAKE_ERROR(EntityResult, ERROR_ENGINE_INVALID_ENTITY);
     }
-    return index_to_entity[index];
+    if(!entity_index_is_alive(index)) {
+        return ERROR_RESULT_MAKE_ERROR(EntityResult, ERROR_ENGINE_ENTITY_NOT_FOUND);
+    }
+    return ERROR_RESULT_MAKE_VALUE(EntityResult, index_to_entity[index]);
 }
 
-Entity entity_add() {
+EntityResult entity_add() {
     Entity entity;
     uint32_t slot;
     EntityIndex index;
     size_t required_capacity;
+    EngineResult result;
     bool reused_slot = false;
     bool reused_index = false;
 
@@ -195,7 +199,7 @@ Entity entity_add() {
     } else {
         if(entity_id_pool.next_id > MAX_ENTITIES) {
             console_write(LOG_ENGINE, "Error: failed to add entity, MAX_ENTITIES exceeded\n");
-            return ENTITY_INVALID;
+            return ERROR_RESULT_MAKE_ERROR(EntityResult, ERROR_ENGINE_MAX_ENTITIES_EXCEEDED);
         }
         slot = entity_id_pool.next_id;
         entity_id_pool.next_id += 1;
@@ -208,19 +212,24 @@ Entity entity_add() {
     } else {
         if(entity_id_pool.next_index >= MAX_ENTITIES) {
             console_write(LOG_ENGINE, "Error: failed to add entity, MAX_ENTITIES exceeded\n");
-            return ENTITY_INVALID;
+            return ERROR_RESULT_MAKE_ERROR(EntityResult, ERROR_ENGINE_MAX_ENTITIES_EXCEEDED);
         }
         index = entity_id_pool.next_index;
         entity_id_pool.next_index += 1;
     }
 
     required_capacity = (size_t)index + 1;
-    if(
-        entity_tables_ensure_capacity(required_capacity).kind == ERROR_RESULT_ERROR ||
-        physics_tables_ensure_capacity(required_capacity).kind == ERROR_RESULT_ERROR ||
-        graphics_tables_ensure_capacity(required_capacity).kind == ERROR_RESULT_ERROR ||
-        grid_tables_ensure_capacity(required_capacity).kind == ERROR_RESULT_ERROR
-    ) {
+    result = entity_tables_ensure_capacity(required_capacity);
+    if(result.kind != ERROR_RESULT_ERROR) {
+        result = physics_tables_ensure_capacity(required_capacity);
+    }
+    if(result.kind != ERROR_RESULT_ERROR) {
+        result = graphics_tables_ensure_capacity(required_capacity);
+    }
+    if(result.kind != ERROR_RESULT_ERROR) {
+        result = grid_tables_ensure_capacity(required_capacity);
+    }
+    if(result.kind == ERROR_RESULT_ERROR) {
         console_write(LOG_ENGINE, "Error: failed to add entity, table expansion failed\n");
         if(reused_slot && entity_id_pool.free_count < MAX_ENTITIES) {
             entity_id_pool.free_ids[entity_id_pool.free_count] = slot;
@@ -236,7 +245,7 @@ Entity entity_add() {
         else if(!reused_index && entity_id_pool.next_index > 0) {
             entity_id_pool.next_index -= 1;
         }
-        return ENTITY_INVALID;
+        return ERROR_RESULT_MAKE_ERROR(EntityResult, result.result.error);
     }
 
     if(entity_generations[slot] == 0) {
@@ -249,7 +258,7 @@ Entity entity_add() {
 
     (void)EntityAlivePool_store_at(&entity_alive_pool, index, true);
     (void)EntityMaskPool_store_at(&entity_mask_pool, index, 0);
-    return entity;
+    return ERROR_RESULT_MAKE_VALUE(EntityResult, entity);
 }
 
 static void entity_clear_index(EntityIndex index) {

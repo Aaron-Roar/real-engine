@@ -345,23 +345,28 @@ void physics_set_mass(Entity entity, Mass m) {
     (void)MassPool_store_at(&mass_pool, index, m);
     console_debug_write(LOG_ENGINE, "Set Entity: %d Mass: %f\n", entity, m);
 }
-Entity physics_set_force(Entity entity, Force f) {
+EntityResult physics_set_force(Entity entity, Force f) {
     EntityIndex index;
+    EntityResult force_result;
 
     if(!(entity_get_index(entity, &index) && entity_index_is_alive(index))) {
         //Error
-        return ENTITY_INVALID;
+        return ERROR_RESULT_MAKE_ERROR(EntityResult, ERROR_ENGINE_INVALID_ENTITY);
     }
-    Entity force_entity = entity_add();
+    force_result = entity_add();
+    if(force_result.kind == ERROR_RESULT_ERROR) {
+        return force_result;
+    }
+    Entity force_entity = force_result.result.value;
     EntityIndex force_index;
     if(!(entity_get_index(force_entity, &force_index) && entity_index_is_alive(force_index))) {
-        return ENTITY_INVALID;
+        return ERROR_RESULT_MAKE_ERROR(EntityResult, ERROR_ENGINE_ENTITY_NOT_FOUND);
     }
     (void)ForcePool_store_at(&forces_pool, force_index, f);
     (void)TargetPool_store_at(&targets_pool, force_index, entity);
     entity_mask[force_index] |= TARGETABLE | FORCE;
     console_debug_write(LOG_ENGINE, "Set Entity: %d Force: {x: %f, y: %f}\n", entity, f.x, f.y);
-    return force_entity;
+    return ERROR_RESULT_MAKE_VALUE(EntityResult, force_entity);
 }
 void physics_set_acceleration(Entity entity, Acceleration a) {
     EntityIndex index;
@@ -373,23 +378,28 @@ void physics_set_acceleration(Entity entity, Acceleration a) {
     (void)AccelerationPool_store_at(&accelerations_pool, index, a);
     console_debug_write(LOG_ENGINE, "Set Entity: %d Acceleration: {x: %f, y: %f}\n", entity, a.x, a.y);
 }
-Entity physics_set_torque(Entity entity, Torque t) {
+EntityResult physics_set_torque(Entity entity, Torque t) {
     EntityIndex index;
+    EntityResult torque_result;
 
     if(!(entity_get_index(entity, &index) && entity_index_is_alive(index))) {
         //Error
-        return ENTITY_INVALID;
+        return ERROR_RESULT_MAKE_ERROR(EntityResult, ERROR_ENGINE_INVALID_ENTITY);
     }
-    Entity torque_entity = entity_add();
+    torque_result = entity_add();
+    if(torque_result.kind == ERROR_RESULT_ERROR) {
+        return torque_result;
+    }
+    Entity torque_entity = torque_result.result.value;
     EntityIndex torque_index;
     if(!(entity_get_index(torque_entity, &torque_index) && entity_index_is_alive(torque_index))) {
-        return ENTITY_INVALID;
+        return ERROR_RESULT_MAKE_ERROR(EntityResult, ERROR_ENGINE_ENTITY_NOT_FOUND);
     }
     (void)TorquePool_store_at(&torques_pool, torque_index, t);
     (void)TargetPool_store_at(&targets_pool, torque_index, entity);
     entity_mask[torque_index] |= TARGETABLE | TORQUE;
     console_debug_write(LOG_ENGINE, "Set Entity: %d Torque: %f\n", entity, t);
-    return torque_entity;
+    return ERROR_RESULT_MAKE_VALUE(EntityResult, torque_entity);
 }
 void physics_set_hitbox(Entity entity, Shape hitbox) {
     EntityIndex index;
@@ -423,16 +433,17 @@ void physics_set_angular_velocity(Entity entity, AngularVelocity v) {
     (void)AngularVelocityPool_store_at(&angular_velocities_pool, index, v);
     console_debug_write(LOG_ENGINE, "Set Entity: %d Angular Velocity: %f\n", entity, v);
 }
-Shape physics_get_global_hit_box(Entity entity) {
+ShapeResult physics_get_global_hit_box(Entity entity) {
     CMask filter = HIT_BOX;
     EntityIndex index;
 
     if((entity_get_index(entity, &index) && entity_index_is_alive(index))) {
         if( entity_index_has_components(index, filter) ) {
-            return world_hit_boxes[index];
+            return ERROR_RESULT_MAKE_VALUE(ShapeResult, world_hit_boxes[index]);
         }
+        return ERROR_RESULT_MAKE_ERROR(ShapeResult, ERROR_ENGINE_COMPONENT_MISSING);
     }
-    return (Shape){0};
+    return ERROR_RESULT_MAKE_ERROR(ShapeResult, ERROR_ENGINE_INVALID_ENTITY);
 }
  void physics_set_restitution(Entity entity, Restitution restitution) {
     EntityIndex index;
@@ -599,7 +610,7 @@ void physics_set_transform_lock_current_transform(
         inherit_velocity
     );
 }
-Entity physics_set_joint(
+EntityResult physics_set_joint(
     Entity a,
     Entity b,
     JointType type,
@@ -610,15 +621,20 @@ Entity physics_set_joint(
 ) {
     EntityIndex a_index;
     EntityIndex b_index;
+    EntityResult joint_result;
 
     if(!(entity_get_index(a, &a_index) && entity_index_is_alive(a_index)) || !(entity_get_index(b, &b_index) && entity_index_is_alive(b_index))) {
-        return ENTITY_INVALID;
+        return ERROR_RESULT_MAKE_ERROR(EntityResult, ERROR_ENGINE_INVALID_ENTITY);
     }
 
-    Entity joint = entity_add();
+    joint_result = entity_add();
+    if(joint_result.kind == ERROR_RESULT_ERROR) {
+        return joint_result;
+    }
+    Entity joint = joint_result.result.value;
     EntityIndex joint_index;
     if(!(entity_get_index(joint, &joint_index) && entity_index_is_alive(joint_index))) {
-        return ENTITY_INVALID;
+        return ERROR_RESULT_MAKE_ERROR(EntityResult, ERROR_ENGINE_ENTITY_NOT_FOUND);
     }
 
     entity_add_components(joint, JOINT);
@@ -653,7 +669,7 @@ Entity physics_set_joint(
         .angular_damping = 0.0f
     });
 
-    return joint;
+    return ERROR_RESULT_MAKE_VALUE(EntityResult, joint);
 }
 
 void physics_set_collision_report(Entity entity, Entity target, bool state) {
