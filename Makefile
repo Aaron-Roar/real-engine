@@ -1,23 +1,26 @@
 CC := clang
+AR := ar
 
 PKGS := sdl3 sdl3-image ncurses
-CFLAGS := -I. -Iexamples/test-assets $(shell pkg-config --cflags $(PKGS))
+CFLAGS := -Iinclude -Isrc -I. -Iexamples/test-assets $(shell pkg-config --cflags $(PKGS))
 LIBS := $(shell pkg-config --libs $(PKGS)) -lm
 
 ENGINE_SRC := \
-	console.c \
-	engine.c \
-	error.c \
-	entity_components.c \
-	graphics.c \
-	math2d.c \
-	physics.c \
-	systems.c \
-	tools.c \
-	level_editor.c\
-	grid.c\
-	controller.c
+	src/console.c \
+	src/engine.c \
+	src/error.c \
+	src/entity_components.c \
+	src/graphics.c \
+	src/math2d.c \
+	src/physics.c \
+	src/systems.c \
+	src/tools.c \
+	src/level_editor.c\
+	src/grid.c\
+	src/controller.c
 
+ENGINE_OBJ := $(patsubst src/%.c,build/obj/%.o,$(ENGINE_SRC))
+ENGINE_LIB := lib/libreal_engine.a
 
 ASSET_SRC := \
 	examples/test-assets/elder-fly/elderfly_descriptors.c\
@@ -27,7 +30,7 @@ PIT_BINARY := build/examples/flies_in_pit
 BALL_BINARY := build/examples/flies_around_ball
 VIEW_BINARY := build/examples/view_port
 
-.PHONY: help all build build-example-pit build-example-ball run-pit run-ball clean
+.PHONY: help all build build-engine build-example-pit build-example-ball run-pit run-ball clean
 
 help:
 	@printf '%s\n' \
@@ -40,6 +43,9 @@ help:
 		"" \
 		"  all" \
 		"		  Equivalent to make build" \
+		"" \
+		"  build-engine" \
+		"		  Builds lib/libreal_engine.a" \
 		"" \
 		"  build-example-pit" \
 		"		  Builds examples/flies-in-pit/flies_in_pit.c" \
@@ -69,21 +75,31 @@ all: build
 
 build: build-example-view build-example-pit build-example-ball
 
+build-engine: $(ENGINE_LIB)
+
 build-example-pit: $(PIT_BINARY)
 
 build-example-ball: $(BALL_BINARY)
 
 build-example-view: $(VIEW_BINARY)
 
-$(PIT_BINARY): examples/flies-in-pit/flies_in_pit.c $(ENGINE_SRC) $(ASSET_SRC)
+$(ENGINE_LIB): $(ENGINE_OBJ)
+	@mkdir -p lib
+	$(AR) rcs $@ $^
+
+build/obj/%.o: src/%.c
+	@mkdir -p build/obj
+	$(CC) -c $< $(CFLAGS) -o $@
+
+$(PIT_BINARY): examples/flies-in-pit/flies_in_pit.c $(ENGINE_LIB) $(ASSET_SRC)
 	@mkdir -p build/examples
 	$(CC) $^ $(CFLAGS) -o $@ $(LIBS)
 
-$(BALL_BINARY): examples/flies-around-ball/flies_around_ball.c $(ENGINE_SRC) $(ASSET_SRC)
+$(BALL_BINARY): examples/flies-around-ball/flies_around_ball.c $(ENGINE_LIB) $(ASSET_SRC)
 	@mkdir -p build/examples
 	$(CC) $^ $(CFLAGS) -o $@ $(LIBS)
 
-$(VIEW_BINARY): examples/view-port/view_port.c $(ENGINE_SRC) $(ASSET_SRC)
+$(VIEW_BINARY): examples/view-port/view_port.c $(ENGINE_LIB) $(ASSET_SRC)
 	@mkdir -p build/examples
 	$(CC) $^ $(CFLAGS) -o $@ $(LIBS)
 
@@ -96,4 +112,4 @@ run-ball: $(BALL_BINARY)
 run-view: $(VIEW_BINARY)
 	./$(VIEW_BINARY)
 clean:
-	rm -rf build
+	rm -rf build lib/*.a
