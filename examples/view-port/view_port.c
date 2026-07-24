@@ -45,7 +45,7 @@ int main(void) {
     rohr_physics_set_hitbox(water_smash, shape4);
     rohr_physics_set_friction(water_smash, 0.4);
     rohr_physics_set_dynamic(water_smash);
-    if(rohr_error_check(animation_result = rohr_graphics_load_animation(elderfly_fly_files))) {
+    if(rohr_error_check(animation_result = rohr_graphics_load_animation(elderfly_fly))) {
         PRINT_ENGINE_ERROR(animation_result);
         goto fail;
     }
@@ -80,55 +80,11 @@ int main(void) {
 
         rohr_controller_update_key_states(&keyboard);
         rohr_controller_add_key_event(&keyboard, key_event);
-        if(
-            keyboard.key_states[KEY_W] == KEY_STATE_UP &&
-            keyboard.key_states[KEY_A] == KEY_STATE_UP &&
-            keyboard.key_states[KEY_S] == KEY_STATE_UP &&
-            keyboard.key_states[KEY_D] == KEY_STATE_UP) {
-
-            rohr_physics_set_velocity(water_smash, (Velocity){0, 0});
-        }
-
-        if(keyboard.key_states[KEY_A] == KEY_STATE_DOWN && keyboard.key_states[KEY_D] == KEY_STATE_DOWN) {
-            rohr_physics_set_velocity(water_smash, (Velocity){0, 0});
-
-        }
-        else if(keyboard.key_states[KEY_S] == KEY_STATE_DOWN && keyboard.key_states[KEY_D] == KEY_STATE_DOWN) {
-            rohr_physics_set_velocity(water_smash, (Velocity){100, -100});
-
-        }
-        else if(keyboard.key_states[KEY_S] == KEY_STATE_DOWN && keyboard.key_states[KEY_A] == KEY_STATE_DOWN) {
-            rohr_physics_set_velocity(water_smash, (Velocity){-100, -100});
-
-        }
-        else if(keyboard.key_states[KEY_W] == KEY_STATE_DOWN && keyboard.key_states[KEY_D] == KEY_STATE_DOWN) {
-            rohr_physics_set_velocity(water_smash, (Velocity){100, 100});
-
-        }
-        else if(keyboard.key_states[KEY_W] == KEY_STATE_DOWN && keyboard.key_states[KEY_A] == KEY_STATE_DOWN) {
-            rohr_physics_set_velocity(water_smash, (Velocity){-100, 100});
-
-        }
-        else if(keyboard.key_states[KEY_W] == KEY_STATE_DOWN && keyboard.key_states[KEY_S] == KEY_STATE_DOWN) {
-            rohr_physics_set_velocity(water_smash, (Velocity){0, 0});
-
-        }
-        else if(keyboard.key_states[KEY_W] == KEY_STATE_DOWN) {
-            rohr_physics_set_velocity(water_smash, (Velocity){0, 100});
-
-        }
-        else if(keyboard.key_states[KEY_A] == KEY_STATE_DOWN) {
-            rohr_physics_set_velocity(water_smash, (Velocity){-100, 0});
-
-        }
-        else if(keyboard.key_states[KEY_S] == KEY_STATE_DOWN) {
-            rohr_physics_set_velocity(water_smash, (Velocity){0, -100});
-
-        }
-        else if(keyboard.key_states[KEY_D] == KEY_STATE_DOWN) {
-            rohr_physics_set_velocity(water_smash, (Velocity){100, 0});
-
-        }
+        Vec2D move_axis = rohr_controller_wasd_axis(&keyboard);
+        rohr_physics_set_velocity(water_smash, (Velocity){
+            .x = move_axis.x * 100.0f,
+            .y = move_axis.y * 100.0f
+        });
 
         rohr_controller_update_mouse_states(&mouse);
         rohr_controller_add_mouse_event(&mouse, mouse_event);

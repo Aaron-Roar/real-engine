@@ -322,15 +322,6 @@ EntityGroupResult rohr_entity_group_get(GroupId group);
 EntityGroupMembershipResult rohr_entity_get_groups(Entity entity);
 
 /**
- * @brief Runs a callback for each live entity in a group.
- * @param group Group id to iterate.
- * @param fn Callback to run for each entity.
- * @param user_data Optional user data passed through to the callback.
- * @return EngineResult describing success or failure.
- */
-EngineResult rohr_entity_group_for_each(GroupId group, EntityGroupFn fn, void *user_data);
-
-/**
  * @brief Removes components from an entity.
  * @param entity Stable entity id to modify.
  * @param mask Component mask to remove.
@@ -484,6 +475,24 @@ EngineResult rohr_physics_set_acceleration_away_from_position(Entity entity, flo
 EngineResult rohr_physics_set_acceleration_away_from_entity(Entity entity, float acceleration_magnitude, Entity target);
 
 /**
+ * @brief Sets acceleration toward an entity for every live entity in a group.
+ * @param group Group id to update.
+ * @param acceleration_magnitude Acceleration magnitude to apply along the direction to target.
+ * @param target Target entity.
+ * @return EngineResult describing success or failure.
+ */
+EngineResult rohr_physics_group_set_acceleration_toward_entity(GroupId group, float acceleration_magnitude, Entity target);
+
+/**
+ * @brief Sets acceleration away from an entity for every live entity in a group.
+ * @param group Group id to update.
+ * @param acceleration_magnitude Acceleration magnitude to apply away from target.
+ * @param target Source entity.
+ * @return EngineResult describing success or failure.
+ */
+EngineResult rohr_physics_group_set_acceleration_away_from_entity(GroupId group, float acceleration_magnitude, Entity target);
+
+/**
  * @brief Sets an entity velocity component value.
  * @param entity Entity to modify.
  * @param v Velocity value.
@@ -528,11 +537,36 @@ EngineResult rohr_physics_set_velocity_away_from_position(Entity entity, float s
 EngineResult rohr_physics_set_velocity_away_from_entity(Entity entity, float speed, Entity target);
 
 /**
+ * @brief Sets velocity toward an entity for every live entity in a group.
+ * @param group Group id to update.
+ * @param speed Speed to apply along the direction to target.
+ * @param target Target entity.
+ * @return EngineResult describing success or failure.
+ */
+EngineResult rohr_physics_group_set_velocity_toward_entity(GroupId group, float speed, Entity target);
+
+/**
+ * @brief Sets velocity away from an entity for every live entity in a group.
+ * @param group Group id to update.
+ * @param speed Speed to apply away from target.
+ * @param target Source entity.
+ * @return EngineResult describing success or failure.
+ */
+EngineResult rohr_physics_group_set_velocity_away_from_entity(GroupId group, float speed, Entity target);
+
+/**
  * @brief Sets an entity velocity to zero.
  * @param entity Entity to modify.
  * @return EngineResult describing success or failure.
  */
 EngineResult rohr_physics_stop_entity(Entity entity);
+
+/**
+ * @brief Sets velocity to zero for every live entity in a group.
+ * @param group Group id to update.
+ * @return EngineResult describing success or failure.
+ */
+EngineResult rohr_physics_group_stop_entities(GroupId group);
 
 /**
  * @brief Applies an immediate linear impulse to an entity velocity.
@@ -567,12 +601,28 @@ EngineResult rohr_physics_set_mass(Entity entity, Mass m);
 EntityResult rohr_physics_set_force(Entity entity, Force f);
 
 /**
+ * @brief Applies force to an entity for one physics tick.
+ * @param entity Entity to target.
+ * @param f Force vector.
+ * @return EngineResult describing success or failure.
+ */
+EngineResult rohr_physics_apply_force_for_one_tick(Entity entity, Force f);
+
+/**
  * @brief Sets an entity torque component value.
  * @param entity Entity to modify.
  * @param t Torque value.
  * @return EntityResult containing entity on success, or an error.
  */
 EntityResult rohr_physics_set_torque(Entity entity, Torque t);
+
+/**
+ * @brief Applies torque to an entity for one physics tick.
+ * @param entity Entity to target.
+ * @param t Torque value.
+ * @return EngineResult describing success or failure.
+ */
+EngineResult rohr_physics_apply_torque_for_one_tick(Entity entity, Torque t);
 
 /**
  * @brief Sets an entity hitbox component value.
@@ -640,6 +690,20 @@ EngineResult rohr_physics_hold_entity(Entity entity);
  * @return EngineResult describing success or failure.
  */
 EngineResult rohr_physics_unhold_entity(Entity entity);
+
+/**
+ * @brief Adds HOLD to every live entity in a group.
+ * @param group Group id to update.
+ * @return EngineResult describing success or failure.
+ */
+EngineResult rohr_physics_group_hold_entities(GroupId group);
+
+/**
+ * @brief Removes HOLD from every live entity in a group.
+ * @param group Group id to update.
+ * @return EngineResult describing success or failure.
+ */
+EngineResult rohr_physics_group_unhold_entities(GroupId group);
 
 /**
  * @brief Locks an entity orientation between minimum and maximum angles.
@@ -1107,12 +1171,6 @@ EngineResult rohr_level_editor_init(void);
 EngineResult rohr_level_editor_update(void);
 
 /**
- * @brief Prints a keyboard event for debugging.
- * @param event Keyboard event to print.
- */
-void rohr_controller_print_keyboard_event(KeyboardEvent event);
-
-/**
  * @brief Updates keyboard key states for the frame.
  * @param keyboard Keyboard state table to update.
  */
@@ -1131,6 +1189,65 @@ void rohr_controller_add_key_event(KeyboardState *keyboard, KeyboardEvent key_ev
  * @return KeyboardEvent derived from sdl_event.
  */
 KeyboardEvent rohr_controller_capture_keyboard_event(const SDL_Event *sdl_event);
+
+/**
+ * @brief Checks whether an SDL keycode is currently held or was pressed this frame.
+ * @param keyboard Keyboard state table to inspect.
+ * @param keycode SDL keycode to check.
+ * @return true when the key is down or pressed.
+ */
+bool rohr_controller_key_down(const KeyboardState *keyboard, SDL_Keycode keycode);
+
+/**
+ * @brief Checks whether an SDL keycode was pressed this frame.
+ * @param keyboard Keyboard state table to inspect.
+ * @param keycode SDL keycode to check.
+ * @return true when the key was pressed this frame.
+ */
+bool rohr_controller_key_pressed(const KeyboardState *keyboard, SDL_Keycode keycode);
+
+/**
+ * @brief Checks whether an SDL keycode was released this frame.
+ * @param keyboard Keyboard state table to inspect.
+ * @param keycode SDL keycode to check.
+ * @return true when the key was released this frame.
+ */
+bool rohr_controller_key_released(const KeyboardState *keyboard, SDL_Keycode keycode);
+
+/**
+ * @brief Returns normalized movement input from supplied up/left/down/right SDL keycodes.
+ *
+ * Opposing directions cancel before normalization. For example, left+right
+ * produces zero X, and up+down produces zero Y.
+ *
+ * @param keyboard Keyboard state table to inspect.
+ * @param up SDL keycode for positive Y.
+ * @param left SDL keycode for negative X.
+ * @param down SDL keycode for negative Y.
+ * @param right SDL keycode for positive X.
+ * @return Direction vector from the supplied directional keys.
+ */
+Vec2D rohr_controller_axis_from_keycodes(
+        const KeyboardState *keyboard,
+        SDL_Keycode up,
+        SDL_Keycode left,
+        SDL_Keycode down,
+        SDL_Keycode right
+);
+
+/**
+ * @brief Returns normalized movement input from W/A/S/D.
+ * @param keyboard Keyboard state table to inspect.
+ * @return Direction vector where W is positive Y and D is positive X.
+ */
+Vec2D rohr_controller_wasd_axis(const KeyboardState *keyboard);
+
+/**
+ * @brief Returns normalized movement input from arrow keys.
+ * @param keyboard Keyboard state table to inspect.
+ * @return Direction vector where up is positive Y and right is positive X.
+ */
+Vec2D rohr_controller_arrow_axis(const KeyboardState *keyboard);
 
 /**
  * @brief Prints a mouse event for debugging.

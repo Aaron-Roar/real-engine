@@ -63,7 +63,6 @@ EngineResult rohr_entity_group_remove(GroupId group, Entity entity) { return ent
 bool rohr_entity_group_contains(GroupId group, Entity entity) { return entity_group_contains(group, entity); }
 EntityGroupResult rohr_entity_group_get(GroupId group) { return entity_group_get(group); }
 EntityGroupMembershipResult rohr_entity_get_groups(Entity entity) { return entity_get_groups(entity); }
-EngineResult rohr_entity_group_for_each(GroupId group, EntityGroupFn fn, void *user_data) { return entity_group_for_each(group, fn, user_data); }
 EngineResult rohr_entity_delete_components(Entity entity, CMask mask) { return entity_delete_components(entity, mask); }
 EngineResult rohr_entity_set_child(Entity parent, Entity child) { return entity_set_child(parent, child); }
 EngineResult rohr_entity_set_parent(Entity child, Entity parent) { return entity_set_parent(child, parent); }
@@ -92,6 +91,12 @@ EngineResult rohr_physics_set_acceleration_away_from_position(Entity entity, flo
 EngineResult rohr_physics_set_acceleration_away_from_entity(Entity entity, float acceleration_magnitude, Entity target) {
     return physics_set_acceleration_away_from_entity(entity, acceleration_magnitude, target);
 }
+EngineResult rohr_physics_group_set_acceleration_toward_entity(GroupId group, float acceleration_magnitude, Entity target) {
+    return physics_group_set_acceleration_toward_entity(group, acceleration_magnitude, target);
+}
+EngineResult rohr_physics_group_set_acceleration_away_from_entity(GroupId group, float acceleration_magnitude, Entity target) {
+    return physics_group_set_acceleration_away_from_entity(group, acceleration_magnitude, target);
+}
 EngineResult rohr_physics_set_velocity(Entity entity, Velocity v) { return physics_set_velocity(entity, v); }
 EngineResult rohr_physics_set_velocity_toward_position(Entity entity, float speed, Position position) {
     return physics_set_velocity_toward_position(entity, speed, position);
@@ -105,12 +110,21 @@ EngineResult rohr_physics_set_velocity_away_from_position(Entity entity, float s
 EngineResult rohr_physics_set_velocity_away_from_entity(Entity entity, float speed, Entity target) {
     return physics_set_velocity_away_from_entity(entity, speed, target);
 }
+EngineResult rohr_physics_group_set_velocity_toward_entity(GroupId group, float speed, Entity target) {
+    return physics_group_set_velocity_toward_entity(group, speed, target);
+}
+EngineResult rohr_physics_group_set_velocity_away_from_entity(GroupId group, float speed, Entity target) {
+    return physics_group_set_velocity_away_from_entity(group, speed, target);
+}
 EngineResult rohr_physics_stop_entity(Entity entity) { return physics_stop_entity(entity); }
+EngineResult rohr_physics_group_stop_entities(GroupId group) { return physics_group_stop_entities(group); }
 EngineResult rohr_physics_apply_impulse(Entity entity, Vec2D impulse) { return physics_apply_impulse(entity, impulse); }
 EngineResult rohr_physics_set_position(Entity entity, Position p) { return physics_set_position(entity, p); }
 EngineResult rohr_physics_set_mass(Entity entity, Mass m) { return physics_set_mass(entity, m); }
 EntityResult rohr_physics_set_force(Entity entity, Force f) { return physics_set_force(entity, f); }
+EngineResult rohr_physics_apply_force_for_one_tick(Entity entity, Force f) { return physics_apply_force_for_one_tick(entity, f); }
 EntityResult rohr_physics_set_torque(Entity entity, Torque t) { return physics_set_torque(entity, t); }
+EngineResult rohr_physics_apply_torque_for_one_tick(Entity entity, Torque t) { return physics_apply_torque_for_one_tick(entity, t); }
 EngineResult rohr_physics_set_hitbox(Entity entity, Shape hitbox) { return physics_set_hitbox(entity, hitbox); }
 EngineResult rohr_physics_set_orientation(Entity entity, Orientation angle) { return physics_set_orientation(entity, angle); }
 EngineResult rohr_physics_set_angular_velocity(Entity entity, AngularVelocity v) { return physics_set_angular_velocity(entity, v); }
@@ -120,6 +134,8 @@ EngineResult rohr_physics_set_dynamic(Entity entity) { return physics_set_dynami
 EngineResult rohr_physics_set_static(Entity entity) { return physics_set_static(entity); }
 EngineResult rohr_physics_hold_entity(Entity entity) { return physics_hold_entity(entity); }
 EngineResult rohr_physics_unhold_entity(Entity entity) { return physics_unhold_entity(entity); }
+EngineResult rohr_physics_group_hold_entities(GroupId group) { return physics_group_hold_entities(group); }
+EngineResult rohr_physics_group_unhold_entities(GroupId group) { return physics_group_unhold_entities(group); }
 EngineResult rohr_physics_set_angle_lock(Entity entity, Orientation min, Orientation max) { return physics_set_angle_lock(entity, min, max); }
 EngineResult rohr_physics_set_axis_lock(Entity entity, Axis axis, Position axis_point) { return physics_set_axis_lock(entity, axis, axis_point); }
 EngineResult rohr_physics_set_friction(Entity entity, float friction) { return physics_set_friction(entity, friction); }
@@ -191,10 +207,23 @@ void rohr_system_clean_entities_past_lifetime(void) { system_clean_entities_past
 EngineResult rohr_level_editor_init(void) { return level_editor_init(); }
 EngineResult rohr_level_editor_update(void) { return level_editor_update(); }
 
-void rohr_controller_print_keyboard_event(KeyboardEvent event) { print_keyboard_event(event); }
 void rohr_controller_update_key_states(KeyboardState *keyboard) { update_key_states(keyboard); }
 void rohr_controller_add_key_event(KeyboardState *keyboard, KeyboardEvent key_event) { add_key_event(keyboard, key_event); }
 KeyboardEvent rohr_controller_capture_keyboard_event(const SDL_Event *sdl_event) { return capture_keyboard_event(sdl_event); }
+bool rohr_controller_key_down(const KeyboardState *keyboard, SDL_Keycode keycode) { return controller_key_down(keyboard, keycode); }
+bool rohr_controller_key_pressed(const KeyboardState *keyboard, SDL_Keycode keycode) { return controller_key_pressed(keyboard, keycode); }
+bool rohr_controller_key_released(const KeyboardState *keyboard, SDL_Keycode keycode) { return controller_key_released(keyboard, keycode); }
+Vec2D rohr_controller_axis_from_keycodes(
+        const KeyboardState *keyboard,
+        SDL_Keycode up,
+        SDL_Keycode left,
+        SDL_Keycode down,
+        SDL_Keycode right
+        ) {
+    return controller_axis_from_keycodes(keyboard, up, left, down, right);
+}
+Vec2D rohr_controller_wasd_axis(const KeyboardState *keyboard) { return controller_wasd_axis(keyboard); }
+Vec2D rohr_controller_arrow_axis(const KeyboardState *keyboard) { return controller_arrow_axis(keyboard); }
 void rohr_controller_print_mouse_event(MouseEvent event) { print_mouse_event(event); }
 void rohr_controller_update_mouse_states(MouseState *mouse) { update_mouse_states(mouse); }
 void rohr_controller_add_mouse_event(MouseState *mouse, MouseEvent mouse_event) { add_mouse_event(mouse, mouse_event); }

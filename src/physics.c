@@ -358,6 +358,79 @@ static Vec2D physics_direction_between_positions(Position from, Position to) {
     };
 }
 
+typedef EngineResult (*PhysicsGroupEntityTargetFn)(Entity entity, float magnitude, Entity target);
+typedef EngineResult (*PhysicsGroupEntityFn)(Entity entity);
+
+static EngineResult physics_group_apply_entity_target(GroupId group, float magnitude, Entity target, PhysicsGroupEntityTargetFn fn) {
+    EntityGroupResult group_result;
+    EntityGroup group_storage;
+    size_t i;
+
+    if(fn == NULL) {
+        return error_result_error(ERROR_MEMORY_POOL_NULL_POINTER);
+    }
+    group_result = entity_group_get(group);
+    if(group_result.kind == ERROR_RESULT_ERROR) {
+        return error_result_error(group_result.result.error);
+    }
+    group_storage = group_result.result.value;
+    if(group_storage.entities.objects == NULL || group_storage.entities.used == NULL) {
+        return error_result_value(true);
+    }
+    for(i = 0; i < group_storage.entities.capacity; i += 1) {
+        EngineResult result;
+        Entity entity;
+
+        if(group_storage.entities.used[i] == 0) {
+            continue;
+        }
+        entity = group_storage.entities.objects[i];
+        if(!entity_is_alive(entity)) {
+            continue;
+        }
+        result = fn(entity, magnitude, target);
+        if(result.kind == ERROR_RESULT_ERROR) {
+            return result;
+        }
+    }
+    return error_result_value(true);
+}
+
+static EngineResult physics_group_apply_entity(GroupId group, PhysicsGroupEntityFn fn) {
+    EntityGroupResult group_result;
+    EntityGroup group_storage;
+    size_t i;
+
+    if(fn == NULL) {
+        return error_result_error(ERROR_MEMORY_POOL_NULL_POINTER);
+    }
+    group_result = entity_group_get(group);
+    if(group_result.kind == ERROR_RESULT_ERROR) {
+        return error_result_error(group_result.result.error);
+    }
+    group_storage = group_result.result.value;
+    if(group_storage.entities.objects == NULL || group_storage.entities.used == NULL) {
+        return error_result_value(true);
+    }
+    for(i = 0; i < group_storage.entities.capacity; i += 1) {
+        EngineResult result;
+        Entity entity;
+
+        if(group_storage.entities.used[i] == 0) {
+            continue;
+        }
+        entity = group_storage.entities.objects[i];
+        if(!entity_is_alive(entity)) {
+            continue;
+        }
+        result = fn(entity);
+        if(result.kind == ERROR_RESULT_ERROR) {
+            return result;
+        }
+    }
+    return error_result_value(true);
+}
+
 //Entity
 EngineResult physics_set_velocity(Entity entity, Velocity v) {
     EntityIndex index;
@@ -404,8 +477,20 @@ EngineResult physics_set_velocity_away_from_entity(Entity entity, float speed, E
     return physics_set_velocity_toward_entity(entity, -speed, target);
 }
 
+EngineResult physics_group_set_velocity_toward_entity(GroupId group, float speed, Entity target) {
+    return physics_group_apply_entity_target(group, speed, target, physics_set_velocity_toward_entity);
+}
+
+EngineResult physics_group_set_velocity_away_from_entity(GroupId group, float speed, Entity target) {
+    return physics_group_apply_entity_target(group, speed, target, physics_set_velocity_away_from_entity);
+}
+
 EngineResult physics_stop_entity(Entity entity) {
     return physics_set_velocity(entity, (Velocity){0});
+}
+
+EngineResult physics_group_stop_entities(GroupId group) {
+    return physics_group_apply_entity(group, physics_stop_entity);
 }
 
 EngineResult physics_apply_impulse(Entity entity, Vec2D impulse) {
@@ -486,6 +571,22 @@ EntityResult physics_set_force(Entity entity, Force f) {
     console_debug_write(LOG_ENGINE, "Set Entity: %d Force: {x: %f, y: %f}\n", entity, f.x, f.y);
     return ERROR_RESULT_MAKE_VALUE(EntityResult, force_entity);
 }
+
+EngineResult physics_apply_force_for_one_tick(Entity entity, Force f) {
+    EntityResult force_result = physics_set_force(entity, f);
+    EngineResult result;
+
+    if(force_result.kind == ERROR_RESULT_ERROR) {
+        return error_result_error(force_result.result.error);
+    }
+    result = entity_set_life_time(force_result.result.value, 0.0, engine_get_tick() + 1);
+    if(result.kind == ERROR_RESULT_ERROR) {
+        (void)entity_delete(force_result.result.value);
+        return result;
+    }
+    return error_result_value(true);
+}
+
 EngineResult physics_set_acceleration(Entity entity, Acceleration a) {
     EntityIndex index;
     EngineResult result = physics_get_live_index(entity, &index);
@@ -546,6 +647,14 @@ EngineResult physics_set_acceleration_away_from_entity(Entity entity, float acce
     return physics_set_acceleration_toward_entity(entity, -acceleration_magnitude, target);
 }
 
+EngineResult physics_group_set_acceleration_toward_entity(GroupId group, float acceleration_magnitude, Entity target) {
+    return physics_group_apply_entity_target(group, acceleration_magnitude, target, physics_set_acceleration_toward_entity);
+}
+
+EngineResult physics_group_set_acceleration_away_from_entity(GroupId group, float acceleration_magnitude, Entity target) {
+    return physics_group_apply_entity_target(group, acceleration_magnitude, target, physics_set_acceleration_away_from_entity);
+}
+
 EntityResult physics_set_torque(Entity entity, Torque t) {
     EntityIndex index;
     EntityResult torque_result;
@@ -569,6 +678,22 @@ EntityResult physics_set_torque(Entity entity, Torque t) {
     console_debug_write(LOG_ENGINE, "Set Entity: %d Torque: %f\n", entity, t);
     return ERROR_RESULT_MAKE_VALUE(EntityResult, torque_entity);
 }
+
+EngineResult physics_apply_torque_for_one_tick(Entity entity, Torque t) {
+    EntityResult torque_result = physics_set_torque(entity, t);
+    EngineResult result;
+
+    if(torque_result.kind == ERROR_RESULT_ERROR) {
+        return error_result_error(torque_result.result.error);
+    }
+    result = entity_set_life_time(torque_result.result.value, 0.0, engine_get_tick() + 1);
+    if(result.kind == ERROR_RESULT_ERROR) {
+        (void)entity_delete(torque_result.result.value);
+        return result;
+    }
+    return error_result_value(true);
+}
+
 EngineResult physics_set_hitbox(Entity entity, Shape hitbox) {
     EntityIndex index;
     EngineResult result = physics_get_live_index(entity, &index);
@@ -705,6 +830,14 @@ EngineResult physics_unhold_entity(Entity entity) {
     }
     console_debug_write(LOG_ENGINE, "Unhold Entity: %d\n", entity);
     return error_result_value(true);
+}
+
+EngineResult physics_group_hold_entities(GroupId group) {
+    return physics_group_apply_entity(group, physics_hold_entity);
+}
+
+EngineResult physics_group_unhold_entities(GroupId group) {
+    return physics_group_apply_entity(group, physics_unhold_entity);
 }
 
 EngineResult physics_set_angle_lock(Entity entity, Orientation min, Orientation max) {

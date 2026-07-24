@@ -8,7 +8,10 @@ const Color background_color = (Color){255,255,255,255};
 AnimationAsset animation_elderfly = {0};
 AnimatedSprite sprite_elderfly = {0};
 const int amount_of_entities = 500;
-const Time demo_duration_seconds = 10.0;
+const Time demo_duration_seconds = 30.0;
+const Mass large_fly_mass = 50.0f;
+const float large_fly_control_acceleration = 240.0f;
+const Torque large_fly_control_torque = 2000000.0f;
 
 #define PRINT_ENGINE_ERROR(engine_result) \
     fprintf(stderr, "%s\n", rohr_error_default_message((engine_result).result.error))
@@ -17,6 +20,7 @@ int main(void) {
     EngineResult result;
     EntityResult entity_result;
     AnimationAssetResult animation_result;
+    KeyboardState keyboard = {0};
 
     if(rohr_error_check(result = rohr_engine_init())) {
         PRINT_ENGINE_ERROR(result);
@@ -79,7 +83,7 @@ int main(void) {
     large_fly = entity_result.result.value;
     rohr_physics_set_position(large_fly, (Position){.x = 0, .y = 300});
     rohr_physics_set_orientation(large_fly, 0);
-    rohr_physics_set_mass(large_fly, 50);
+    rohr_physics_set_mass(large_fly, large_fly_mass);
     rohr_physics_set_velocity(large_fly, (Velocity){0, 0});
     rohr_physics_set_acceleration(large_fly, (Acceleration){0, -30});
     rohr_physics_set_restitution(large_fly, 0.1);
@@ -87,14 +91,13 @@ int main(void) {
     rohr_physics_set_hitbox(large_fly, shape4);
     rohr_physics_set_friction(large_fly, 0.4);
     rohr_physics_set_dynamic(large_fly);
-    if(rohr_error_check(animation_result = rohr_graphics_load_animation(elderfly_fly_files))) {
+    if(rohr_error_check(animation_result = rohr_graphics_load_animation(elderfly_fly))) {
         PRINT_ENGINE_ERROR(animation_result);
         goto fail;
     }
     animation_elderfly = animation_result.result.value;
     sprite_elderfly = rohr_graphics_create_animated_sprite(animation_elderfly, (Scale){10,10});
     rohr_graphics_add_animated_sprite(large_fly, sprite_elderfly);
-    //set_axis_lock(large_fly, (Axis){0,1}, positions[smash]);
 
     time_t seed = 1003463;
     srand(seed);
@@ -134,6 +137,9 @@ int main(void) {
         if(event.type == SDL_EVENT_QUIT) {
             break;
         }
+        KeyboardEvent key_event = rohr_controller_capture_keyboard_event(&event);
+        rohr_controller_update_key_states(&keyboard);
+        rohr_controller_add_key_event(&keyboard, key_event);
         if(!phase_1 && rohr_engine_get_time() > 3) {
             phase_1 = true;
         }
@@ -142,6 +148,27 @@ int main(void) {
         }
         if(!phase_3 && rohr_engine_get_time() > 7) {
             phase_3 = true;
+        }
+
+        //Game Code
+        Vec2D move_axis = rohr_controller_wasd_axis(&keyboard);
+        Vec2D turn_axis = rohr_controller_axis_from_keycodes(&keyboard, SDLK_UNKNOWN, SDLK_LEFT, SDLK_UNKNOWN, SDLK_RIGHT);
+        if(move_axis.x != 0.0f || move_axis.y != 0.0f) {
+            result = rohr_physics_apply_force_for_one_tick(large_fly, (Force){
+                .x = move_axis.x * large_fly_mass * large_fly_control_acceleration,
+                .y = move_axis.y * large_fly_mass * large_fly_control_acceleration
+            });
+            if(rohr_error_check(result)) {
+                PRINT_ENGINE_ERROR(result);
+                goto fail;
+            }
+        }
+        if(turn_axis.x != 0.0f) {
+            result = rohr_physics_apply_torque_for_one_tick(large_fly, -turn_axis.x * large_fly_control_torque);
+            if(rohr_error_check(result)) {
+                PRINT_ENGINE_ERROR(result);
+                goto fail;
+            }
         }
 
         //physics

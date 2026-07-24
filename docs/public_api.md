@@ -571,22 +571,6 @@ Returns the groups assigned to an entity.
 
 **Returns:** EntityGroupMembershipResult containing group ids, or an error.
 
-### `rohr_entity_group_for_each`
-
-```c
-EngineResult rohr_entity_group_for_each(GroupId group, EntityGroupFn fn, void *user_data);
-```
-
-Runs a callback for each live entity in a group.
-
-| Parameter | Description |
-| --- | --- |
-| `group` | Group id to iterate. |
-| `fn` | Callback to run for each entity. |
-| `user_data` | Optional user data passed through to the callback. |
-
-**Returns:** EngineResult describing success or failure.
-
 ### `rohr_entity_delete_components`
 
 ```c
@@ -875,6 +859,38 @@ Sets entity acceleration away from another entity's current world position.
 
 **Returns:** EngineResult describing success or failure.
 
+### `rohr_physics_group_set_acceleration_toward_entity`
+
+```c
+EngineResult rohr_physics_group_set_acceleration_toward_entity(GroupId group, float acceleration_magnitude, Entity target);
+```
+
+Sets acceleration toward an entity for every live entity in a group.
+
+| Parameter | Description |
+| --- | --- |
+| `group` | Group id to update. |
+| `acceleration_magnitude` | Acceleration magnitude to apply along the direction to target. |
+| `target` | Target entity. |
+
+**Returns:** EngineResult describing success or failure.
+
+### `rohr_physics_group_set_acceleration_away_from_entity`
+
+```c
+EngineResult rohr_physics_group_set_acceleration_away_from_entity(GroupId group, float acceleration_magnitude, Entity target);
+```
+
+Sets acceleration away from an entity for every live entity in a group.
+
+| Parameter | Description |
+| --- | --- |
+| `group` | Group id to update. |
+| `acceleration_magnitude` | Acceleration magnitude to apply away from target. |
+| `target` | Source entity. |
+
+**Returns:** EngineResult describing success or failure.
+
 ### `rohr_physics_set_velocity`
 
 ```c
@@ -954,6 +970,38 @@ Sets entity velocity away from another entity's current world position.
 
 **Returns:** EngineResult describing success or failure.
 
+### `rohr_physics_group_set_velocity_toward_entity`
+
+```c
+EngineResult rohr_physics_group_set_velocity_toward_entity(GroupId group, float speed, Entity target);
+```
+
+Sets velocity toward an entity for every live entity in a group.
+
+| Parameter | Description |
+| --- | --- |
+| `group` | Group id to update. |
+| `speed` | Speed to apply along the direction to target. |
+| `target` | Target entity. |
+
+**Returns:** EngineResult describing success or failure.
+
+### `rohr_physics_group_set_velocity_away_from_entity`
+
+```c
+EngineResult rohr_physics_group_set_velocity_away_from_entity(GroupId group, float speed, Entity target);
+```
+
+Sets velocity away from an entity for every live entity in a group.
+
+| Parameter | Description |
+| --- | --- |
+| `group` | Group id to update. |
+| `speed` | Speed to apply away from target. |
+| `target` | Source entity. |
+
+**Returns:** EngineResult describing success or failure.
+
 ### `rohr_physics_stop_entity`
 
 ```c
@@ -965,6 +1013,20 @@ Sets an entity velocity to zero.
 | Parameter | Description |
 | --- | --- |
 | `entity` | Entity to modify. |
+
+**Returns:** EngineResult describing success or failure.
+
+### `rohr_physics_group_stop_entities`
+
+```c
+EngineResult rohr_physics_group_stop_entities(GroupId group);
+```
+
+Sets velocity to zero for every live entity in a group.
+
+| Parameter | Description |
+| --- | --- |
+| `group` | Group id to update. |
 
 **Returns:** EngineResult describing success or failure.
 
@@ -1028,6 +1090,21 @@ Sets an entity force component value.
 
 **Returns:** EntityResult containing entity on success, or an error.
 
+### `rohr_physics_apply_force_for_one_tick`
+
+```c
+EngineResult rohr_physics_apply_force_for_one_tick(Entity entity, Force f);
+```
+
+Applies force to an entity for one physics tick.
+
+| Parameter | Description |
+| --- | --- |
+| `entity` | Entity to target. |
+| `f` | Force vector. |
+
+**Returns:** EngineResult describing success or failure.
+
 ### `rohr_physics_set_torque`
 
 ```c
@@ -1042,6 +1119,21 @@ Sets an entity torque component value.
 | `t` | Torque value. |
 
 **Returns:** EntityResult containing entity on success, or an error.
+
+### `rohr_physics_apply_torque_for_one_tick`
+
+```c
+EngineResult rohr_physics_apply_torque_for_one_tick(Entity entity, Torque t);
+```
+
+Applies torque to an entity for one physics tick.
+
+| Parameter | Description |
+| --- | --- |
+| `entity` | Entity to target. |
+| `t` | Torque value. |
+
+**Returns:** EngineResult describing success or failure.
 
 ### `rohr_physics_set_hitbox`
 
@@ -1170,6 +1262,34 @@ Removes HOLD without changing STATIC or DYNAMIC state.
 | Parameter | Description |
 | --- | --- |
 | `entity` | Entity to modify. |
+
+**Returns:** EngineResult describing success or failure.
+
+### `rohr_physics_group_hold_entities`
+
+```c
+EngineResult rohr_physics_group_hold_entities(GroupId group);
+```
+
+Adds HOLD to every live entity in a group.
+
+| Parameter | Description |
+| --- | --- |
+| `group` | Group id to update. |
+
+**Returns:** EngineResult describing success or failure.
+
+### `rohr_physics_group_unhold_entities`
+
+```c
+EngineResult rohr_physics_group_unhold_entities(GroupId group);
+```
+
+Removes HOLD from every live entity in a group.
+
+| Parameter | Description |
+| --- | --- |
+| `group` | Group id to update. |
 
 **Returns:** EngineResult describing success or failure.
 
@@ -1997,18 +2117,6 @@ Updates the level editor.
 
 ## Controller Input
 
-### `rohr_controller_print_keyboard_event`
-
-```c
-void rohr_controller_print_keyboard_event(KeyboardEvent event);
-```
-
-Prints a keyboard event for debugging.
-
-| Parameter | Description |
-| --- | --- |
-| `event` | Keyboard event to print. |
-
 ### `rohr_controller_update_key_states`
 
 ```c
@@ -2047,6 +2155,101 @@ Converts an SDL event into a Rohr keyboard event.
 | `sdl_event` | SDL event to inspect. |
 
 **Returns:** KeyboardEvent derived from sdl_event.
+
+### `rohr_controller_key_down`
+
+```c
+bool rohr_controller_key_down(const KeyboardState *keyboard, SDL_Keycode keycode);
+```
+
+Checks whether an SDL keycode is currently held or was pressed this frame.
+
+| Parameter | Description |
+| --- | --- |
+| `keyboard` | Keyboard state table to inspect. |
+| `keycode` | SDL keycode to check. |
+
+**Returns:** true when the key is down or pressed.
+
+### `rohr_controller_key_pressed`
+
+```c
+bool rohr_controller_key_pressed(const KeyboardState *keyboard, SDL_Keycode keycode);
+```
+
+Checks whether an SDL keycode was pressed this frame.
+
+| Parameter | Description |
+| --- | --- |
+| `keyboard` | Keyboard state table to inspect. |
+| `keycode` | SDL keycode to check. |
+
+**Returns:** true when the key was pressed this frame.
+
+### `rohr_controller_key_released`
+
+```c
+bool rohr_controller_key_released(const KeyboardState *keyboard, SDL_Keycode keycode);
+```
+
+Checks whether an SDL keycode was released this frame.
+
+| Parameter | Description |
+| --- | --- |
+| `keyboard` | Keyboard state table to inspect. |
+| `keycode` | SDL keycode to check. |
+
+**Returns:** true when the key was released this frame.
+
+### `rohr_controller_axis_from_keycodes`
+
+```c
+Vec2D rohr_controller_axis_from_keycodes( const KeyboardState *keyboard, SDL_Keycode up, SDL_Keycode left, SDL_Keycode down, SDL_Keycode right );
+```
+
+Returns normalized movement input from supplied up/left/down/right SDL keycodes.
+
+Opposing directions cancel before normalization. For example, left+right
+
+produces zero X, and up+down produces zero Y.
+
+| Parameter | Description |
+| --- | --- |
+| `keyboard` | Keyboard state table to inspect. |
+| `up` | SDL keycode for positive Y. |
+| `left` | SDL keycode for negative X. |
+| `down` | SDL keycode for negative Y. |
+| `right` | SDL keycode for positive X. |
+
+**Returns:** Direction vector from the supplied directional keys.
+
+### `rohr_controller_wasd_axis`
+
+```c
+Vec2D rohr_controller_wasd_axis(const KeyboardState *keyboard);
+```
+
+Returns normalized movement input from W/A/S/D.
+
+| Parameter | Description |
+| --- | --- |
+| `keyboard` | Keyboard state table to inspect. |
+
+**Returns:** Direction vector where W is positive Y and D is positive X.
+
+### `rohr_controller_arrow_axis`
+
+```c
+Vec2D rohr_controller_arrow_axis(const KeyboardState *keyboard);
+```
+
+Returns normalized movement input from arrow keys.
+
+| Parameter | Description |
+| --- | --- |
+| `keyboard` | Keyboard state table to inspect. |
+
+**Returns:** Direction vector where up is positive Y and right is positive X.
 
 ### `rohr_controller_print_mouse_event`
 

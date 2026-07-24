@@ -1,5 +1,5 @@
 #include "elderfly_descriptors.h"
-AnimationDescriptor elderfly_fly_files = (AnimationDescriptor) {
+AnimationDescriptor elderfly_fly = (AnimationDescriptor) {
   .texture_descriptors = {
     {
       "examples/test-assets/elder-fly/flying/f1.png",
@@ -55,7 +55,7 @@ AnimationDescriptor elderfly_fly_files = (AnimationDescriptor) {
   .time_per_frame = 0.05,
 };
 
-AnimationDescriptor elderfly_death_files = (AnimationDescriptor) {
+AnimationDescriptor elderfly_death = (AnimationDescriptor) {
   .texture_descriptors = {
     {
       "examples/test-assets/elder-fly/death/d1.png",
@@ -103,7 +103,7 @@ AnimationDescriptor elderfly_death_files = (AnimationDescriptor) {
   .time_per_frame = 0.08,
 };
 
-AnimationDescriptor elderfly_attack_files = (AnimationDescriptor) {
+AnimationDescriptor elderfly_attack = (AnimationDescriptor) {
   .texture_descriptors = {
     {
       "examples/test-assets/elder-fly/attack/a1.png",
@@ -147,7 +147,7 @@ AnimationDescriptor elderfly_attack_files = (AnimationDescriptor) {
   .time_per_frame = 0.05,
 };
 
-AnimationDescriptor elderfly_jump_files = (AnimationDescriptor) {
+AnimationDescriptor elderfly_jump = (AnimationDescriptor) {
   .texture_descriptors = {
     {
       "examples/test-assets/elder-fly/jump/j1.png",
@@ -191,7 +191,7 @@ AnimationDescriptor elderfly_jump_files = (AnimationDescriptor) {
   .time_per_frame = 0.05,
 };
 
-AnimationDescriptor elderfly_land_files = (AnimationDescriptor) {
+AnimationDescriptor elderfly_land = (AnimationDescriptor) {
   .texture_descriptors = {
     {
       "examples/test-assets/elder-fly/land/l1.png",
@@ -219,7 +219,7 @@ AnimationDescriptor elderfly_land_files = (AnimationDescriptor) {
   .time_per_frame = 0.05,
 };
 
-AnimationDescriptor elderfly_takedamage_files = (AnimationDescriptor) {
+AnimationDescriptor elderfly_take_damage = (AnimationDescriptor) {
   .texture_descriptors = {
     {
       "examples/test-assets/elder-fly/take-damage/td1.png",

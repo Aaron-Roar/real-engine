@@ -925,40 +925,6 @@ EntityGroupMembershipResult entity_get_groups(Entity entity) {
     return ERROR_RESULT_MAKE_VALUE(EntityGroupMembershipResult, entity_group_memberships[index]);
 }
 
-EngineResult entity_group_for_each(GroupId group, EntityGroupFn fn, void *user_data) {
-    EntityGroup *group_storage;
-    size_t i;
-
-    if(fn == NULL) {
-        return error_result_error(ERROR_MEMORY_POOL_NULL_POINTER);
-    }
-    if(!entity_group_is_alive(group)) {
-        return error_result_error(ERROR_ENGINE_INVALID_ENTITY);
-    }
-    group_storage = &entity_groups[entity_group_index(group)];
-    if(group_storage->entities.objects == NULL || group_storage->entities.used == NULL) {
-        return error_result_value(true);
-    }
-    for(i = 0; i < group_storage->entities.capacity; i += 1) {
-        EngineResult result;
-        Entity entity;
-
-        if(group_storage->entities.used[i] == 0) {
-            continue;
-        }
-        entity = group_storage->entities.objects[i];
-        if(!entity_is_alive(entity)) {
-            continue;
-        }
-        result = fn(entity, user_data);
-        if(result.kind == ERROR_RESULT_ERROR) {
-            return result;
-        }
-    }
-    return error_result_value(true);
-}
-
-
 static EngineResult entity_ensure_children_component(Entity parent, EntityIndex parent_index) {
     GroupIdResult group_result;
     EngineResult result;

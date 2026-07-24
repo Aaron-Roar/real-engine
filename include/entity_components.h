@@ -144,9 +144,6 @@ typedef GroupId Children;
 /** Result type for functions returning a children group id. */
 ERROR_DECLARE_RESULT_TYPE(ChildrenResult, Children);
 
-/** Callback used by entity_group_for_each(). */
-typedef EngineResult (*EntityGroupFn)(Entity entity, void *user_data);
-
 /** Result type for functions returning Parent. */
 ERROR_DECLARE_RESULT_TYPE(ParentResult, Parent);
 
@@ -360,16 +357,6 @@ EntityGroupResult entity_group_get(GroupId group);
  * @return EntityGroupMembershipResult containing group ids, or an error.
  */
 EntityGroupMembershipResult entity_get_groups(Entity entity);
-
-/**
- * Run a callback for each live entity in a group.
- *
- * @param group Group id to iterate.
- * @param fn Callback to run for each entity.
- * @param user_data Optional user data passed through to the callback.
- * @return EngineResult describing success or failure.
- */
-EngineResult entity_group_for_each(GroupId group, EntityGroupFn fn, void *user_data);
 
 /**
  * Remove component bits from an entity.

@@ -8,28 +8,13 @@ const Color background_color = (Color){255,255,255,255};
 const int amount_of_entities = 20;
 AnimationAsset animation = {0};
 AnimatedSprite sprite = {0};
-const Time demo_duration_seconds = 10.0;
+const Time demo_duration_seconds = 30.0;
+const Mass ball_mass = 5000.0f;
+const float ball_control_acceleration = 240.0f;
+const Torque ball_control_torque = 2000000.0f;
 
 #define PRINT_ENGINE_ERROR(engine_result) \
     fprintf(stderr, "%s\n", rohr_error_default_message((engine_result).result.error))
-
-typedef struct ChildAccelerationData {
-    Entity parent;
-    float magnitude;
-    bool away;
-} ChildAccelerationData;
-
-static EngineResult accelerate_child(Entity child, void *user_data) {
-    ChildAccelerationData *data = user_data;
-
-    if(data == NULL) {
-        return rohr_error_result_error(ERROR_MEMORY_POOL_NULL_POINTER);
-    }
-    if(data->away) {
-        return rohr_physics_set_acceleration_away_from_entity(child, data->magnitude, data->parent);
-    }
-    return rohr_physics_set_acceleration_toward_entity(child, data->magnitude, data->parent);
-}
 
 int main(void) {
     EngineResult result;
@@ -37,6 +22,7 @@ int main(void) {
     ChildrenResult children_result;
     AnimationAssetResult animation_result;
     GroupId children_group = GROUP_INVALID;
+    KeyboardState keyboard = {0};
 
     if(rohr_error_check(result = rohr_engine_init())) {
         PRINT_ENGINE_ERROR(result);
@@ -49,7 +35,7 @@ int main(void) {
         return 1;
     }
 
-    if(rohr_error_check(animation_result = rohr_graphics_load_animation(elderfly_fly_files))) {
+    if(rohr_error_check(animation_result = rohr_graphics_load_animation(elderfly_fly))) {
         PRINT_ENGINE_ERROR(animation_result);
         goto fail;
     }
@@ -63,8 +49,8 @@ int main(void) {
     }
     ball = entity_result.result.value;
     rohr_physics_set_position(ball, (Position){.x = 0, .y = 100});
-    rohr_physics_set_orientation(ball, 1);
-    rohr_physics_set_mass(ball, 5000);
+    rohr_physics_set_orientation(ball, 0);
+    rohr_physics_set_mass(ball, ball_mass);
     rohr_physics_set_velocity(ball, (Velocity){0, 0});
     //set_angular_velocity(ball, 3);
     rohr_physics_set_acceleration(ball, (Acceleration){0, 0});
@@ -72,11 +58,7 @@ int main(void) {
     Shape ball_shape = rohr_math_create_circle(50, 4);
     rohr_physics_set_hitbox(ball, ball_shape);
     rohr_physics_set_friction(ball, 0.4);
-    rohr_physics_set_static(ball);
-    EntityIndex ball_index;
-    if(rohr_entity_get_index(ball, &ball_index)) {
-        rohr_physics_set_axis_lock(ball, (Axis){1,0}, positions[ball_index]);
-    }
+    rohr_physics_set_dynamic(ball);
     //set_angle_lock(ball, 0, 0);
 
     time_t seed = 1003463;
@@ -127,6 +109,9 @@ int main(void) {
         if(event.type == SDL_EVENT_QUIT) {
             break;
         }
+        KeyboardEvent key_event = rohr_controller_capture_keyboard_event(&event);
+        rohr_controller_update_key_states(&keyboard);
+        rohr_controller_add_key_event(&keyboard, key_event);
         if(!phase_1 && rohr_engine_get_time() > 3) {
             phase_1 = true;
         }
@@ -140,13 +125,34 @@ int main(void) {
         //Game Code
         Time time = rohr_engine_get_time();
         Time phase_time = time - ((int)(time / 4.0) * 4.0);
-        ChildAccelerationData acceleration_data = {
-            .parent = ball,
-            .magnitude = 20.0f + (float)time * 12.0f,
-            .away = phase_time >= 3.0
-        };
+        float acceleration_magnitude = 50.0f + (float)time * 22.0f;
+        Vec2D move_axis = rohr_controller_wasd_axis(&keyboard);
+        Vec2D turn_axis = rohr_controller_axis_from_keycodes(&keyboard, SDLK_UNKNOWN, SDLK_LEFT, SDLK_UNKNOWN, SDLK_RIGHT);
 
-        if(rohr_error_check(result = rohr_entity_group_for_each(children_group, accelerate_child, &acceleration_data))) {
+        if(move_axis.x != 0.0f || move_axis.y != 0.0f) {
+            result = rohr_physics_apply_force_for_one_tick(ball, (Force){
+                .x = -move_axis.x * ball_mass * ball_control_acceleration,
+                .y = -move_axis.y * ball_mass * ball_control_acceleration
+            });
+            if(rohr_error_check(result)) {
+                PRINT_ENGINE_ERROR(result);
+                goto fail;
+            }
+        }
+        if(turn_axis.x != 0.0f) {
+            result = rohr_physics_apply_torque_for_one_tick(ball, -turn_axis.x * ball_control_torque);
+            if(rohr_error_check(result)) {
+                PRINT_ENGINE_ERROR(result);
+                goto fail;
+            }
+        }
+
+        if(phase_time < 3.0) {
+            result = rohr_physics_group_set_acceleration_toward_entity(children_group, acceleration_magnitude, ball);
+        } else {
+            result = rohr_physics_group_set_acceleration_away_from_entity(children_group, acceleration_magnitude, ball);
+        }
+        if(rohr_error_check(result)) {
             PRINT_ENGINE_ERROR(result);
             goto fail;
         }
