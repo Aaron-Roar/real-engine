@@ -204,17 +204,20 @@ Useful contributions include:
 
 Please keep the style of the project in mind: plain C, explicit ownership, minimal dependencies, and focused changes.
 
-## License Intent
+## License Status
 
-I want Rohr Engine to be usable as a library in other projects, including closed-source games or applications, while still requiring changes to the engine itself to stay open when distributed.
+The license is not finalized yet.
 
-That sounds closest to the GNU Lesser General Public License, likely `LGPL-3.0-or-later`, but the license is not finalized until the repository includes the proper license files. If you plan to use this seriously before that is finished, please check the current repo state first.
+I am currently deciding between `Apache-2.0` and `LGPL-3.0-or-later`. Until a
+proper `LICENSE` file is added, please treat the licensing as undecided and be
+careful about depending on the project for released work.
 
-The intent is:
+The goal is still for Rohr Engine to be usable as a library in other projects,
+including closed-source games or applications. The main decision is whether
+engine changes should be required to stay open when distributed.
 
-* You can link the engine as a library from your own project.
-* Your game or application code can remain under your own license.
-* If you modify and distribute the engine itself, those engine changes should be shared under the same library license.
+If that requirement stays important, `LGPL-3.0-or-later` is likely the better
+fit. If simpler adoption matters more, `Apache-2.0` may be the better fit.
 
 ## Roadmap
 
