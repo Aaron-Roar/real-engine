@@ -12,71 +12,46 @@
 #include "examples/test-assets/elder-fly/elderfly_descriptors.h"
 
 const Color background_color = (Color){255,255,255,255};
-#define amount_of_entities 20
+const int amount_of_entities = 20;
 AnimationAsset animation = {0};
 AnimatedSprite sprite = {0};
 
-static bool example_add_entity(Entity *entity) {
-    EntityResult result = entity_add();
-
-    if(entity == NULL) {
-        return false;
-    }
-    if(result.kind == ERROR_RESULT_ERROR) {
-        console_write(LOG_ENGINE, "Error: failed to add entity: %s\n", error_string(result.result.error));
-        return false;
-    }
-    *entity = result.result.value;
-    return true;
-}
-
-static bool example_load_animation(AnimationDescriptor descriptor, AnimationAsset *asset) {
-    AnimationAssetResult result = graphics_load_animation(descriptor);
-
-    if(asset == NULL) {
-        return false;
-    }
-    if(result.kind == ERROR_RESULT_ERROR) {
-        console_write(LOG_ENGINE, "Error: failed to load animation: %s\n", error_string(result.result.error));
-        return false;
-    }
-    *asset = result.result.value;
-    return true;
-}
-
 int main() {
+    EngineResult result;
+    EntityResult entity_result;
+    AnimationAssetResult animation_result;
+
     console_init();
     console_set_debug(CONSOLE_DEBUG_OFF);
-    EngineResult engine_result = engine_init();
-    if(engine_result.kind == ERROR_RESULT_ERROR) {
-        console_write(LOG_ENGINE, "Error: failed to initialize engine: %s\n", error_string(engine_result.result.error));
+    if(error_check(result = engine_init())) {
+        console_write(LOG_ENGINE, error_default_message(result.result.error));
         return 1;
     }
-    EngineResult level_editor_result = level_editor_init();
-    if(level_editor_result.kind == ERROR_RESULT_ERROR) {
-        console_write(LOG_ENGINE, "Error: failed to initialize level editor: %s\n", error_string(level_editor_result.result.error));
+    if(error_check(result = level_editor_init())) {
+        console_write(LOG_ENGINE, error_default_message(result.result.error));
         engine_shutdown();
         return 1;
     }
     SDL_Event event = {0};
-    EngineResult graphics_result = graphics_start();
-    if(graphics_result.kind == ERROR_RESULT_ERROR) {
-        console_write(LOG_ENGINE, "Error: failed to initialize graphics: %s\n", error_string(graphics_result.result.error));
+    if(error_check(result = graphics_start())) {
+        console_write(LOG_ENGINE, error_default_message(result.result.error));
         engine_shutdown();
         return 1;
     }
 
-    if(!example_load_animation(elderfly_fly_files, &animation)) {
-        engine_shutdown();
-        return 1;
+    if(error_check(animation_result = graphics_load_animation(elderfly_fly_files))) {
+        console_write(LOG_ENGINE, error_default_message(animation_result.result.error));
+        goto fail;
     }
+    animation = animation_result.result.value;
     sprite = graphics_create_animated_sprite(animation, (Scale){3,3});
 
     Entity magnet_smash;
-    if(!example_add_entity(&magnet_smash)) {
-        engine_shutdown();
-        return 1;
+    if(error_check(entity_result = entity_add())) {
+        console_write(LOG_ENGINE, error_default_message(entity_result.result.error));
+        goto fail;
     }
+    magnet_smash = entity_result.result.value;
     physics_set_position(magnet_smash, (Position){.x = 0, .y = 100});
     physics_set_orientation(magnet_smash, 1);
     physics_set_mass(magnet_smash, 5000);
@@ -98,10 +73,11 @@ int main() {
     srand(seed);
     for(int i = 0; i < amount_of_entities; i += 1) {
         Entity ball;
-        if(!example_add_entity(&ball)) {
-            engine_shutdown();
-            return 1;
+        if(error_check(entity_result = entity_add())) {
+            console_write(LOG_ENGINE, error_default_message(entity_result.result.error));
+            goto fail;
         }
+        ball = entity_result.result.value;
         physics_set_position(ball, (Position){.x = tools_random_range(100, 400), .y = tools_random_range(0, 300)});
         physics_set_orientation(ball, tools_random_range(0, 2*PI_F));
         physics_set_mass(ball, 10);
@@ -114,11 +90,9 @@ int main() {
         physics_set_friction(ball, 0.4);
         physics_set_dynamic(ball);
         //set_transform_lock(ball, water_smash, (Vec2D){tools_random_range(100, 400), tools_random_range(100, 400)}, tools_random_range(0, 10), true, true, false);
-        EntityResult joint_result = physics_set_joint(ball, magnet_smash, JOINT_DISTANCE, (Vec2D){0}, (Vec2D){0}, 10, 0);
-        if(joint_result.kind == ERROR_RESULT_ERROR) {
-            console_write(LOG_ENGINE, "Error: failed to create joint: %s\n", error_string(joint_result.result.error));
-            engine_shutdown();
-            return 1;
+        if(error_check(entity_result = physics_set_joint(ball, magnet_smash, JOINT_DISTANCE, (Vec2D){0}, (Vec2D){0}, 10, 0))) {
+            console_write(LOG_ENGINE, error_default_message(entity_result.result.error));
+            goto fail;
         }
         sprite = graphics_create_animated_sprite(animation, (Scale){size/10, size/10});
         sprite.animation.time_per_frame = tools_random_range_float(0.005, 0.5);
@@ -172,4 +146,10 @@ int main() {
     }
     graphics_end();
     engine_shutdown();
+    return 0;
+
+fail:
+    graphics_end();
+    engine_shutdown();
+    return 1;
 }

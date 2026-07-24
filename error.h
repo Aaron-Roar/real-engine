@@ -65,10 +65,14 @@ typedef enum EngineError {
         .result.error = (ErrorValue) \
     })
 
+#define error_check(ResultValue) \
+    ((ResultValue).kind == ERROR_RESULT_ERROR)
+
 ERROR_DECLARE_RESULT_TYPE(EngineResult, bool);
 
 EngineResult error_result_value(bool value);
 EngineResult error_result_error(EngineError error);
+const char *error_default_message(EngineError error);
 const char *error_string(EngineError error);
 
 #endif

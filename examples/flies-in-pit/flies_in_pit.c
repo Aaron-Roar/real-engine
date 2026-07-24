@@ -17,63 +17,37 @@ AnimationAsset animation_elderfly = {0};
 AnimatedSprite sprite_elderfly = {0};
 AnimationAsset animation_orm = {0};
 AnimatedSprite sprite_orm = {0};
-#define amount_of_entities 500
-
-static bool example_add_entity(Entity *entity) {
-    EntityResult result = entity_add();
-
-    if(entity == NULL) {
-        return false;
-    }
-    if(result.kind == ERROR_RESULT_ERROR) {
-        console_write(LOG_ENGINE, "Error: failed to add entity: %s\n", error_string(result.result.error));
-        return false;
-    }
-    *entity = result.result.value;
-    return true;
-}
-
-static bool example_load_animation(AnimationDescriptor descriptor, AnimationAsset *asset) {
-    AnimationAssetResult result = graphics_load_animation(descriptor);
-
-    if(asset == NULL) {
-        return false;
-    }
-    if(result.kind == ERROR_RESULT_ERROR) {
-        console_write(LOG_ENGINE, "Error: failed to load animation: %s\n", error_string(result.result.error));
-        return false;
-    }
-    *asset = result.result.value;
-    return true;
-}
+const int amount_of_entities = 500;
 
 int main() {
+    EngineResult result;
+    EntityResult entity_result;
+    AnimationAssetResult animation_result;
+
     console_init();
     console_set_debug(CONSOLE_DEBUG_OFF);
-    EngineResult engine_result = engine_init();
-    if(engine_result.kind == ERROR_RESULT_ERROR) {
-        console_write(LOG_ENGINE, "Error: failed to initialize engine: %s\n", error_string(engine_result.result.error));
+    if(error_check(result = engine_init())) {
+        console_write(LOG_ENGINE, error_default_message(result.result.error));
         return 1;
     }
     engine_set_dt(1/(float)120);
-    EngineResult level_editor_result = level_editor_init();
-    if(level_editor_result.kind == ERROR_RESULT_ERROR) {
-        console_write(LOG_ENGINE, "Error: failed to initialize level editor: %s\n", error_string(level_editor_result.result.error));
+    if(error_check(result = level_editor_init())) {
+        console_write(LOG_ENGINE, error_default_message(result.result.error));
         engine_shutdown();
         return 1;
     }
-    EngineResult graphics_result = graphics_start();
-    if(graphics_result.kind == ERROR_RESULT_ERROR) {
-        console_write(LOG_ENGINE, "Error: failed to initialize graphics: %s\n", error_string(graphics_result.result.error));
+    if(error_check(result = graphics_start())) {
+        console_write(LOG_ENGINE, error_default_message(result.result.error));
         engine_shutdown();
         return 1;
     }
 
     Entity water_wall_1;
-    if(!example_add_entity(&water_wall_1)) {
-        engine_shutdown();
-        return 1;
+    if(error_check(entity_result = entity_add())) {
+        console_write(LOG_ENGINE, error_default_message(entity_result.result.error));
+        goto fail;
     }
+    water_wall_1 = entity_result.result.value;
     physics_set_static(water_wall_1);
     physics_set_position(water_wall_1, (Position){0, -80});
     physics_set_orientation(water_wall_1, 120*(PI_F/180));
@@ -83,10 +57,11 @@ int main() {
     physics_set_hitbox(water_wall_1, shape_1);
 
     Entity water_wall_2;
-    if(!example_add_entity(&water_wall_2)) {
-        engine_shutdown();
-        return 1;
+    if(error_check(entity_result = entity_add())) {
+        console_write(LOG_ENGINE, error_default_message(entity_result.result.error));
+        goto fail;
     }
+    water_wall_2 = entity_result.result.value;
     physics_set_static(water_wall_2);
     physics_set_position(water_wall_2, (Position){-180, -10});
     physics_set_orientation(water_wall_2, 0*(PI_F/180));
@@ -96,10 +71,11 @@ int main() {
     physics_set_hitbox(water_wall_2, shape_2);
 
     Entity water_wall_3;
-    if(!example_add_entity(&water_wall_3)) {
-        engine_shutdown();
-        return 1;
+    if(error_check(entity_result = entity_add())) {
+        console_write(LOG_ENGINE, error_default_message(entity_result.result.error));
+        goto fail;
     }
+    water_wall_3 = entity_result.result.value;
     physics_set_static(water_wall_3);
     physics_set_position(water_wall_3, (Position){180, -10});
     physics_set_orientation(water_wall_3, 0*(PI_F/180));
@@ -109,10 +85,11 @@ int main() {
     physics_set_hitbox(water_wall_3, shape_3);
 
     Entity water_smash;
-    if(!example_add_entity(&water_smash)) {
-        engine_shutdown();
-        return 1;
+    if(error_check(entity_result = entity_add())) {
+        console_write(LOG_ENGINE, error_default_message(entity_result.result.error));
+        goto fail;
     }
+    water_smash = entity_result.result.value;
     physics_set_position(water_smash, (Position){.x = 0, .y = 300});
     physics_set_orientation(water_smash, 0);
     physics_set_mass(water_smash, 50);
@@ -123,26 +100,29 @@ int main() {
     physics_set_hitbox(water_smash, shape4);
     physics_set_friction(water_smash, 0.4);
     physics_set_dynamic(water_smash);
-    if(!example_load_animation(orm_files, &animation_orm)) {
-        engine_shutdown();
-        return 1;
+    if(error_check(animation_result = graphics_load_animation(orm_files))) {
+        console_write(LOG_ENGINE, error_default_message(animation_result.result.error));
+        goto fail;
     }
-        sprite_orm = graphics_create_animated_sprite(animation_orm, (Scale){10,10});
-        graphics_add_animated_sprite(water_smash, sprite_orm);
+    animation_orm = animation_result.result.value;
+    sprite_orm = graphics_create_animated_sprite(animation_orm, (Scale){10,10});
+    graphics_add_animated_sprite(water_smash, sprite_orm);
     //set_axis_lock(water_smash, (Axis){0,1}, positions[smash]);
 
-    if(!example_load_animation(elderfly_fly_files, &animation_elderfly)) {
-        engine_shutdown();
-        return 1;
+    if(error_check(animation_result = graphics_load_animation(elderfly_fly_files))) {
+        console_write(LOG_ENGINE, error_default_message(animation_result.result.error));
+        goto fail;
     }
+    animation_elderfly = animation_result.result.value;
     time_t seed = 1003463;
     srand(seed);
     for(int i = 0; i < amount_of_entities - 1; i += 1) {
         Entity ball;
-        if(!example_add_entity(&ball)) {
-            engine_shutdown();
-            return 1;
+        if(error_check(entity_result = entity_add())) {
+            console_write(LOG_ENGINE, error_default_message(entity_result.result.error));
+            goto fail;
         }
+        ball = entity_result.result.value;
         physics_set_position(ball, (Position){.x = tools_random_range(-10, 10), .y = tools_random_range(100, 200)});
         physics_set_orientation(ball, tools_random_range(0, 2*PI_F));
         physics_set_mass(ball, 1);
@@ -213,4 +193,10 @@ int main() {
     }
     graphics_end();
     engine_shutdown();
+    return 0;
+
+fail:
+    graphics_end();
+    engine_shutdown();
+    return 1;
 }

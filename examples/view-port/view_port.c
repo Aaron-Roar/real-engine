@@ -17,57 +17,32 @@ const Color background_color = (Color){255,255,255,255};
 AnimationAsset animation_orm = {0};
 AnimatedSprite sprite_orm = {0};
 
-static bool example_add_entity(Entity *entity) {
-    EntityResult result = entity_add();
-
-    if(entity == NULL) {
-        return false;
-    }
-    if(result.kind == ERROR_RESULT_ERROR) {
-        console_write(LOG_ENGINE, "Error: failed to add entity: %s\n", error_string(result.result.error));
-        return false;
-    }
-    *entity = result.result.value;
-    return true;
-}
-
-static bool example_load_animation(AnimationDescriptor descriptor, AnimationAsset *asset) {
-    AnimationAssetResult result = graphics_load_animation(descriptor);
-
-    if(asset == NULL) {
-        return false;
-    }
-    if(result.kind == ERROR_RESULT_ERROR) {
-        console_write(LOG_ENGINE, "Error: failed to load animation: %s\n", error_string(result.result.error));
-        return false;
-    }
-    *asset = result.result.value;
-    return true;
-}
-
 int main() {
+    EngineResult result;
+    EntityResult entity_result;
+    AnimationAssetResult animation_result;
+
     console_init();
     console_set_debug(CONSOLE_DEBUG_OFF);
-    EngineResult engine_result = engine_init();
-    if(engine_result.kind == ERROR_RESULT_ERROR) {
-        console_write(LOG_ENGINE, "Error: failed to initialize engine: %s\n", error_string(engine_result.result.error));
+    if(error_check(result = engine_init())) {
+        console_write(LOG_ENGINE, error_default_message(result.result.error));
         return 1;
     }
     KeyboardState keyboard = {0};
     MouseState mouse = {0};
     //level_editor_init();
-    EngineResult graphics_result = graphics_start();
-    if(graphics_result.kind == ERROR_RESULT_ERROR) {
-        console_write(LOG_ENGINE, "Error: failed to initialize graphics: %s\n", error_string(graphics_result.result.error));
+    if(error_check(result = graphics_start())) {
+        console_write(LOG_ENGINE, error_default_message(result.result.error));
         engine_shutdown();
         return 1;
     }
 
     Entity water_smash;
-    if(!example_add_entity(&water_smash)) {
-        engine_shutdown();
-        return 1;
+    if(error_check(entity_result = entity_add())) {
+        console_write(LOG_ENGINE, error_default_message(entity_result.result.error));
+        goto fail;
     }
+    water_smash = entity_result.result.value;
     physics_set_position(water_smash, (Position){.x = 0, .y = 0});
     physics_set_orientation(water_smash, 0);
     physics_set_mass(water_smash, 50);
@@ -77,12 +52,13 @@ int main() {
     physics_set_hitbox(water_smash, shape4);
     physics_set_friction(water_smash, 0.4);
     physics_set_dynamic(water_smash);
-    if(!example_load_animation(orm_files, &animation_orm)) {
-        engine_shutdown();
-        return 1;
+    if(error_check(animation_result = graphics_load_animation(orm_files))) {
+        console_write(LOG_ENGINE, error_default_message(animation_result.result.error));
+        goto fail;
     }
-        sprite_orm = graphics_create_animated_sprite(animation_orm, (Scale){10,10});
-        graphics_add_animated_sprite(water_smash, sprite_orm);
+    animation_orm = animation_result.result.value;
+    sprite_orm = graphics_create_animated_sprite(animation_orm, (Scale){10,10});
+    graphics_add_animated_sprite(water_smash, sprite_orm);
 
     engine_reset_clock();
     Time dt = engine_get_dt();
@@ -183,4 +159,10 @@ int main() {
     }
     graphics_end();
     engine_shutdown();
+    return 0;
+
+fail:
+    graphics_end();
+    engine_shutdown();
+    return 1;
 }

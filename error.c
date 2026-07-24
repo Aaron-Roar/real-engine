@@ -14,7 +14,7 @@ EngineResult error_result_error(EngineError error) {
     };
 }
 
-const char *error_string(EngineError error) {
+const char *error_default_message(EngineError error) {
     switch(error) {
         case ERROR_NONE:
             return "no error";
@@ -63,4 +63,8 @@ const char *error_string(EngineError error) {
         default:
             return "unknown error";
     }
+}
+
+const char *error_string(EngineError error) {
+    return error_default_message(error);
 }

@@ -801,12 +801,12 @@ LevelEditorMode editor_input_to_mode(LevelEditorMode current_mode, EditorInput i
 
 
 
-void editor_select(EditorInput input) {
+EngineResult editor_select(EditorInput input) {
     if(input.pressed) {
         EntityIndex selection_index;
 
         if(!entity_get_index(selection, &selection_index)) {
-            return;
+            return error_result_value(true);
         }
         //Do something here??
         console_write(LOG_APP, "Pressed\n");
@@ -823,217 +823,226 @@ void editor_select(EditorInput input) {
             }
         }
     }
+    return error_result_value(true);
 }
 
-void editor_move_mouse(EditorInput input) {
+EngineResult editor_move_mouse(EditorInput input) {
     EntityIndex selection_index;
 
     if(!entity_get_index(selection, &selection_index)) {
-        return;
+        return error_result_value(true);
     }
-    physics_set_position(selected_entity, positions[selection_index]);
+    return physics_set_position(selected_entity, positions[selection_index]);
 }
 
 //Rotation
-void editor_rotate_cw(EditorInput input) {
+EngineResult editor_rotate_cw(EditorInput input) {
     EntityIndex selected_index;
     if(entity_get_index(selected_entity, &selected_index)) {
-        physics_set_orientation(selected_entity, orientations[selected_index] - 1*2*PI_F/360);
+        return physics_set_orientation(selected_entity, orientations[selected_index] - 1*2*PI_F/360);
     }
+    return error_result_value(true);
 }
-void editor_rotate_ccw(EditorInput input) {
+EngineResult editor_rotate_ccw(EditorInput input) {
     EntityIndex selected_index;
     if(entity_get_index(selected_entity, &selected_index)) {
-        physics_set_orientation(selected_entity, orientations[selected_index] + 1*2*PI_F/360);
+        return physics_set_orientation(selected_entity, orientations[selected_index] + 1*2*PI_F/360);
     }
+    return error_result_value(true);
 }
-void editor_rotate_up(EditorInput input) {
+EngineResult editor_rotate_up(EditorInput input) {
     EntityIndex selected_index;
     if(entity_get_index(selected_entity, &selected_index)) {
-        physics_set_orientation(selected_entity, orientations[selected_index] - 180*2*PI_F/360);
+        return physics_set_orientation(selected_entity, orientations[selected_index] - 180*2*PI_F/360);
     }
+    return error_result_value(true);
 }
-void editor_rotate_down(EditorInput input) {
+EngineResult editor_rotate_down(EditorInput input) {
     EntityIndex selected_index;
     if(entity_get_index(selected_entity, &selected_index)) {
-        physics_set_orientation(selected_entity, orientations[selected_index] + 180*2*PI_F/360);
+        return physics_set_orientation(selected_entity, orientations[selected_index] + 180*2*PI_F/360);
     }
+    return error_result_value(true);
 }
-void editor_rotate_right(EditorInput input) {
+EngineResult editor_rotate_right(EditorInput input) {
     EntityIndex selected_index;
     if(entity_get_index(selected_entity, &selected_index)) {
-        physics_set_orientation(selected_entity, orientations[selected_index] - 90*2*PI_F/360);
+        return physics_set_orientation(selected_entity, orientations[selected_index] - 90*2*PI_F/360);
     }
+    return error_result_value(true);
 }
-void editor_rotate_left(EditorInput input) {
+EngineResult editor_rotate_left(EditorInput input) {
     EntityIndex selected_index;
     if(entity_get_index(selected_entity, &selected_index)) {
-        physics_set_orientation(selected_entity, orientations[selected_index] + 90*2*PI_F/360);
+        return physics_set_orientation(selected_entity, orientations[selected_index] + 90*2*PI_F/360);
     }
+    return error_result_value(true);
 }
 
-void editor_scale_all_up(EditorInput input) {
+EngineResult editor_scale_all_up(EditorInput input) {
     EntityIndex selected_index;
-    if(!entity_get_index(selected_entity, &selected_index)) { return; }
+    if(!entity_get_index(selected_entity, &selected_index)) { return error_result_value(true); }
     Shape shape = math_scale_shape(hit_boxes[selected_index], 1 + SCALE_INCREMENT);
-    physics_set_hitbox(selected_entity, shape);
+    EngineResult result = physics_set_hitbox(selected_entity, shape);
+    if(result.kind == ERROR_RESULT_ERROR) { return result; }
     graphics_scale_textures(selected_entity, (Scale){1 + SCALE_INCREMENT,1 + SCALE_INCREMENT});
+    return error_result_value(true);
 }
-void editor_scale_all_down(EditorInput input) {
+EngineResult editor_scale_all_down(EditorInput input) {
     EntityIndex selected_index;
-    if(!entity_get_index(selected_entity, &selected_index)) { return; }
+    if(!entity_get_index(selected_entity, &selected_index)) { return error_result_value(true); }
     Shape shape = math_scale_shape(hit_boxes[selected_index], 1 - SCALE_INCREMENT);
-    physics_set_hitbox(selected_entity, shape);
+    EngineResult result = physics_set_hitbox(selected_entity, shape);
+    if(result.kind == ERROR_RESULT_ERROR) { return result; }
     graphics_scale_textures(selected_entity, (Scale){1 - SCALE_INCREMENT,1 - SCALE_INCREMENT});
+    return error_result_value(true);
 }
-void editor_scale_x_up(EditorInput input) {
+EngineResult editor_scale_x_up(EditorInput input) {
     EntityIndex selected_index;
-    if(!entity_get_index(selected_entity, &selected_index)) { return; }
+    if(!entity_get_index(selected_entity, &selected_index)) { return error_result_value(true); }
     Shape shape = math_scale_shape_x(hit_boxes[selected_index], 1 + SCALE_INCREMENT);
-    physics_set_hitbox(selected_entity, shape);
+    EngineResult result = physics_set_hitbox(selected_entity, shape);
+    if(result.kind == ERROR_RESULT_ERROR) { return result; }
     graphics_scale_textures(selected_entity, (Scale){1 + SCALE_INCREMENT,1});
+    return error_result_value(true);
 }
-void editor_scale_x_down(EditorInput input) {
+EngineResult editor_scale_x_down(EditorInput input) {
     EntityIndex selected_index;
-    if(!entity_get_index(selected_entity, &selected_index)) { return; }
+    if(!entity_get_index(selected_entity, &selected_index)) { return error_result_value(true); }
     Shape shape = math_scale_shape_x(hit_boxes[selected_index], 1 - SCALE_INCREMENT);
-    physics_set_hitbox(selected_entity, shape);
+    EngineResult result = physics_set_hitbox(selected_entity, shape);
+    if(result.kind == ERROR_RESULT_ERROR) { return result; }
     graphics_scale_textures(selected_entity, (Scale){1 - SCALE_INCREMENT,1});
+    return error_result_value(true);
 }
-void editor_scale_y_up(EditorInput input) {
+EngineResult editor_scale_y_up(EditorInput input) {
     EntityIndex selected_index;
-    if(!entity_get_index(selected_entity, &selected_index)) { return; }
+    if(!entity_get_index(selected_entity, &selected_index)) { return error_result_value(true); }
     Shape shape = math_scale_shape_y(hit_boxes[selected_index], 1 + SCALE_INCREMENT);
-    physics_set_hitbox(selected_entity, shape);
+    EngineResult result = physics_set_hitbox(selected_entity, shape);
+    if(result.kind == ERROR_RESULT_ERROR) { return result; }
     graphics_scale_textures(selected_entity, (Scale){1,1 + SCALE_INCREMENT});
+    return error_result_value(true);
 }
-void editor_scale_y_down(EditorInput input) {
+EngineResult editor_scale_y_down(EditorInput input) {
     EntityIndex selected_index;
-    if(!entity_get_index(selected_entity, &selected_index)) { return; }
+    if(!entity_get_index(selected_entity, &selected_index)) { return error_result_value(true); }
     Shape shape = math_scale_shape_y(hit_boxes[selected_index], 1 - SCALE_INCREMENT);
-    physics_set_hitbox(selected_entity, shape);
+    EngineResult result = physics_set_hitbox(selected_entity, shape);
+    if(result.kind == ERROR_RESULT_ERROR) { return result; }
     graphics_scale_textures(selected_entity, (Scale){1,1 - SCALE_INCREMENT});
+    return error_result_value(true);
 }
 
-void editor_shape_add_vertex(EditorInput input) {
+EngineResult editor_shape_add_vertex(EditorInput input) {
     EntityIndex selected_index;
-    if(!entity_get_index(selected_entity, &selected_index)) { return; }
+    if(!entity_get_index(selected_entity, &selected_index)) { return error_result_value(true); }
     Shape new_shape = math_add_vertex(hit_boxes[selected_index]);
-    physics_set_hitbox(selected_entity, new_shape);
+    return physics_set_hitbox(selected_entity, new_shape);
 }
-void editor_shape_remove_vertex(EditorInput input) {
+EngineResult editor_shape_remove_vertex(EditorInput input) {
     EntityIndex selected_index;
-    if(!entity_get_index(selected_entity, &selected_index)) { return; }
+    if(!entity_get_index(selected_entity, &selected_index)) { return error_result_value(true); }
     Shape new_shape = math_delete_vertex(hit_boxes[selected_index]);
-    physics_set_hitbox(selected_entity, new_shape);
+    return physics_set_hitbox(selected_entity, new_shape);
 }
-void editor_move_up(EditorInput input) {
+EngineResult editor_move_up(EditorInput input) {
     EntityIndex selected_index;
     if(entity_get_index(selected_entity, &selected_index)) {
-        physics_set_position(selected_entity, (Position){positions[selected_index].x, positions[selected_index].y + MOVE_INCREMENT});
+        return physics_set_position(selected_entity, (Position){positions[selected_index].x, positions[selected_index].y + MOVE_INCREMENT});
     }
+    return error_result_value(true);
 }
-void editor_move_down(EditorInput input) {
+EngineResult editor_move_down(EditorInput input) {
     EntityIndex selected_index;
     if(entity_get_index(selected_entity, &selected_index)) {
-        physics_set_position(selected_entity, (Position){positions[selected_index].x, positions[selected_index].y - MOVE_INCREMENT});
+        return physics_set_position(selected_entity, (Position){positions[selected_index].x, positions[selected_index].y - MOVE_INCREMENT});
     }
+    return error_result_value(true);
 }
-void editor_move_left(EditorInput input) {
+EngineResult editor_move_left(EditorInput input) {
     EntityIndex selected_index;
     if(entity_get_index(selected_entity, &selected_index)) {
-        physics_set_position(selected_entity, (Position){positions[selected_index].x - MOVE_INCREMENT, positions[selected_index].y});
+        return physics_set_position(selected_entity, (Position){positions[selected_index].x - MOVE_INCREMENT, positions[selected_index].y});
     }
+    return error_result_value(true);
 }
-void editor_move_right(EditorInput input) {
+EngineResult editor_move_right(EditorInput input) {
     EntityIndex selected_index;
     if(entity_get_index(selected_entity, &selected_index)) {
-        physics_set_position(selected_entity, (Position){positions[selected_index].x + MOVE_INCREMENT, positions[selected_index].y});
+        return physics_set_position(selected_entity, (Position){positions[selected_index].x + MOVE_INCREMENT, positions[selected_index].y});
     }
+    return error_result_value(true);
 }
 
-void editor_pause_engine(EditorInput input) {
+EngineResult editor_pause_engine(EditorInput input) {
     if(engine_is_paused()) {
         engine_resume();
     }
     else {
         engine_pause();
     }
+    return error_result_value(true);
 }
 
-void resolve_mode(LevelEditorMode mode, EditorInput input) {
+EngineResult resolve_mode(LevelEditorMode mode, EditorInput input) {
     switch(mode) {
         case EDITOR_NONE:
-            break;
+            return error_result_value(true);
         case EDITOR_PAUSE_ENGINE:
-            editor_pause_engine(input);
-            break;
+            return editor_pause_engine(input);
         case EDITOR_SELECT:
-            editor_select(input);
-            break;
-        case EDITOR_MOVE_MOUSE:
-            editor_move_mouse(input);
+            return editor_select(input);
+        case EDITOR_MOVE_MOUSE: {
+            EngineResult result = editor_move_mouse(input);
+            if(result.kind == ERROR_RESULT_ERROR) {
+                return result;
+            }
+        }
         case EDITOR_MOVE_UP:
-            editor_move_up(input);
-            break;
+            return editor_move_up(input);
         case EDITOR_MOVE_DOWN:
-            editor_move_down(input);
-            break;
+            return editor_move_down(input);
         case EDITOR_MOVE_LEFT:
-            editor_move_left(input);
-            break;
+            return editor_move_left(input);
         case EDITOR_MOVE_RIGHT:
-            editor_move_right(input);
-            break;
+            return editor_move_right(input);
         case EDITOR_ROTATE_CW:
-            editor_rotate_cw(input);
-            break;
+            return editor_rotate_cw(input);
         case EDITOR_ROTATE_CCW:
-            editor_rotate_ccw(input);
-            break;
+            return editor_rotate_ccw(input);
         case EDITOR_ROTATE_UP:
-            editor_rotate_up(input);
-            break;
+            return editor_rotate_up(input);
         case EDITOR_ROTATE_DOWN:
-            editor_rotate_down(input);
-            break;
+            return editor_rotate_down(input);
         case EDITOR_ROTATE_LEFT:
-            editor_rotate_left(input);
-            break;
+            return editor_rotate_left(input);
         case EDITOR_ROTATE_RIGHT:
-            editor_rotate_right(input);
-            break;
+            return editor_rotate_right(input);
         case EDITOR_SCALE_ALL_UP:
-            editor_scale_all_up(input);
-            break;
+            return editor_scale_all_up(input);
         case EDITOR_SCALE_ALL_DOWN:
-            editor_scale_all_down(input);
-            break;
+            return editor_scale_all_down(input);
         case EDITOR_SCALE_X_UP:
-            editor_scale_x_up(input);
-            break;
+            return editor_scale_x_up(input);
         case EDITOR_SCALE_X_DOWN:
-            editor_scale_x_down(input);
-            break;
+            return editor_scale_x_down(input);
         case EDITOR_SCALE_Y_UP:
-            editor_scale_y_up(input);
-            break;
+            return editor_scale_y_up(input);
         case EDITOR_SCALE_Y_DOWN:
-            editor_scale_y_down(input);
-            break;
+            return editor_scale_y_down(input);
         case EDITOR_SHAPE_ADD_VERTEX:
-            editor_shape_add_vertex(input);
-            break;
+            return editor_shape_add_vertex(input);
         case EDITOR_SHAPE_REMOVE_VERTEX:
-            editor_shape_remove_vertex(input);
-            break;
+            return editor_shape_remove_vertex(input);
         default:
-            break;
+            return error_result_value(true);
     }
+    return error_result_value(true);
 }
 
-void bind_selection_to_mouse() {
-    physics_set_position(selection, graphics_screen_to_world(get_mouse_coordinates()));
+EngineResult bind_selection_to_mouse() {
+    return physics_set_position(selection, graphics_screen_to_world(get_mouse_coordinates()));
 }
 
 void print_mode(LevelEditorMode mode) {
@@ -1201,10 +1210,19 @@ EngineResult level_editor_init() {
         return error_result_error(selection_result.result.error);
     }
     selection = selection_result.result.value;
-    physics_set_static(selection);
-    physics_set_position(selection, (Vec2D){80, 390});
+    result = physics_set_static(selection);
+    if(result.kind == ERROR_RESULT_ERROR) {
+        return result;
+    }
+    result = physics_set_position(selection, (Vec2D){80, 390});
+    if(result.kind == ERROR_RESULT_ERROR) {
+        return result;
+    }
     Shape selection_hit_box = math_create_circle(0.1, 5);
-    physics_set_hitbox(selection, selection_hit_box);
+    result = physics_set_hitbox(selection, selection_hit_box);
+    if(result.kind == ERROR_RESULT_ERROR) {
+        return result;
+    }
     result = entity_delete_components(selection, COLLISION);
     if(result.kind == ERROR_RESULT_ERROR) {
         return result;
@@ -1213,15 +1231,20 @@ EngineResult level_editor_init() {
     return error_result_value(true);
 }
 
-void level_editor_update() {
+EngineResult level_editor_update() {
         SDL_Event event = engine_poll_event();
         EditorInput input = sdl_event_to_editor_input(event);
+        EngineResult result;
+
         prev_mode = current_mode;
         current_mode = editor_input_to_mode(current_mode, input);
         //if(prev_mode != current_mode) {
         //    print_mode(current_mode);
         //}
-        bind_selection_to_mouse();
-        resolve_mode(current_mode, input);
+        result = bind_selection_to_mouse();
+        if(result.kind == ERROR_RESULT_ERROR) {
+            return result;
+        }
+        return resolve_mode(current_mode, input);
 
 }
