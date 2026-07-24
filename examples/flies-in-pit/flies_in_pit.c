@@ -29,97 +29,97 @@ int main(void) {
         return 1;
     }
 
-    Entity water_wall_1;
+    Entity wall_1;
     if(rohr_error_check(entity_result = rohr_entity_add())) {
         PRINT_ENGINE_ERROR(entity_result);
         goto fail;
     }
-    water_wall_1 = entity_result.result.value;
-    rohr_physics_set_static(water_wall_1);
-    rohr_physics_set_position(water_wall_1, (Position){0, -80});
-    rohr_physics_set_orientation(water_wall_1, 120*(PI_F/180));
-    rohr_physics_set_restitution(water_wall_1, 0.5);
-    rohr_physics_set_friction(water_wall_1, 1);
+    wall_1 = entity_result.result.value;
+    rohr_physics_set_static(wall_1);
+    rohr_physics_set_position(wall_1, (Position){0, -80});
+    rohr_physics_set_orientation(wall_1, 120*(PI_F/180));
+    rohr_physics_set_restitution(wall_1, 0.5);
+    rohr_physics_set_friction(wall_1, 1);
     Shape shape_1 = rohr_math_create_square(40, 400);
-    rohr_physics_set_hitbox(water_wall_1, shape_1);
+    rohr_physics_set_hitbox(wall_1, shape_1);
 
-    Entity water_wall_2;
+    Entity wall_2;
     if(rohr_error_check(entity_result = rohr_entity_add())) {
         PRINT_ENGINE_ERROR(entity_result);
         goto fail;
     }
-    water_wall_2 = entity_result.result.value;
-    rohr_physics_set_static(water_wall_2);
-    rohr_physics_set_position(water_wall_2, (Position){-180, -10});
-    rohr_physics_set_orientation(water_wall_2, 0*(PI_F/180));
-    rohr_physics_set_restitution(water_wall_2, 0.5);
-    rohr_physics_set_friction(water_wall_2, 1);
+    wall_2 = entity_result.result.value;
+    rohr_physics_set_static(wall_2);
+    rohr_physics_set_position(wall_2, (Position){-180, -10});
+    rohr_physics_set_orientation(wall_2, 0*(PI_F/180));
+    rohr_physics_set_restitution(wall_2, 0.5);
+    rohr_physics_set_friction(wall_2, 1);
     Shape shape_2 = rohr_math_create_square(40, 60);
-    rohr_physics_set_hitbox(water_wall_2, shape_2);
+    rohr_physics_set_hitbox(wall_2, shape_2);
 
-    Entity water_wall_3;
+    Entity wall_3;
     if(rohr_error_check(entity_result = rohr_entity_add())) {
         PRINT_ENGINE_ERROR(entity_result);
         goto fail;
     }
-    water_wall_3 = entity_result.result.value;
-    rohr_physics_set_static(water_wall_3);
-    rohr_physics_set_position(water_wall_3, (Position){180, -10});
-    rohr_physics_set_orientation(water_wall_3, 0*(PI_F/180));
-    rohr_physics_set_restitution(water_wall_3, 0.5);
-    rohr_physics_set_friction(water_wall_3, 1);
+    wall_3 = entity_result.result.value;
+    rohr_physics_set_static(wall_3);
+    rohr_physics_set_position(wall_3, (Position){180, -10});
+    rohr_physics_set_orientation(wall_3, 0*(PI_F/180));
+    rohr_physics_set_restitution(wall_3, 0.5);
+    rohr_physics_set_friction(wall_3, 1);
     Shape shape_3 = rohr_math_create_square(40, 60);
-    rohr_physics_set_hitbox(water_wall_3, shape_3);
+    rohr_physics_set_hitbox(wall_3, shape_3);
 
-    Entity water_smash;
+    Entity large_fly;
     if(rohr_error_check(entity_result = rohr_entity_add())) {
         PRINT_ENGINE_ERROR(entity_result);
         goto fail;
     }
-    water_smash = entity_result.result.value;
-    rohr_physics_set_position(water_smash, (Position){.x = 0, .y = 300});
-    rohr_physics_set_orientation(water_smash, 0);
-    rohr_physics_set_mass(water_smash, 50);
-    rohr_physics_set_velocity(water_smash, (Velocity){0, 0});
-    rohr_physics_set_acceleration(water_smash, (Acceleration){0, -30});
-    rohr_physics_set_restitution(water_smash, 0.1);
+    large_fly = entity_result.result.value;
+    rohr_physics_set_position(large_fly, (Position){.x = 0, .y = 300});
+    rohr_physics_set_orientation(large_fly, 0);
+    rohr_physics_set_mass(large_fly, 50);
+    rohr_physics_set_velocity(large_fly, (Velocity){0, 0});
+    rohr_physics_set_acceleration(large_fly, (Acceleration){0, -30});
+    rohr_physics_set_restitution(large_fly, 0.1);
     Shape shape4 = rohr_math_create_square(150, 220);
-    rohr_physics_set_hitbox(water_smash, shape4);
-    rohr_physics_set_friction(water_smash, 0.4);
-    rohr_physics_set_dynamic(water_smash);
+    rohr_physics_set_hitbox(large_fly, shape4);
+    rohr_physics_set_friction(large_fly, 0.4);
+    rohr_physics_set_dynamic(large_fly);
     if(rohr_error_check(animation_result = rohr_graphics_load_animation(elderfly_fly_files))) {
         PRINT_ENGINE_ERROR(animation_result);
         goto fail;
     }
     animation_elderfly = animation_result.result.value;
     sprite_elderfly = rohr_graphics_create_animated_sprite(animation_elderfly, (Scale){10,10});
-    rohr_graphics_add_animated_sprite(water_smash, sprite_elderfly);
-    //set_axis_lock(water_smash, (Axis){0,1}, positions[smash]);
+    rohr_graphics_add_animated_sprite(large_fly, sprite_elderfly);
+    //set_axis_lock(large_fly, (Axis){0,1}, positions[smash]);
 
     time_t seed = 1003463;
     srand(seed);
     for(int i = 0; i < amount_of_entities - 1; i += 1) {
-        Entity ball;
+        Entity small_fly;
         if(rohr_error_check(entity_result = rohr_entity_add())) {
             PRINT_ENGINE_ERROR(entity_result);
             goto fail;
         }
-        ball = entity_result.result.value;
-        rohr_physics_set_position(ball, (Position){.x = rohr_tools_random_range(-10, 10), .y = rohr_tools_random_range(100, 200)});
-        rohr_physics_set_orientation(ball, rohr_tools_random_range(0, 2*PI_F));
-        rohr_physics_set_mass(ball, 1);
-        rohr_physics_set_velocity(ball, (Velocity){0, .y = rohr_tools_random_range(0, -10)});
-        rohr_physics_set_acceleration(ball, (Acceleration){0, -50});
-        rohr_physics_set_restitution(ball, 0.2);
+        small_fly = entity_result.result.value;
+        rohr_physics_set_position(small_fly, (Position){.x = rohr_tools_random_range(-10, 10), .y = rohr_tools_random_range(100, 200)});
+        rohr_physics_set_orientation(small_fly, rohr_tools_random_range(0, 2*PI_F));
+        rohr_physics_set_mass(small_fly, 1);
+        rohr_physics_set_velocity(small_fly, (Velocity){0, .y = rohr_tools_random_range(0, -10)});
+        rohr_physics_set_acceleration(small_fly, (Acceleration){0, -50});
+        rohr_physics_set_restitution(small_fly, 0.2);
         float size = rohr_tools_random_range_float(3, 5);
         Shape shape3 = rohr_math_create_circle(size, 3);
-        rohr_physics_set_hitbox(ball, shape3);
-        rohr_physics_set_friction(ball, 0.4);
-        rohr_physics_set_dynamic(ball);
+        rohr_physics_set_hitbox(small_fly, shape3);
+        rohr_physics_set_friction(small_fly, 0.4);
+        rohr_physics_set_dynamic(small_fly);
         sprite_elderfly = rohr_graphics_create_animated_sprite(animation_elderfly, (Scale){size/10,size/10});
         sprite_elderfly.animation.time_per_frame = rohr_tools_random_range_float(0.005, 0.5);
-        rohr_graphics_add_animated_sprite(ball, sprite_elderfly);
-        rohr_entity_add_components(ball, PARTICLE);
+        rohr_graphics_add_animated_sprite(small_fly, sprite_elderfly);
+        rohr_entity_add_components(small_fly, PARTICLE);
     }
 
     rohr_engine_reset_clock();
@@ -151,9 +151,9 @@ int main(void) {
 
         //render
         rohr_graphics_draw_background(background_color);
-        rohr_graphics_draw_hit_box(water_wall_1, GRAPHICS_FILLED);
-        rohr_graphics_draw_hit_box(water_wall_2, GRAPHICS_FILLED);
-        rohr_graphics_draw_hit_box(water_wall_3, GRAPHICS_FILLED);
+        rohr_graphics_draw_hit_box(wall_1, GRAPHICS_FILLED);
+        rohr_graphics_draw_hit_box(wall_2, GRAPHICS_FILLED);
+        rohr_graphics_draw_hit_box(wall_3, GRAPHICS_FILLED);
         rohr_graphics_update_sprite_frames(rohr_engine_get_tick(), rohr_engine_get_time());
         rohr_graphics_draw_animated_sprites();
         if(phase_1) {

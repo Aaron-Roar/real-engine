@@ -13,10 +13,30 @@ const Time demo_duration_seconds = 10.0;
 #define PRINT_ENGINE_ERROR(engine_result) \
     fprintf(stderr, "%s\n", rohr_error_default_message((engine_result).result.error))
 
+typedef struct ChildAccelerationData {
+    Entity parent;
+    float magnitude;
+    bool away;
+} ChildAccelerationData;
+
+static EngineResult accelerate_child(Entity child, void *user_data) {
+    ChildAccelerationData *data = user_data;
+
+    if(data == NULL) {
+        return rohr_error_result_error(ERROR_MEMORY_POOL_NULL_POINTER);
+    }
+    if(data->away) {
+        return rohr_physics_set_acceleration_away_from_entity(child, data->magnitude, data->parent);
+    }
+    return rohr_physics_set_acceleration_toward_entity(child, data->magnitude, data->parent);
+}
+
 int main(void) {
     EngineResult result;
     EntityResult entity_result;
+    ChildrenResult children_result;
     AnimationAssetResult animation_result;
+    GroupId children_group = GROUP_INVALID;
 
     if(rohr_error_check(result = rohr_engine_init())) {
         PRINT_ENGINE_ERROR(result);
@@ -36,60 +56,64 @@ int main(void) {
     animation = animation_result.result.value;
     sprite = rohr_graphics_create_animated_sprite(animation, (Scale){3,3});
 
-    Entity magnet_smash;
+    Entity ball;
     if(rohr_error_check(entity_result = rohr_entity_add())) {
         PRINT_ENGINE_ERROR(entity_result);
         goto fail;
     }
-    magnet_smash = entity_result.result.value;
-    rohr_physics_set_position(magnet_smash, (Position){.x = 0, .y = 100});
-    rohr_physics_set_orientation(magnet_smash, 1);
-    rohr_physics_set_mass(magnet_smash, 5000);
-    rohr_physics_set_velocity(magnet_smash, (Velocity){0, 0});
-    //set_angular_velocity(water_smash, 3);
-    rohr_physics_set_acceleration(magnet_smash, (Acceleration){0, 0});
-    rohr_physics_set_restitution(magnet_smash, 0.7);
-    Shape shape4 = rohr_math_create_circle(50, 4);
-    rohr_physics_set_hitbox(magnet_smash, shape4);
-    rohr_physics_set_friction(magnet_smash, 0.4);
-    rohr_physics_set_dynamic(magnet_smash);
-    EntityIndex magnet_smash_index;
-    if(rohr_entity_get_index(magnet_smash, &magnet_smash_index)) {
-        rohr_physics_set_axis_lock(magnet_smash, (Axis){1,0}, positions[magnet_smash_index]);
+    ball = entity_result.result.value;
+    rohr_physics_set_position(ball, (Position){.x = 0, .y = 100});
+    rohr_physics_set_orientation(ball, 1);
+    rohr_physics_set_mass(ball, 5000);
+    rohr_physics_set_velocity(ball, (Velocity){0, 0});
+    //set_angular_velocity(ball, 3);
+    rohr_physics_set_acceleration(ball, (Acceleration){0, 0});
+    rohr_physics_set_restitution(ball, 0.7);
+    Shape ball_shape = rohr_math_create_circle(50, 4);
+    rohr_physics_set_hitbox(ball, ball_shape);
+    rohr_physics_set_friction(ball, 0.4);
+    rohr_physics_set_static(ball);
+    EntityIndex ball_index;
+    if(rohr_entity_get_index(ball, &ball_index)) {
+        rohr_physics_set_axis_lock(ball, (Axis){1,0}, positions[ball_index]);
     }
-    //set_angle_lock(magnet_smash, 0, 0);
+    //set_angle_lock(ball, 0, 0);
 
     time_t seed = 1003463;
     srand(seed);
     for(int i = 0; i < amount_of_entities; i += 1) {
-        Entity ball;
+        Entity small_fly;
         if(rohr_error_check(entity_result = rohr_entity_add())) {
             PRINT_ENGINE_ERROR(entity_result);
             goto fail;
         }
-        ball = entity_result.result.value;
-        rohr_physics_set_position(ball, (Position){.x = rohr_tools_random_range(100, 400), .y = rohr_tools_random_range(0, 300)});
-        rohr_physics_set_orientation(ball, rohr_tools_random_range(0, 2*PI_F));
-        rohr_physics_set_mass(ball, 10);
-        rohr_physics_set_velocity(ball, (Velocity){.x = rohr_tools_random_range(-10, 10), .y = rohr_tools_random_range(0, 100)});
-        rohr_physics_set_acceleration(ball, (Acceleration){rohr_tools_random_range(0,10), 50});
-        rohr_physics_set_restitution(ball, 0.1);
+        small_fly = entity_result.result.value;
+        rohr_physics_set_position(small_fly, (Position){.x = rohr_tools_random_range(100, 400), .y = rohr_tools_random_range(0, 300)});
+        rohr_physics_set_orientation(small_fly, rohr_tools_random_range(0, 2*PI_F));
+        rohr_physics_set_mass(small_fly, 10);
+        rohr_physics_set_velocity(small_fly, (Velocity){.x = rohr_tools_random_range(-10, 10), .y = rohr_tools_random_range(0, 100)});
+        rohr_physics_set_acceleration(small_fly, (Acceleration){0, 0});
+        rohr_physics_set_restitution(small_fly, 0.1);
         float size = rohr_tools_random_range_float(10, 20);
-        Shape shape3 = rohr_math_create_circle(size, 5);
-        rohr_physics_set_hitbox(ball, shape3);
-        rohr_physics_set_friction(ball, 0.4);
-        rohr_physics_set_dynamic(ball);
-        //set_transform_lock(ball, water_smash, (Vec2D){rohr_tools_random_range(100, 400), rohr_tools_random_range(100, 400)}, rohr_tools_random_range(0, 10), true, true, false);
-        if(rohr_error_check(entity_result = rohr_physics_set_joint(ball, magnet_smash, JOINT_DISTANCE, (Vec2D){0}, (Vec2D){0}, 10, 0))) {
-            PRINT_ENGINE_ERROR(entity_result);
+        Shape small_fly_shape = rohr_math_create_circle(size, 5);
+        rohr_physics_set_hitbox(small_fly, small_fly_shape);
+        rohr_physics_set_friction(small_fly, 0.4);
+        rohr_physics_set_dynamic(small_fly);
+        if(rohr_error_check(result = rohr_entity_set_parent(small_fly, ball))) {
+            PRINT_ENGINE_ERROR(result);
             goto fail;
         }
         sprite = rohr_graphics_create_animated_sprite(animation, (Scale){size/10, size/10});
         sprite.animation.time_per_frame = rohr_tools_random_range_float(0.005, 0.5);
-        rohr_graphics_add_animated_sprite(ball, sprite);
-        rohr_entity_add_components(ball, PARTICLE);
+        rohr_graphics_add_animated_sprite(small_fly, sprite);
+        rohr_entity_add_components(small_fly, PARTICLE);
     }
 
+    if(rohr_error_check(children_result = rohr_entity_get_children(ball))) {
+        PRINT_ENGINE_ERROR(children_result);
+        goto fail;
+    }
+    children_group = children_result.result.value;
 
     //Game Loop
     rohr_engine_reset_clock();
@@ -114,23 +138,17 @@ int main(void) {
         }
 
         //Game Code
-        if(rohr_engine_get_tick() % 1000 == 0) {
-            for(int i = 0; i < MAX_ENTITIES; i += 1) {
-                if(!rohr_entity_index_is_alive(i)) {
-                    continue;
-                }
-                if( rohr_entity_index_has_components(i, JOINT)) {
-                    if(joints[i].type == JOINT_PIN) {
-                        joints[i].type = JOINT_DISTANCE;
-                        rohr_physics_set_acceleration(magnet_smash, (Velocity){2,0});
-                        rohr_physics_set_angular_velocity(magnet_smash, 3);
-                    } else {
-                        joints[i].type = JOINT_PIN;
-                        rohr_physics_set_acceleration(magnet_smash, (Velocity){-2, 0});
-                        rohr_physics_set_angular_velocity(magnet_smash, -3);
-                    }
-                }
-            }
+        Time time = rohr_engine_get_time();
+        Time phase_time = time - ((int)(time / 4.0) * 4.0);
+        ChildAccelerationData acceleration_data = {
+            .parent = ball,
+            .magnitude = 20.0f + (float)time * 12.0f,
+            .away = phase_time >= 3.0
+        };
+
+        if(rohr_error_check(result = rohr_entity_group_for_each(children_group, accelerate_child, &acceleration_data))) {
+            PRINT_ENGINE_ERROR(result);
+            goto fail;
         }
 
         //physics

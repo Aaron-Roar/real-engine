@@ -271,6 +271,66 @@ bool rohr_entity_has_components(Entity entity, CMask components);
 bool rohr_entity_index_has_components(EntityIndex index, CMask components);
 
 /**
+ * @brief Creates a reusable entity group.
+ * @return GroupIdResult containing a group id, or an error.
+ */
+GroupIdResult rohr_entity_group_create(void);
+
+/**
+ * @brief Destroys a generic entity group and clears member group references.
+ * @param group Group id to destroy.
+ * @return EngineResult describing success or failure.
+ */
+EngineResult rohr_entity_group_destroy(GroupId group);
+
+/**
+ * @brief Adds an entity to a generic group.
+ * @param group Group id to update.
+ * @param entity Entity id to add.
+ * @return EngineResult describing success or failure.
+ */
+EngineResult rohr_entity_group_add(GroupId group, Entity entity);
+
+/**
+ * @brief Removes an entity from a generic group.
+ * @param group Group id to update.
+ * @param entity Entity id to remove.
+ * @return EngineResult describing success or failure.
+ */
+EngineResult rohr_entity_group_remove(GroupId group, Entity entity);
+
+/**
+ * @brief Checks whether an entity belongs to a group.
+ * @param group Group id to inspect.
+ * @param entity Entity id to search for.
+ * @return true when entity belongs to the group.
+ */
+bool rohr_entity_group_contains(GroupId group, Entity entity);
+
+/**
+ * @brief Returns an entity group.
+ * @param group Group id to inspect.
+ * @return EntityGroupResult containing group data, or an error.
+ */
+EntityGroupResult rohr_entity_group_get(GroupId group);
+
+/**
+ * @brief Returns the groups assigned to an entity.
+ * @param entity Entity id to inspect.
+ * @return EntityGroupMembershipResult containing group ids, or an error.
+ */
+EntityGroupMembershipResult rohr_entity_get_groups(Entity entity);
+
+/**
+ * @brief Runs a callback for each live entity in a group.
+ * @param group Group id to iterate.
+ * @param fn Callback to run for each entity.
+ * @param user_data Optional user data passed through to the callback.
+ * @return EngineResult describing success or failure.
+ */
+EngineResult rohr_entity_group_for_each(GroupId group, EntityGroupFn fn, void *user_data);
+
+/**
  * @brief Removes components from an entity.
  * @param entity Stable entity id to modify.
  * @param mask Component mask to remove.
@@ -310,9 +370,9 @@ EngineResult rohr_entity_remove_parent(Entity child);
 EngineResult rohr_entity_remove_child(Entity parent, Entity child);
 
 /**
- * @brief Returns the children assigned to an entity.
+ * @brief Returns the children group assigned to an entity.
  * @param entity Stable entity id to inspect.
- * @return ChildrenResult containing child data, or an error.
+ * @return ChildrenResult containing a group id, or an error.
  */
 ChildrenResult rohr_entity_get_children(Entity entity);
 

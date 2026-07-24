@@ -474,6 +474,119 @@ Checks whether an entity table index has all requested components.
 
 **Returns:** true when index has every requested component, false otherwise.
 
+### `rohr_entity_group_create`
+
+```c
+GroupIdResult rohr_entity_group_create(void);
+```
+
+Creates a reusable entity group.
+
+**Returns:** GroupIdResult containing a group id, or an error.
+
+### `rohr_entity_group_destroy`
+
+```c
+EngineResult rohr_entity_group_destroy(GroupId group);
+```
+
+Destroys a generic entity group and clears member group references.
+
+| Parameter | Description |
+| --- | --- |
+| `group` | Group id to destroy. |
+
+**Returns:** EngineResult describing success or failure.
+
+### `rohr_entity_group_add`
+
+```c
+EngineResult rohr_entity_group_add(GroupId group, Entity entity);
+```
+
+Adds an entity to a generic group.
+
+| Parameter | Description |
+| --- | --- |
+| `group` | Group id to update. |
+| `entity` | Entity id to add. |
+
+**Returns:** EngineResult describing success or failure.
+
+### `rohr_entity_group_remove`
+
+```c
+EngineResult rohr_entity_group_remove(GroupId group, Entity entity);
+```
+
+Removes an entity from a generic group.
+
+| Parameter | Description |
+| --- | --- |
+| `group` | Group id to update. |
+| `entity` | Entity id to remove. |
+
+**Returns:** EngineResult describing success or failure.
+
+### `rohr_entity_group_contains`
+
+```c
+bool rohr_entity_group_contains(GroupId group, Entity entity);
+```
+
+Checks whether an entity belongs to a group.
+
+| Parameter | Description |
+| --- | --- |
+| `group` | Group id to inspect. |
+| `entity` | Entity id to search for. |
+
+**Returns:** true when entity belongs to the group.
+
+### `rohr_entity_group_get`
+
+```c
+EntityGroupResult rohr_entity_group_get(GroupId group);
+```
+
+Returns an entity group.
+
+| Parameter | Description |
+| --- | --- |
+| `group` | Group id to inspect. |
+
+**Returns:** EntityGroupResult containing group data, or an error.
+
+### `rohr_entity_get_groups`
+
+```c
+EntityGroupMembershipResult rohr_entity_get_groups(Entity entity);
+```
+
+Returns the groups assigned to an entity.
+
+| Parameter | Description |
+| --- | --- |
+| `entity` | Entity id to inspect. |
+
+**Returns:** EntityGroupMembershipResult containing group ids, or an error.
+
+### `rohr_entity_group_for_each`
+
+```c
+EngineResult rohr_entity_group_for_each(GroupId group, EntityGroupFn fn, void *user_data);
+```
+
+Runs a callback for each live entity in a group.
+
+| Parameter | Description |
+| --- | --- |
+| `group` | Group id to iterate. |
+| `fn` | Callback to run for each entity. |
+| `user_data` | Optional user data passed through to the callback. |
+
+**Returns:** EngineResult describing success or failure.
+
 ### `rohr_entity_delete_components`
 
 ```c
@@ -554,13 +667,13 @@ Removes a child relationship from a parent entity.
 ChildrenResult rohr_entity_get_children(Entity entity);
 ```
 
-Returns the children assigned to an entity.
+Returns the children group assigned to an entity.
 
 | Parameter | Description |
 | --- | --- |
 | `entity` | Stable entity id to inspect. |
 
-**Returns:** ChildrenResult containing child data, or an error.
+**Returns:** ChildrenResult containing a group id, or an error.
 
 ### `rohr_entity_get_parent`
 

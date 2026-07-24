@@ -20,11 +20,23 @@ typedef uint32_t EntityIndex; //An index into component tables
 /** Maximum number of live or reusable entity slots. */
 #define MAX_ENTITIES 10000
 
+/** Maximum number of reusable entity groups. */
+#define MAX_GROUPS 10000
+
 /** Maximum number of component bits reserved by the engine. */
 #define MAX_COMPONENTS 100
 
 /** Result type for functions that return an Entity. */
 ERROR_DECLARE_RESULT_TYPE(EntityResult, Entity);
+
+/** Stable group id used to refer to reusable entity groups. */
+typedef uint32_t GroupId;
+
+/** Invalid group id sentinel. */
+#define GROUP_INVALID 0
+
+/** Result type for functions that return a GroupId. */
+ERROR_DECLARE_RESULT_TYPE(GroupIdResult, GroupId);
 
 /** Component mask value for an entity. */
 typedef uint32_t CMask; //The bit mask for an entities components
@@ -82,6 +94,8 @@ typedef enum {
     ANIMATED_SPRITE             = 1 << 17,
     /** Entity keeps physics values but skips physics updates. */
     HOLD                        = 1 << 18,
+    /** Entity belongs to one or more groups. */
+    GROUP                       = 1 << 19,
 } Component;
 
 /** Parent entity id alias. */
@@ -90,17 +104,48 @@ typedef Entity Parent;
 /** Child entity id alias. */
 typedef Entity Child;
 
-/** Dynamic pool storing one parent entity's child ids. */
-MEMORY_DECLARE_OBJECT_POOL(ChildPool, Child);
+/** Dynamic pool storing entity ids in a group. */
+MEMORY_DECLARE_OBJECT_POOL(GroupEntityPool, Entity);
 
-/** Dynamic child entity list owned by one parent entity component. */
-typedef struct Children {
-    /** Pool of child entity ids. */
-    ChildPool entities;
-} Children;
+/** Group ownership kind used to protect specialized group invariants. */
+typedef enum GroupKind {
+    /** Generic application-owned group. */
+    GROUP_KIND_GENERIC,
+    /** Parent-owned group containing child entities. */
+    GROUP_KIND_CHILDREN,
+} GroupKind;
 
-/** Result type for functions returning Children. */
+/** Dynamic group of entity ids. */
+typedef struct EntityGroup {
+    /** Group member entity ids. */
+    GroupEntityPool entities;
+    /** Ownership kind for mutation rules. */
+    GroupKind kind;
+} EntityGroup;
+
+/** Result type for functions returning EntityGroup. */
+ERROR_DECLARE_RESULT_TYPE(EntityGroupResult, EntityGroup);
+
+/** Dynamic pool storing group ids on one entity. */
+MEMORY_DECLARE_OBJECT_POOL(GroupIdPool, GroupId);
+
+/** Dynamic group id list owned by one entity component. */
+typedef struct EntityGroupMembership {
+    /** Groups this entity belongs to. */
+    GroupIdPool groups;
+} EntityGroupMembership;
+
+/** Result type for functions returning EntityGroupMembership. */
+ERROR_DECLARE_RESULT_TYPE(EntityGroupMembershipResult, EntityGroupMembership);
+
+/** Children component stores the group id containing a parent's children. */
+typedef GroupId Children;
+
+/** Result type for functions returning a children group id. */
 ERROR_DECLARE_RESULT_TYPE(ChildrenResult, Children);
+
+/** Callback used by entity_group_for_each(). */
+typedef EngineResult (*EntityGroupFn)(Entity entity, void *user_data);
 
 /** Result type for functions returning Parent. */
 ERROR_DECLARE_RESULT_TYPE(ParentResult, Parent);
@@ -115,8 +160,12 @@ typedef struct LifeTime {
 
 /** Pool storing parent entity ids by EntityIndex. */
 MEMORY_DECLARE_OBJECT_POOL(ParentPool, Parent);
-/** Pool storing child lists by EntityIndex. */
+/** Pool storing children group ids by EntityIndex. */
 MEMORY_DECLARE_OBJECT_POOL(ChildrenPool, Children);
+/** Pool storing entity group memberships by EntityIndex. */
+MEMORY_DECLARE_OBJECT_POOL(EntityGroupMembershipPool, EntityGroupMembership);
+/** Pool storing entity groups by group index. */
+MEMORY_DECLARE_OBJECT_POOL(EntityGroupPool, EntityGroup);
 /** Pool storing lifetime data by EntityIndex. */
 MEMORY_DECLARE_OBJECT_POOL(LifeTimePool, LifeTime);
 /** Pool storing target entity ids by EntityIndex. */
@@ -126,6 +175,10 @@ MEMORY_DECLARE_OBJECT_POOL(TargetPool, Entity);
 extern ParentPool parents_pool;
 /** Children pool backing the children table. */
 extern ChildrenPool children_pool;
+/** Entity group membership pool backing the entity_group_memberships table. */
+extern EntityGroupMembershipPool entity_group_memberships_pool;
+/** Global entity group pool. */
+extern EntityGroupPool entity_groups_pool;
 /** Lifetime pool backing the life_times table. */
 extern LifeTimePool life_times_pool;
 /** Target pool backing the targets table. */
@@ -135,6 +188,10 @@ extern TargetPool targets_pool;
 #define parents parents_pool.objects
 /** Children table indexed by EntityIndex. */
 #define children children_pool.objects
+/** Group membership table indexed by EntityIndex. */
+#define entity_group_memberships entity_group_memberships_pool.objects
+/** Entity group table indexed by GroupId - 1. */
+#define entity_groups entity_groups_pool.objects
 /** Lifetime table indexed by EntityIndex. */
 #define life_times life_times_pool.objects
 /** Target table indexed by EntityIndex. */
@@ -238,6 +295,83 @@ bool entity_has_components(Entity entity, CMask components);
 bool entity_index_has_components(EntityIndex index, CMask components);
 
 /**
+ * Create a reusable group of entity ids.
+ *
+ * @return GroupIdResult containing a group id, or an error.
+ */
+GroupIdResult entity_group_create(void);
+
+/**
+ * Destroy a generic group and remove it from member entity group lists.
+ *
+ * Groups owned by parent-child relationships must be changed through the
+ * parent/child APIs.
+ *
+ * @param group Group id to destroy.
+ * @return EngineResult describing success or failure.
+ */
+EngineResult entity_group_destroy(GroupId group);
+
+/**
+ * Add an entity to a generic group.
+ *
+ * Groups owned by parent-child relationships must be changed through the
+ * parent/child APIs.
+ *
+ * @param group Group id to update.
+ * @param entity Entity id to add.
+ * @return EngineResult describing success or failure.
+ */
+EngineResult entity_group_add(GroupId group, Entity entity);
+
+/**
+ * Remove an entity from a generic group.
+ *
+ * Groups owned by parent-child relationships must be changed through the
+ * parent/child APIs.
+ *
+ * @param group Group id to update.
+ * @param entity Entity id to remove.
+ * @return EngineResult describing success or failure.
+ */
+EngineResult entity_group_remove(GroupId group, Entity entity);
+
+/**
+ * Check whether an entity belongs to a group.
+ *
+ * @param group Group id to inspect.
+ * @param entity Entity id to search for.
+ * @return true when entity is a member of group.
+ */
+bool entity_group_contains(GroupId group, Entity entity);
+
+/**
+ * Get the group component for a group id.
+ *
+ * @param group Group id to inspect.
+ * @return EntityGroupResult containing the group, or an error.
+ */
+EntityGroupResult entity_group_get(GroupId group);
+
+/**
+ * Get the groups assigned to an entity.
+ *
+ * @param entity Entity id to inspect.
+ * @return EntityGroupMembershipResult containing group ids, or an error.
+ */
+EntityGroupMembershipResult entity_get_groups(Entity entity);
+
+/**
+ * Run a callback for each live entity in a group.
+ *
+ * @param group Group id to iterate.
+ * @param fn Callback to run for each entity.
+ * @param user_data Optional user data passed through to the callback.
+ * @return EngineResult describing success or failure.
+ */
+EngineResult entity_group_for_each(GroupId group, EntityGroupFn fn, void *user_data);
+
+/**
  * Remove component bits from an entity.
  *
  * @param entity Entity id to update.
@@ -282,10 +416,10 @@ EngineResult entity_remove_parent(Entity child);
 EngineResult entity_remove_child(Entity parent, Entity child);
 
 /**
- * Get the children table for an entity.
+ * Get the children group id for an entity.
  *
  * @param entity Entity id to inspect.
- * @return ChildrenResult containing child data, or an error.
+ * @return ChildrenResult containing a group id, or an error.
  */
 ChildrenResult entity_get_children(Entity entity);
 
