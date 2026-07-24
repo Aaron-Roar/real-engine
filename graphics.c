@@ -622,8 +622,8 @@ void graphics_draw_particle(Entity entity, Fill fill_type) {
 void graphics_draw_particles() {
   for(int i = 0; i < MAX_ENTITIES; i += 1) {
     if(entity_index_is_alive(i)) {
-        if( (entity_mask[i] & HIT_BOX) == HIT_BOX) {
-          if( (entity_mask[i] & PARTICLE) == PARTICLE) {
+        if( entity_index_has_components(i, HIT_BOX)) {
+          if( entity_index_has_components(i, PARTICLE)) {
               graphics_draw_particle(entity_from_index(i), GRAPHICS_OUTLINE);
           }
         }
@@ -732,7 +732,7 @@ void graphics_add_animated_sprite(Entity entity, AnimatedSprite sprite) {
 void graphics_draw_animated_sprites() {
     CMask filter = ANIMATED_SPRITE;
     for(int i = 0; i < MAX_ENTITIES; i += 1) {
-        if(entity_index_is_alive(i) && (entity_mask[i] & filter) == filter) {
+        if(entity_index_is_alive(i) && entity_index_has_components(i, filter)) {
             graphics_draw_sprite(animated_sprites[i], positions[i], orientations[i]);
         }
     }
@@ -741,7 +741,7 @@ void graphics_draw_animated_sprites() {
 void graphics_update_sprite_frames(Tick current_tick, Time current_time) {
     CMask filter = ANIMATED_SPRITE;
     for(int i = 0; i < MAX_ENTITIES; i += 1) {
-        if(entity_index_is_alive(i) && (entity_mask[i] & filter) == filter) {
+        if(entity_index_is_alive(i) && entity_index_has_components(i, filter)) {
             graphics_update_sprite_frame(&animated_sprites[i], current_tick, current_time);
         }
     }
@@ -858,7 +858,7 @@ void graphics_draw_local_origins() {
         if(!entity_index_is_alive(i)) {
             continue;
         }
-        if ((entity_mask[i] & HIT_BOX) != HIT_BOX) {
+        if (!entity_index_has_components(i, HIT_BOX)) {
             continue;
         }
         graphics_draw_local_origin(entity_from_index(i));

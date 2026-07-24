@@ -338,12 +338,19 @@ void entity_delete_components(Entity entity, CMask mask) {
     (void)EntityMaskPool_store_at(&entity_mask_pool, index, entity_mask[index] & ~mask);
 }
 
-bool entity_has_components(Entity entity, Component components) {
+bool entity_has_components(Entity entity, CMask components) {
   EntityIndex index;
 
   if(!entity_get_index(entity, &index)) {
     return false;
   }
+  if(!entity_index_is_alive(index)) {
+    return false;
+  }
+  return entity_index_has_components(index, components);
+}
+
+bool entity_index_has_components(EntityIndex index, CMask components) {
   if(!entity_index_is_alive(index)) {
     return false;
   }

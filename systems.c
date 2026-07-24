@@ -14,7 +14,7 @@ void system_generate_global_hitboxes() {
 
     for(int i = 0; i < MAX_ENTITIES; i += 1) {
         if(entity_index_is_alive(i)) {
-            if( (entity_mask[i] & filter) == filter ) {
+            if( entity_index_has_components(i, filter) ) {
                 Position pos = positions[i];
                 Orientation ort = orientations[i];
                 Shape hit_box = hit_boxes[i];
@@ -31,7 +31,7 @@ Shape system_generate_global_hitbox(Entity entity) {
     EntityIndex index;
 
         if(entity_get_index(entity, &index) && entity_index_is_alive(index)) {
-            if( (entity_mask[index] & filter) == filter ) {
+            if( entity_index_has_components(index, filter) ) {
                 Position pos = positions[index];
                 Orientation ort = orientations[index];
                 Shape hit_box = hit_boxes[index];
@@ -46,7 +46,7 @@ void system_update_positions(double dt) {
     CMask filter = DYNAMIC;
     for (int i = 0; i < MAX_ENTITIES; i++) {
         if(entity_index_is_alive(i)) {
-            if( (entity_mask[i] & filter) == filter ) {
+            if( entity_index_has_components(i, filter) ) {
                 positions[i] = (Position){
                     .x = positions[i].x + (velocities[i].x)*dt,
                     .y = positions[i].y + (velocities[i].y)*dt
@@ -60,7 +60,7 @@ void system_update_orientations(double dt) {
     CMask filter = DYNAMIC;
     for (int i = 0; i < MAX_ENTITIES; i++) {
         if(entity_index_is_alive(i)) {
-            if( (entity_mask[i] & filter) == filter ) {
+            if( entity_index_has_components(i, filter) ) {
                 orientations[i] = orientations[i] + angular_velocities[i]*dt;
             }
         }
@@ -72,7 +72,7 @@ void system_update_angular_velocities(double dt) {
     CMask filter = DYNAMIC;
     for (int i = 0; i < MAX_ENTITIES; i++) {
         if(entity_index_is_alive(i)) {
-            if( (entity_mask[i] & filter) == filter) {
+            if( entity_index_has_components(i, filter)) {
                 angular_velocities[i] += (angular_accelerations[i] + torque_angular_accelerations[i]) * dt;
             }
         }
@@ -83,7 +83,7 @@ void system_update_velocities(double dt) {
     CMask filter = DYNAMIC;
     for (int i = 0; i < MAX_ENTITIES; i++) {
         if(entity_index_is_alive(i)) {
-            if( (entity_mask[i] & filter) == filter) {
+            if( entity_index_has_components(i, filter)) {
                 velocities[i] = (Velocity){
                     .x = velocities[i].x + (accelerations[i].x + force_accelerations[i].x)*dt,
                     .y = velocities[i].y + (accelerations[i].y + force_accelerations[i].y)*dt
@@ -99,10 +99,10 @@ void system_apply_forces() {
 
   for(int i = 0; i < MAX_ENTITIES; i++) {
     if(entity_index_is_alive(i)) { //Check if this entity exists
-        if( (entity_mask[i] & filter) == filter ) { //Check if this entity is a targetable force
+        if( entity_index_has_components(i, filter) ) { //Check if this entity is a targetable force
             EntityIndex target_index;
             if(entity_get_index(targets[i], &target_index) && entity_index_is_alive(target_index)) { //Check if the target to the force exists
-                if( (entity_mask[target_index] & target_filter) == target_filter ) { //Check if the target is moveable
+                if( entity_index_has_components(target_index, target_filter) ) { //Check if the target is moveable
                     if(mass[target_index] != 0) {
                         force_accelerations[target_index].x += forces[i].x/mass[target_index];
                         force_accelerations[target_index].y += forces[i].y/mass[target_index];
@@ -132,10 +132,10 @@ void system_apply_torques() {
 
   for(int i = 0; i < MAX_ENTITIES; i++) {
     if(entity_index_is_alive(i)) { //Check if this entity exists
-        if( (entity_mask[i] & filter) == filter ) { //Check if this entity is a targetable force
+        if( entity_index_has_components(i, filter) ) { //Check if this entity is a targetable force
             EntityIndex target_index;
             if(entity_get_index(targets[i], &target_index) && entity_index_is_alive(target_index)) { //Check if the target to the force exists
-                if( (entity_mask[target_index] & target_filter) == target_filter ) { //Check if the target is moveable
+                if( entity_index_has_components(target_index, target_filter) ) { //Check if the target is moveable
                     if(mass[target_index] != 0) {
                         torque_angular_accelerations[target_index] += torques[i]/physics_polygon_moment_of_inertia(hit_boxes[target_index], mass[target_index]);
                     } else {
@@ -171,7 +171,7 @@ void system_clear_force_torque_accelerations() {
 Collision system_get_entity_collision(Entity entity_1, Entity entity_2) {
     Shape shape1 = world_hit_boxes[entity_1];
     Shape shape2 = world_hit_boxes[entity_2];
-    if((entity_mask[entity_1] & PARTICLE) == PARTICLE && (entity_mask[entity_2] & PARTICLE) == PARTICLE) {
+    if(entity_index_has_components(entity_1, PARTICLE) && entity_index_has_components(entity_2, PARTICLE)) {
         return physics_particle_collision(shape1, shape2);
     }
     return physics_sat_collision(shape1, shape2);
@@ -182,8 +182,8 @@ void system_separate_entities_tuned(
     Entity entity_2,
     Collision collision
 ) {
-    bool dynamic_1 = (entity_mask[entity_1] & DYNAMIC) == DYNAMIC;
-    bool dynamic_2 = (entity_mask[entity_2] & DYNAMIC) == DYNAMIC;
+    bool dynamic_1 = entity_index_has_components(entity_1, DYNAMIC);
+    bool dynamic_2 = entity_index_has_components(entity_2, DYNAMIC);
 
     float inv_mass_1 =
         dynamic_1 && mass[entity_1] > 0.0f
@@ -218,8 +218,8 @@ void system_separate_entities_tuned(
 
 void system_separate_entities(Entity entity_1, Entity entity_2, Collision collision)
 {
-    bool entity_1_dynamic = (entity_mask[entity_1] & DYNAMIC) == DYNAMIC;
-    bool entity_2_dynamic = (entity_mask[entity_2] & DYNAMIC) == DYNAMIC;
+    bool entity_1_dynamic = entity_index_has_components(entity_1, DYNAMIC);
+    bool entity_2_dynamic = entity_index_has_components(entity_2, DYNAMIC);
 
     Vec2D correction = {
         .x = collision.normal.x * collision.depth,
@@ -291,8 +291,8 @@ Position system_collision_contact_point(Entity entity_1, Entity entity_2, Collis
     Shape shape_1 = world_hit_boxes[entity_1];
     Shape shape_2 = world_hit_boxes[entity_2];
 
-    bool entity_1_dynamic = (entity_mask[entity_1] & DYNAMIC) == DYNAMIC;
-    bool entity_2_dynamic = (entity_mask[entity_2] & DYNAMIC) == DYNAMIC;
+    bool entity_1_dynamic = entity_index_has_components(entity_1, DYNAMIC);
+    bool entity_2_dynamic = entity_index_has_components(entity_2, DYNAMIC);
 
     Vec2D normal = collision.normal;
 
@@ -304,7 +304,7 @@ Position system_collision_contact_point(Entity entity_1, Entity entity_2, Collis
     Position point_1 = {0};
     Position point_2 = {0};
     //PARTICLE
-    if((entity_mask[entity_1] & PARTICLE) == PARTICLE && (entity_mask[entity_2] & PARTICLE) == PARTICLE){
+    if(entity_index_has_components(entity_1, PARTICLE) && entity_index_has_components(entity_2, PARTICLE)){
         Vec1D r1 = math_circle_radius(shape_1, math_polygon_centroid(shape_1));
         Vec1D r2 = math_circle_radius(shape_2, math_polygon_centroid(shape_2));
         point_1 = system_get_particle_edge(entity_1, normal, r1);
@@ -423,10 +423,10 @@ void system_apply_friction_impulse(
 void system_resolve_collision(Entity entity_1, Entity entity_2, Collision collision) {
     //Assume collision.normal points from entity_1 -> entity_2
     bool entity_1_movable =
-        ((entity_mask[entity_1] & DYNAMIC) == DYNAMIC);
+        (entity_index_has_components(entity_1, DYNAMIC));
 
     bool entity_2_movable =
-        ((entity_mask[entity_2] & DYNAMIC) == DYNAMIC);
+        (entity_index_has_components(entity_2, DYNAMIC));
 
     float inv_mass_1 = 0.0f;
     float inv_mass_2 = 0.0f;
@@ -505,7 +505,7 @@ void system_resolve_collision(Entity entity_1, Entity entity_2, Collision collis
 
     if (entity_1_movable) {
         float inertia_1 = 0;
-        if((entity_mask[entity_1] & PARTICLE) == PARTICLE) {
+        if(entity_index_has_components(entity_1, PARTICLE)) {
             inertia_1 = physics_circle_moment_of_inertia(hit_boxes[entity_1], mass[entity_1]);
         } else {
             inertia_1 =
@@ -520,7 +520,7 @@ void system_resolve_collision(Entity entity_1, Entity entity_2, Collision collis
     if (entity_2_movable) {
         float inertia_2 = 0.0f;
 
-        if((entity_mask[entity_2] & PARTICLE) == PARTICLE) {
+        if(entity_index_has_components(entity_2, PARTICLE)) {
             inertia_2 = physics_circle_moment_of_inertia(
                 hit_boxes[entity_2],
                 mass[entity_2]
@@ -586,7 +586,7 @@ void system_add_entities_to_grid() {
         if(!entity_index_is_alive(i)) {
             continue;
         }
-        if( (entity_mask[i] & HIT_BOX) == HIT_BOX) {
+        if( entity_index_has_components(i, HIT_BOX)) {
             add_entity_to_grids(i);
         }
     }
@@ -613,7 +613,7 @@ void system_apply_collisions_tuned() {
                             if(collision.overlap == true) {
                                 physics_set_collision_report(entity_from_index(entity_1), entity_from_index(entity_2), true);
                                 physics_set_collision_report(entity_from_index(entity_2), entity_from_index(entity_1), true);
-                                if((entity_mask[entity_1] & entity_mask[entity_2] & COLLISION) == COLLISION) {
+                                if(entity_index_has_components(entity_1, COLLISION) && entity_index_has_components(entity_2, COLLISION)) {
                                     system_resolve_collision(entity_1, entity_2, collision);
                                     system_separate_entities(entity_1,entity_2, collision);
 
@@ -654,7 +654,7 @@ void system_apply_collisions() {
             }
 
             const CMask filter = HIT_BOX;
-            if((entity_mask[i] & entity_mask[j] & HIT_BOX) != HIT_BOX) {
+            if(!entity_index_has_components(i, HIT_BOX) || !entity_index_has_components(j, HIT_BOX)) {
                 continue;
             }
             Collision collision = system_get_entity_collision(i, j);
@@ -663,7 +663,7 @@ void system_apply_collisions() {
             if(collision.overlap == true) {
                 physics_set_collision_report(entity_from_index(i), entity_from_index(j), true);
                 physics_set_collision_report(entity_from_index(j), entity_from_index(i), true);
-                if((entity_mask[i] & entity_mask[j] & COLLISION) == COLLISION) {
+                if(entity_index_has_components(i, COLLISION) && entity_index_has_components(j, COLLISION)) {
                     system_resolve_collision(i, j, collision);
                 }
 
@@ -683,7 +683,7 @@ void system_apply_angle_locks() {
             continue;
         }
 
-        if((entity_mask[entity] & ANGLE_LOCK) != ANGLE_LOCK) {
+        if(!entity_index_has_components(entity, ANGLE_LOCK)) {
             continue;
         }
 
@@ -753,7 +753,7 @@ void system_apply_axis_locks() {
             continue;
         }
 
-        if((entity_mask[entity] & AXIS_LOCK) != AXIS_LOCK) {
+        if(!entity_index_has_components(entity, AXIS_LOCK)) {
             continue;
         }
 
@@ -795,7 +795,7 @@ void system_apply_transform_locks() {
             continue;
         }
 
-        if((entity_mask[driven] & TRANSFORM_LOCK) != TRANSFORM_LOCK) {
+        if(!entity_index_has_components(driven, TRANSFORM_LOCK)) {
             continue;
         }
 
@@ -845,7 +845,7 @@ void system_clean_entities_past_lifetime() {
         if(!entity_index_is_alive(i)) {
             continue;
         }
-        if( (entity_mask[i] & LIFETIME) == LIFETIME ) {
+        if( entity_index_has_components(i, LIFETIME) ) {
 
             if( (life_times[i].expirey_time != 0 && life_times[i].expirey_time <= engine_get_time()) ) {
                 entity_delete(entity_from_index(i));
@@ -920,7 +920,7 @@ static void system_add_joint_force_at_point_for_one_tick(Entity target, Position
         return;
     }
 
-    if((entity_mask[target_index] & DYNAMIC) != DYNAMIC) {
+    if(!entity_index_has_components(target_index, DYNAMIC)) {
         return;
     }
 
@@ -1117,7 +1117,7 @@ void system_apply_joints()
         if(!entity_index_is_alive(joint_entity)) {
             continue;
         }
-        if((entity_mask[joint_entity] & JOINT) != JOINT) {
+        if(!entity_index_has_components(joint_entity, JOINT)) {
             continue;
         }
         Joint joint = joints[joint_entity];
@@ -1144,7 +1144,7 @@ void system_update_aabbs() {
         if(!entity_index_is_alive(i)) {
             continue;
         }
-        if( (entity_mask[i] & HIT_BOX) == HIT_BOX) {
+        if( entity_index_has_components(i, HIT_BOX)) {
             grid_update_aabb(i);
         }
     }

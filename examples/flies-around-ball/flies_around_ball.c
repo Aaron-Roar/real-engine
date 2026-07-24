@@ -88,7 +88,7 @@ int main() {
                 if(!entity_index_is_alive(i)) {
                     continue;
                 }
-                if( (entity_mask[i] & JOINT) == JOINT) {
+                if( entity_index_has_components(i, JOINT)) {
                     if(joints[i].type == JOINT_PIN) {
                         joints[i].type = JOINT_DISTANCE;
                         physics_set_acceleration(magnet_smash, (Velocity){2,0});

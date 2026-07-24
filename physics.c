@@ -428,7 +428,7 @@ Shape physics_get_global_hit_box(Entity entity) {
     EntityIndex index;
 
     if((entity_get_index(entity, &index) && entity_index_is_alive(index))) {
-        if( (entity_mask[index] & filter) == filter ) {
+        if( entity_index_has_components(index, filter) ) {
             return world_hit_boxes[index];
         }
     }
