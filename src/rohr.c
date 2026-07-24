@@ -71,6 +71,12 @@ float rohr_physics_polygon_moment_of_inertia(Shape shape, Mass mass_value) { ret
 Collision rohr_physics_sat_collision(Shape shape_1, Shape shape_2) { return physics_sat_collision(shape_1, shape_2); }
 Vec1D rohr_physics_circle_moment_of_inertia(Shape circle, Mass mass_value) { return physics_circle_moment_of_inertia(circle, mass_value); }
 EngineResult rohr_physics_set_acceleration(Entity entity, Acceleration a) { return physics_set_acceleration(entity, a); }
+EngineResult rohr_physics_accelerate_toward_position(Entity entity, float acceleration_magnitude, Position position) {
+    return physics_accelerate_toward_position(entity, acceleration_magnitude, position);
+}
+EngineResult rohr_physics_accelerate_toward_entity(Entity entity, float acceleration_magnitude, Entity target) {
+    return physics_accelerate_toward_entity(entity, acceleration_magnitude, target);
+}
 EngineResult rohr_physics_set_velocity(Entity entity, Velocity v) { return physics_set_velocity(entity, v); }
 EngineResult rohr_physics_set_position(Entity entity, Position p) { return physics_set_position(entity, p); }
 EngineResult rohr_physics_set_mass(Entity entity, Mass m) { return physics_set_mass(entity, m); }

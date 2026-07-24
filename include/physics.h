@@ -238,6 +238,10 @@ Vec1D physics_circle_moment_of_inertia(Shape circle, Mass mass_value);
 
 /** Set an entity's base linear acceleration. */
 EngineResult physics_set_acceleration(Entity entity, Acceleration a);
+/** Set acceleration toward a world position using a scalar magnitude. */
+EngineResult physics_accelerate_toward_position(Entity entity, float acceleration_magnitude, Position position);
+/** Set acceleration toward another entity's current world position. */
+EngineResult physics_accelerate_toward_entity(Entity entity, float acceleration_magnitude, Entity target);
 /** Set an entity's linear velocity. */
 EngineResult physics_set_velocity(Entity entity, Velocity v);
 /** Set an entity's world position. */

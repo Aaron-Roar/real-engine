@@ -684,6 +684,38 @@ Sets an entity acceleration component value.
 
 **Returns:** EngineResult describing success or failure.
 
+### `rohr_physics_accelerate_toward_position`
+
+```c
+EngineResult rohr_physics_accelerate_toward_position(Entity entity, float acceleration_magnitude, Position position);
+```
+
+Sets entity acceleration toward a world position.
+
+| Parameter | Description |
+| --- | --- |
+| `entity` | Entity to modify. |
+| `acceleration_magnitude` | Acceleration magnitude to apply along the direction to position. |
+| `position` | Target world position. |
+
+**Returns:** EngineResult describing success or failure.
+
+### `rohr_physics_accelerate_toward_entity`
+
+```c
+EngineResult rohr_physics_accelerate_toward_entity(Entity entity, float acceleration_magnitude, Entity target);
+```
+
+Sets entity acceleration toward another entity's current world position.
+
+| Parameter | Description |
+| --- | --- |
+| `entity` | Entity to modify. |
+| `acceleration_magnitude` | Acceleration magnitude to apply along the direction to target. |
+| `target` | Target entity. |
+
+**Returns:** EngineResult describing success or failure.
+
 ### `rohr_physics_set_velocity`
 
 ```c

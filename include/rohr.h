@@ -381,6 +381,24 @@ Vec1D rohr_physics_circle_moment_of_inertia(Shape circle, Mass mass_value);
 EngineResult rohr_physics_set_acceleration(Entity entity, Acceleration a);
 
 /**
+ * @brief Sets entity acceleration toward a world position.
+ * @param entity Entity to modify.
+ * @param acceleration_magnitude Acceleration magnitude to apply along the direction to position.
+ * @param position Target world position.
+ * @return EngineResult describing success or failure.
+ */
+EngineResult rohr_physics_accelerate_toward_position(Entity entity, float acceleration_magnitude, Position position);
+
+/**
+ * @brief Sets entity acceleration toward another entity's current world position.
+ * @param entity Entity to modify.
+ * @param acceleration_magnitude Acceleration magnitude to apply along the direction to target.
+ * @param target Target entity.
+ * @return EngineResult describing success or failure.
+ */
+EngineResult rohr_physics_accelerate_toward_entity(Entity entity, float acceleration_magnitude, Entity target);
+
+/**
  * @brief Sets an entity velocity component value.
  * @param entity Entity to modify.
  * @param v Velocity value.

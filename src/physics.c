@@ -396,6 +396,59 @@ EngineResult physics_set_acceleration(Entity entity, Acceleration a) {
     console_debug_write(LOG_ENGINE, "Set Entity: %d Acceleration: {x: %f, y: %f}\n", entity, a.x, a.y);
     return error_result_value(true);
 }
+
+EngineResult physics_accelerate_toward_position(Entity entity, float acceleration_magnitude, Position position) {
+    EntityIndex index;
+    Position current_position;
+    Vec2D delta;
+    float distance;
+    Acceleration acceleration;
+    EngineResult result = physics_get_live_index(entity, &index);
+
+    if(result.kind == ERROR_RESULT_ERROR) {
+        return result;
+    }
+
+    current_position = positions[index];
+    delta = (Vec2D){
+        .x = position.x - current_position.x,
+        .y = position.y - current_position.y
+    };
+    distance = math_vector_magnitude(delta);
+
+    if(distance > 0.00001f) {
+        acceleration = (Acceleration){
+            .x = (delta.x / distance) * acceleration_magnitude,
+            .y = (delta.y / distance) * acceleration_magnitude
+        };
+    } else {
+        acceleration = (Acceleration){0};
+    }
+
+    (void)AccelerationPool_store_at(&accelerations_pool, index, acceleration);
+    console_debug_write(
+        LOG_ENGINE,
+        "Set Entity: %d Acceleration Toward Position: {x: %f, y: %f} Magnitude: %f Acceleration: {x: %f, y: %f}\n",
+        entity,
+        position.x,
+        position.y,
+        acceleration_magnitude,
+        acceleration.x,
+        acceleration.y
+    );
+    return error_result_value(true);
+}
+
+EngineResult physics_accelerate_toward_entity(Entity entity, float acceleration_magnitude, Entity target) {
+    EntityIndex target_index;
+    EngineResult result = physics_get_live_index(target, &target_index);
+
+    if(result.kind == ERROR_RESULT_ERROR) {
+        return result;
+    }
+    return physics_accelerate_toward_position(entity, acceleration_magnitude, positions[target_index]);
+}
+
 EntityResult physics_set_torque(Entity entity, Torque t) {
     EntityIndex index;
     EntityResult torque_result;
