@@ -73,6 +73,7 @@
       devShells.${system}.default = pkgs.mkShell {
         nativeBuildInputs = with pkgs; [
           clang
+          doxygen
           gnumake
           pkg-config
           ffmpeg

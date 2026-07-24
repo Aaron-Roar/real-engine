@@ -1,0 +1,14 @@
+build/
+a.out
+*.o
+*.a
+*.so
+*.dll
+*.dylib
+*.exe
+*.lock
+!flake.lock
+.cache/
+build/
+*.mp4
+AGENTS.md

@@ -21,6 +21,9 @@ ENGINE_SRC := \
 
 ENGINE_OBJ := $(patsubst src/%.c,build/obj/%.o,$(ENGINE_SRC))
 ENGINE_LIB := lib/libreal_engine.a
+DOXYGEN := doxygen
+DOCS_DOXYFILE := docs/Doxyfile
+DOCS_OUTPUT := build/docs
 
 ASSET_SRC := \
 	examples/test-assets/elder-fly/elderfly_descriptors.c\
@@ -30,7 +33,7 @@ PIT_BINARY := build/examples/flies_in_pit
 BALL_BINARY := build/examples/flies_around_ball
 VIEW_BINARY := build/examples/view_port
 
-.PHONY: help all build build-engine build-example-pit build-example-ball run-pit run-ball clean
+.PHONY: help all build build-engine build-example-pit build-example-ball run-pit run-ball docs clean-docs clean
 
 help:
 	@printf '%s\n' \
@@ -67,6 +70,12 @@ help:
 		"" \
 		"  run-view" \
 		"		  Builds and runs the view_port example" \
+		"" \
+		"  docs" \
+		"		  Builds Doxygen HTML docs into build/docs/html" \
+		"" \
+		"  clean-docs" \
+		"		  Removes generated documentation" \
 		"" \
 		"  clean" \
 		"		  Removes the build directory"
@@ -111,5 +120,12 @@ run-ball: $(BALL_BINARY)
 
 run-view: $(VIEW_BINARY)
 	./$(VIEW_BINARY)
+
+docs:
+	$(DOXYGEN) $(DOCS_DOXYFILE)
+
+clean-docs:
+	rm -rf $(DOCS_OUTPUT)
+
 clean:
 	rm -rf build lib/*.a

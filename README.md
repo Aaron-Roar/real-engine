@@ -23,15 +23,12 @@ The long-term goal is to provide a modular engine for creating reactive 2D and 2
 
 ```text
 engine/
-├── console.*              # Terminal interface
-├── engine.*               # Engine timing and lifecycle
-├── entity_components.*    # ECS management
-├── physics.*              # Physics data and utilities
-├── systems.*              # Physics and gameplay systems
-├── graphics.*             # Rendering
-├── math2d.*               # Geometry and math
-├── tools.*                # Utility functions
-└── examples/              # Example games
+├── include/               # Public engine headers
+├── src/                   # Engine implementation and private headers
+├── docs/                  # Doxygen config and documentation pages
+├── examples/              # Example games and assets
+├── lib/                   # Generated static library output
+└── build/                 # Generated objects, binaries, and docs
 ```
 
 ---
@@ -60,6 +57,21 @@ Run an example:
 make run-pit
 ```
 
+Generate API documentation:
+
+```bash
+make docs
+```
+
+The generated HTML is written to:
+
+```text
+build/docs/html/index.html
+```
+
+Documentation source is committed in `docs/` and Doxygen comments in
+`include/`. Generated HTML under `build/docs/` is not committed.
+
 ### NixOS / Nix
 
 If you have Nix installed, enter the development environment:
@@ -67,6 +79,9 @@ If you have Nix installed, enter the development environment:
 ```bash
 nix develop
 ```
+
+The Nix development shell includes the build tools, SDL dependencies, ffmpeg,
+and Doxygen.
 ---
 
 ## Design Goals
@@ -94,4 +109,3 @@ nix develop
 ---
 
 This engine is an active personal project and continues to evolve as new engine systems are implemented and refined.
-
