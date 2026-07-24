@@ -18,7 +18,7 @@ Tick engine_tick_count = 0;
 Time engine_time = 0.0;   // simulated engine time in seconds
 Time engine_dt = 0.0;     // simulated delta time in seconds
 
-Time engine_overide_dt = 0.0;
+Time engine_override_dt = 0.0;
 bool engine_dt_overwritten = false;
 
 SDLTime sdl_prev_counter = 0;
@@ -82,6 +82,8 @@ EngineResult engine_init() {
 
     engine_time = 0.0;
     engine_dt = 0.0;
+    engine_override_dt = 0.0;
+    engine_dt_overwritten = false;
     engine_tick_count = 0;
 
     engine_paused = false;
@@ -117,8 +119,8 @@ void engine_update_time() {
         return;
     }
 
-    if(engine_overide_dt) {
-        engine_dt = engine_overide_dt;
+    if(engine_dt_overwritten) {
+        engine_dt = engine_override_dt;
     } else {
         engine_dt = real_dt;
     }
@@ -142,16 +144,17 @@ Time engine_get_time() {
 }
 void engine_reset_clock() {
     sdl_prev_counter = SDL_GetPerformanceCounter();
-    engine_dt = 0.0;
+    engine_dt = engine_dt_overwritten ? engine_override_dt : 0.0;
 }
 
 void engine_set_dt(Time dt) {
-    engine_overide_dt = dt;
+    engine_override_dt = dt;
+    engine_dt = dt;
     engine_dt_overwritten = true;
 }
 
 void engine_calculate_dt() {
-    engine_overide_dt = 0.0;
+    engine_override_dt = 0.0;
     engine_dt_overwritten = false;
 }
 
