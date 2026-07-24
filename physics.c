@@ -132,10 +132,6 @@ void physics_tables_destroy(void) {
     (void)JointPool_destroy(&joints_pool);
 }
 
-static bool physics_get_entity_index(Entity entity, EntityIndex *index) {
-    return entity_get_index(entity, index) && entity_index_is_alive(*index);
-}
-
 Shape physics_shape_world_translate(Shape shape, Position position, Orientation angle) {
     Shape world_shape = {0};
     world_shape.amount_of_vertices = shape.amount_of_vertices;
@@ -320,7 +316,7 @@ Vec1D physics_circle_moment_of_inertia(Shape circle, Mass mass_value) {
 void physics_set_velocity(Entity entity, Velocity v) {
     EntityIndex index;
 
-    if(!physics_get_entity_index(entity, &index)) {
+    if(!(entity_get_index(entity, &index) && entity_index_is_alive(index))) {
         //Error
         return;
     }
@@ -330,7 +326,7 @@ void physics_set_velocity(Entity entity, Velocity v) {
 void physics_set_position(Entity entity, Position p) {
     EntityIndex index;
 
-    if(!physics_get_entity_index(entity, &index)) {
+    if(!(entity_get_index(entity, &index) && entity_index_is_alive(index))) {
         //Error
         return;
     }
@@ -341,7 +337,7 @@ void physics_set_position(Entity entity, Position p) {
 void physics_set_mass(Entity entity, Mass m) {
     EntityIndex index;
 
-    if(!physics_get_entity_index(entity, &index)) {
+    if(!(entity_get_index(entity, &index) && entity_index_is_alive(index))) {
         //Error
         return;
     }
@@ -352,13 +348,13 @@ void physics_set_mass(Entity entity, Mass m) {
 Entity physics_set_force(Entity entity, Force f) {
     EntityIndex index;
 
-    if(!physics_get_entity_index(entity, &index)) {
+    if(!(entity_get_index(entity, &index) && entity_index_is_alive(index))) {
         //Error
         return ENTITY_INVALID;
     }
     Entity force_entity = entity_add();
     EntityIndex force_index;
-    if(!physics_get_entity_index(force_entity, &force_index)) {
+    if(!(entity_get_index(force_entity, &force_index) && entity_index_is_alive(force_index))) {
         return ENTITY_INVALID;
     }
     (void)ForcePool_store_at(&forces_pool, force_index, f);
@@ -370,7 +366,7 @@ Entity physics_set_force(Entity entity, Force f) {
 void physics_set_acceleration(Entity entity, Acceleration a) {
     EntityIndex index;
 
-    if(!physics_get_entity_index(entity, &index)) {
+    if(!(entity_get_index(entity, &index) && entity_index_is_alive(index))) {
         //Error
         return;
     }
@@ -380,13 +376,13 @@ void physics_set_acceleration(Entity entity, Acceleration a) {
 Entity physics_set_torque(Entity entity, Torque t) {
     EntityIndex index;
 
-    if(!physics_get_entity_index(entity, &index)) {
+    if(!(entity_get_index(entity, &index) && entity_index_is_alive(index))) {
         //Error
         return ENTITY_INVALID;
     }
     Entity torque_entity = entity_add();
     EntityIndex torque_index;
-    if(!physics_get_entity_index(torque_entity, &torque_index)) {
+    if(!(entity_get_index(torque_entity, &torque_index) && entity_index_is_alive(torque_index))) {
         return ENTITY_INVALID;
     }
     (void)TorquePool_store_at(&torques_pool, torque_index, t);
@@ -398,7 +394,7 @@ Entity physics_set_torque(Entity entity, Torque t) {
 void physics_set_hitbox(Entity entity, Shape hitbox) {
     EntityIndex index;
 
-    if(!physics_get_entity_index(entity, &index)) {
+    if(!(entity_get_index(entity, &index) && entity_index_is_alive(index))) {
         //Error
         return;
     }
@@ -409,7 +405,7 @@ void physics_set_hitbox(Entity entity, Shape hitbox) {
 void physics_set_orientation(Entity entity, Orientation angle) {
     EntityIndex index;
 
-    if(!physics_get_entity_index(entity, &index)) {
+    if(!(entity_get_index(entity, &index) && entity_index_is_alive(index))) {
         //Error
         return;
     }
@@ -419,7 +415,7 @@ void physics_set_orientation(Entity entity, Orientation angle) {
 void physics_set_angular_velocity(Entity entity, AngularVelocity v) {
     EntityIndex index;
 
-    if(!physics_get_entity_index(entity, &index)) {
+    if(!(entity_get_index(entity, &index) && entity_index_is_alive(index))) {
         //Error
         return;
     }
@@ -431,7 +427,7 @@ Shape physics_get_global_hit_box(Entity entity) {
     CMask filter = HIT_BOX;
     EntityIndex index;
 
-    if(physics_get_entity_index(entity, &index)) {
+    if((entity_get_index(entity, &index) && entity_index_is_alive(index))) {
         if( (entity_mask[index] & filter) == filter ) {
             return world_hit_boxes[index];
         }
@@ -441,7 +437,7 @@ Shape physics_get_global_hit_box(Entity entity) {
  void physics_set_restitution(Entity entity, Restitution restitution) {
     EntityIndex index;
 
-    if(!physics_get_entity_index(entity, &index)) {
+    if(!(entity_get_index(entity, &index) && entity_index_is_alive(index))) {
         //Error
         return;
     }
@@ -462,7 +458,7 @@ Shape physics_get_global_hit_box(Entity entity) {
 void physics_set_dynamic(Entity entity) {
     EntityIndex index;
 
-    if(!physics_get_entity_index(entity, &index)) {
+    if(!(entity_get_index(entity, &index) && entity_index_is_alive(index))) {
         //Error
         return;
     }
@@ -473,7 +469,7 @@ void physics_set_dynamic(Entity entity) {
 void physics_set_static(Entity entity) {
     EntityIndex index;
 
-    if(!physics_get_entity_index(entity, &index)) {
+    if(!(entity_get_index(entity, &index) && entity_index_is_alive(index))) {
         //Error
         return;
     }
@@ -484,7 +480,7 @@ void physics_set_static(Entity entity) {
 void physics_set_angle_lock(Entity entity, Orientation min, Orientation max) {
     EntityIndex index;
 
-    if(!physics_get_entity_index(entity, &index)) {
+    if(!(entity_get_index(entity, &index) && entity_index_is_alive(index))) {
         //Error
         return;
     }
@@ -497,7 +493,7 @@ void physics_set_angle_lock(Entity entity, Orientation min, Orientation max) {
 void physics_set_axis_lock(Entity entity, Axis axis, Position axis_point) {
     EntityIndex index;
 
-    if(!physics_get_entity_index(entity, &index)) {
+    if(!(entity_get_index(entity, &index) && entity_index_is_alive(index))) {
         //Error
         return;
     }
@@ -517,7 +513,7 @@ void physics_set_axis_lock(Entity entity, Axis axis, Position axis_point) {
 void physics_set_friction(Entity entity, float friction) {
     EntityIndex index;
 
-    if(!physics_get_entity_index(entity, &index)) {
+    if(!(entity_get_index(entity, &index) && entity_index_is_alive(index))) {
         //Error
         return;
     }
@@ -540,7 +536,7 @@ void physics_set_transform_lock(
     EntityIndex driven_index;
     EntityIndex driver_index;
 
-    if(!physics_get_entity_index(driven, &driven_index) || !physics_get_entity_index(driver, &driver_index)) {
+    if(!(entity_get_index(driven, &driven_index) && entity_index_is_alive(driven_index)) || !(entity_get_index(driver, &driver_index) && entity_index_is_alive(driver_index))) {
         //Error
         return;
     }
@@ -557,7 +553,7 @@ void physics_set_transform_lock(
 void physics_remove_transform_lock(Entity entity) {
     EntityIndex index;
 
-    if(!physics_get_entity_index(entity, &index)) {
+    if(!(entity_get_index(entity, &index) && entity_index_is_alive(index))) {
         //Error
         return;
     }
@@ -576,7 +572,7 @@ void physics_set_transform_lock_current_transform(
     EntityIndex driven_index;
     EntityIndex driver_index;
 
-    if(!physics_get_entity_index(driven, &driven_index) || !physics_get_entity_index(driver, &driver_index)) {
+    if(!(entity_get_index(driven, &driven_index) && entity_index_is_alive(driven_index)) || !(entity_get_index(driver, &driver_index) && entity_index_is_alive(driver_index))) {
         return;
     }
 
@@ -615,13 +611,13 @@ Entity physics_set_joint(
     EntityIndex a_index;
     EntityIndex b_index;
 
-    if(!physics_get_entity_index(a, &a_index) || !physics_get_entity_index(b, &b_index)) {
+    if(!(entity_get_index(a, &a_index) && entity_index_is_alive(a_index)) || !(entity_get_index(b, &b_index) && entity_index_is_alive(b_index))) {
         return ENTITY_INVALID;
     }
 
     Entity joint = entity_add();
     EntityIndex joint_index;
-    if(!physics_get_entity_index(joint, &joint_index)) {
+    if(!(entity_get_index(joint, &joint_index) && entity_index_is_alive(joint_index))) {
         return ENTITY_INVALID;
     }
 
@@ -664,7 +660,7 @@ void physics_set_collision_report(Entity entity, Entity target, bool state) {
     EntityIndex index;
     EntityIndex target_index;
 
-    if(!physics_get_entity_index(entity, &index) || !physics_get_entity_index(target, &target_index)) {
+    if(!(entity_get_index(entity, &index) && entity_index_is_alive(index)) || !(entity_get_index(target, &target_index) && entity_index_is_alive(target_index))) {
         return;
     }
     if(index >= collision_reports_pool.capacity) {
@@ -679,7 +675,7 @@ bool physics_get_collision_report(Entity entity, Entity target) {
     EntityIndex index;
     EntityIndex target_index;
 
-    if(!physics_get_entity_index(entity, &index) || !physics_get_entity_index(target, &target_index)) {
+    if(!(entity_get_index(entity, &index) && entity_index_is_alive(index)) || !(entity_get_index(target, &target_index) && entity_index_is_alive(target_index))) {
         return false;
     }
     if(collision_reports[index].collisions[target_index] && collision_reports[target_index].collisions[index]) {
