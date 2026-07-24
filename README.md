@@ -47,6 +47,7 @@ I look forward to releasing a game with Rohr Engine in the soon future.
 
 ## Public API
 
+* [Public API reference](docs/public_api.md)
 Application code should include the public Rohr API facade:
 
 ```c
