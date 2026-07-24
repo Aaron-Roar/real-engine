@@ -1,65 +1,131 @@
 # Real Engine
 
-A lightweight 2D game engine written in C using SDL3. The project focuses on building core engine systems from first principles rather than relying on existing game frameworks.
+Real Engine is a small 2D game engine written in C with SDL3.
 
-The long-term goal is to provide a modular engine for creating reactive 2D and 2.5D games while remaining easy to understand, extend, and experiment with.
+I am building this as a solo developer. I am not a school-taught programmer; I am learning by building the systems myself, making mistakes, fixing them, and trying to keep the code understandable as it grows. The goal is not to compete with large engines. The goal is to make a simple, hackable C engine where the core pieces are visible and worth studying.
 
----
+Pull requests are welcome. If you want to add features, improve examples, fix bugs, clean up documentation, or point out better ways to structure something, I would appreciate the help.
 
-## Current Features
+![Flies in Pit demo](docs/assets/flies_in_pit.gif)
 
-* Entity Component System (ECS)
-* Convex polygon collision detection (SAT)
-* Rigid body physics
-* Forces, torque, and joints
-* Sprite rendering and animation
-* Transform and axis constraints
-* Screen playback recording
-* Terminal debugging interface (ncurses) "Implementation to be changed"
+## What It Does
 
----
+Real Engine currently focuses on data-oriented 2D simulation:
+
+* Entity ids are stable handles, separate from table indices.
+* Component data is stored in indexed tables for cache-friendly systems.
+* Object pools back engine tables and grow as entities are added.
+* Entity table indices are still preserved for compute-heavy loops.
+* Systems use explicit component masks instead of hidden object behavior.
+* Physics supports convex polygon and circle-style shape data.
+* Collision uses SAT for convex polygon overlap checks.
+* Rigid bodies support mass, velocity, acceleration, angular velocity, restitution, and friction.
+* Constraints include joints, axis locks, angle locks, and transform locks.
+* Sprite animation is driven through SDL3 textures.
+* Screen recording can write MP4 output through ffmpeg.
+* A terminal console exists for engine logs and debugging.
+* Doxygen comments are used for API documentation.
+
+The engine is still early, but the interesting part is that the systems are real engine systems: entity lifetime, stale id protection, table growth, physics stepping, rendering, input, errors, examples, and docs are all being worked through directly in C.
+
+## Public API
+
+Application code should include the public Rohr API facade:
+
+```c
+#include "rohr.h"
+```
+
+The public layer uses `rohr_` prefixes, for example:
+
+```c
+rohr_console_init();
+
+EngineResult result = rohr_engine_init();
+if(rohr_error_check(result)) {
+    rohr_console_write(LOG_ENGINE, rohr_error_default_message(result.result.error));
+    return 1;
+}
+
+EntityResult entity_result = rohr_entity_add();
+if(rohr_error_check(entity_result)) {
+    rohr_console_write(LOG_ENGINE, rohr_error_default_message(entity_result.result.error));
+    return 1;
+}
+```
+
+Internal modules still exist under `include/` and `src/`, but examples are intended to use the public API where possible.
 
 ## Project Structure
 
 ```text
 engine/
-├── include/               # Public engine headers
+├── include/               # Public headers
 ├── src/                   # Engine implementation and private headers
-├── docs/                  # Doxygen config and documentation pages
-├── examples/              # Example games and assets
+├── docs/                  # Doxygen config and documentation source
+├── docs/assets/           # README and documentation media
+├── examples/              # Example programs and example assets
 ├── lib/                   # Generated static library output
 └── build/                 # Generated objects, binaries, and docs
 ```
 
----
 ## Building
 
 ### Dependencies
-- C compiler: `clang` or `gcc`
-- C standard library
-- `make`
-- `pkg-config`
-- `sdl3`
-- `sdl3-image`
-- `ncurses`
-- `ffmpeg` "If using video recording"
-- Math library: `libm` / `-lm`
 
-Build the examples:
+* C compiler: `clang` or `gcc`
+* C standard library
+* `make`
+* `pkg-config`
+* `sdl3`
+* `sdl3-image`
+* `ncurses`
+* `ffmpeg` for recording or converting demo media
+* Math library: `libm` / `-lm`
 
-```bash
+Build the engine and examples:
+
+```sh
 make build
 ```
 
-Run an example:
+Run the pit example:
 
-```bash
+```sh
 make run-pit
 ```
 
-Generate API documentation:
+Run the ball example:
 
-```bash
+```sh
+make run-ball
+```
+
+Run the viewport example:
+
+```sh
+make run-view
+```
+
+## Nix
+
+If you use Nix, the development shell includes the C toolchain, SDL dependencies, ffmpeg, and Doxygen:
+
+```sh
+nix develop
+```
+
+Then build normally:
+
+```sh
+make build
+```
+
+## Documentation
+
+Generate the Doxygen docs with:
+
+```sh
 make docs
 ```
 
@@ -69,43 +135,65 @@ The generated HTML is written to:
 build/docs/html/index.html
 ```
 
-Documentation source is committed in `docs/` and Doxygen comments in
-`include/`. Generated HTML under `build/docs/` is not committed.
+Documentation source lives in `docs/`, and API comments live mainly in `include/`. Generated HTML under `build/docs/` is not committed.
 
-### NixOS / Nix
+## Examples
 
-If you have Nix installed, enter the development environment:
+Current examples:
 
-```bash
-nix develop
+* `flies-in-pit`: physics, particles, animated sprites, collisions, grid drawing, and recording.
+* `flies-around-ball`: joints, attraction-style motion, particles, and animated sprites.
+* `view-port`: basic sprite movement and input handling.
+
+Build output goes to:
+
+```text
+build/examples/
 ```
 
-The Nix development shell includes the build tools, SDL dependencies, ffmpeg,
-and Doxygen.
----
+## Contributing
 
-## Design Goals
+This project is very open to pull requests.
 
-* Simple, readable C code
-* Modular engine architecture
-* Data-oriented ECS
-* Minimal dependencies
-* Easily extensible systems
-* Platform independent where practical
+Useful contributions include:
 
----
+* Bug fixes
+* More examples
+* Better docs
+* Safer public API wrappers
+* Physics fixes or focused improvements
+* Rendering improvements
+* Input, audio, camera, UI, or scene features
+* Tests or reproducible demo cases
+* Cleanup that keeps the engine simple and explicit
+
+Please keep the style of the project in mind: plain C, explicit ownership, minimal dependencies, and focused changes.
+
+## License Intent
+
+I want Real Engine to be usable as a library in other projects, including closed-source games or applications, while still requiring changes to the engine itself to stay open when distributed.
+
+That sounds closest to the GNU Lesser General Public License, likely `LGPL-3.0-or-later`, but the license is not finalized until the repository includes the proper license files. If you plan to use this seriously before that is finished, please check the current repo state first.
+
+The intent is:
+
+* You can link the engine as a library from your own project.
+* Your game or application code can remain under your own license.
+* If you modify and distribute the engine itself, those engine changes should be shared under the same library license.
 
 ## Roadmap
 
-* Input system
+Things I would like to keep improving:
+
+* Stable public API coverage
+* Better camera and viewport tools
 * Audio
-* Camera system
 * Scene serialization
-* Particle system
+* More complete input system
+* More rendering helpers
 * UI framework
-* Networking
-* Scripting support
+* Better examples
+* Tests and validation tools
+* More complete documentation
 
----
-
-This engine is an active personal project and continues to evolve as new engine systems are implemented and refined.
+Real Engine is an active personal project. It is rough in places, but the goal is to keep improving it in the open and make the engine easier to use, inspect, and contribute to over time.

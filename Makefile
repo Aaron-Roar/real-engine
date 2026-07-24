@@ -13,6 +13,7 @@ ENGINE_SRC := \
 	src/graphics.c \
 	src/math2d.c \
 	src/physics.c \
+	src/rohr.c \
 	src/systems.c \
 	src/tools.c \
 	src/level_editor.c\
@@ -26,8 +27,7 @@ DOCS_DOXYFILE := docs/Doxyfile
 DOCS_OUTPUT := build/docs
 
 ASSET_SRC := \
-	examples/test-assets/elder-fly/elderfly_descriptors.c\
-	examples/test-assets/orm/orm_descriptors.c
+	examples/test-assets/elder-fly/elderfly_descriptors.c
 
 PIT_BINARY := build/examples/flies_in_pit
 BALL_BINARY := build/examples/flies_around_ball

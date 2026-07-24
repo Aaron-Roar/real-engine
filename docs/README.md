@@ -4,6 +4,15 @@ Real Engine is a lightweight C and SDL3 game engine built around explicit
 engine systems, stable entity ids, component tables, object pools, and a small
 error/result API.
 
+Application code should prefer the public facade:
+
+```c
+#include "rohr.h"
+```
+
+The facade exposes `rohr_`-prefixed functions while the engine keeps its
+smaller internal module headers and implementations.
+
 ## Local Generation
 
 From the project root:

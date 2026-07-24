@@ -220,22 +220,6 @@ bool entity_index_has_components(EntityIndex index, CMask components);
 EngineResult entity_delete_components(Entity entity, CMask mask);
 
 /**
- * Print an entity's component mask to the engine console.
- *
- * @param entity Entity id to inspect.
- */
-void entity_print_entity_components(Entity entity);
-
-/**
- * Check whether a component mask contains all bits from a filter.
- *
- * @param e_mask Component mask to inspect.
- * @param filter Required component bits.
- * @return true when all filter bits are present.
- */
-bool entity_equate_mask(CMask e_mask, CMask filter);
-
-/**
  * Set a parent-child relationship.
  *
  * @param parent Parent entity id.

@@ -251,16 +251,11 @@ char console_source_symbol(LogSourceType source) {
     return result;
 }
 
-void console_write(LogSourceType source, const char *fmt, ...)
-{
-        ConsoleLogString str_buff = {0};
-
+void console_vwrite(LogSourceType source, const char *fmt, va_list args) {
+    ConsoleLogString str_buff = {0};
     str_buff.string[0] = '[';
     str_buff.string[1] = console_source_symbol(source);
     str_buff.string[2] = ']';
-
-    va_list args;
-    va_start(args, fmt);
 
     vsnprintf(
         &str_buff.string[3],
@@ -269,34 +264,31 @@ void console_write(LogSourceType source, const char *fmt, ...)
         args
     );
 
-    va_end(args);
-
     console_log_input(str_buff);
+}
+
+void console_write(LogSourceType source, const char *fmt, ...)
+{
+    va_list args;
+
+    va_start(args, fmt);
+    console_vwrite(source, fmt, args);
+    va_end(args);
+}
+
+void console_debug_vwrite(LogSourceType source, const char *fmt, va_list args) {
+    if(console_debug) {
+        console_vwrite(source, fmt, args);
+    }
 }
 
 void console_debug_write(LogSourceType source, const char *fmt, ...)
 {
-    if(console_debug) {
-      ConsoleLogString str_buff = {0};
+    va_list args;
 
-      str_buff.string[0] = '[';
-      str_buff.string[1] = console_source_symbol(source);
-      str_buff.string[2] = ']';
-
-      va_list args;
-      va_start(args, fmt);
-
-      vsnprintf(
-          &str_buff.string[3],
-          sizeof(str_buff.string) - 3,
-          fmt,
-          args
-      );
-
-      va_end(args);
-
-      console_log_input(str_buff);
-    }
+    va_start(args, fmt);
+    console_debug_vwrite(source, fmt, args);
+    va_end(args);
 }
 
 void console_set_debug(bool state) {
