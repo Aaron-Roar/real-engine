@@ -216,9 +216,6 @@ The goal is still for Rohr Engine to be usable as a library in other projects,
 including closed-source games or applications. The main decision is whether
 engine changes should be required to stay open when distributed.
 
-If that requirement stays important, `LGPL-3.0-or-later` is likely the better
-fit. If simpler adoption matters more, `Apache-2.0` may be the better fit.
-
 ## Roadmap
 
 Things I would like to keep improving:
@@ -234,4 +231,5 @@ Things I would like to keep improving:
 * Tests and validation tools
 * More complete documentation
 
-Rohr Engine is an active personal project. It is rough in places, but the goal is to keep improving it in the open and make the engine easier to use, inspect, and contribute to over time.
+Rohr Engine is an active personal project in the early phases of development.
+Please keep this in mind if integrating into a project.
