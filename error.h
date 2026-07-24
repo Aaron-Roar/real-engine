@@ -4,9 +4,9 @@
 #include <stdbool.h>
 
 typedef enum {
-    RESULT_VALUE,
-    RESULT_ERROR,
-} ResultKind;
+    ERROR_RESULT_VALUE,
+    ERROR_RESULT_ERROR,
+} ErrorResultKind;
 
 typedef enum EngineError {
     ERROR_NONE = 0,
@@ -37,21 +37,21 @@ typedef enum EngineError {
  * valid types can include spaces, pointers, and other tokens that cannot be
  * pasted into an identifier. Pass the PascalCase ResultType explicitly.
  */
-#define DECLARE_RESULT_TYPE(ResultType, ValueType) \
+#define ERROR_DECLARE_RESULT_TYPE(ResultType, ValueType) \
     typedef union Result##ResultType { \
         ValueType value; \
         EngineError error; \
     } Result##ResultType; \
     \
     typedef struct ResultType { \
-        ResultKind kind; \
+        ErrorResultKind kind; \
         Result##ResultType result; \
     } ResultType
 
-DECLARE_RESULT_TYPE(EngineResult, bool);
+ERROR_DECLARE_RESULT_TYPE(EngineResult, bool);
 
-EngineResult engine_result_value(bool value);
-EngineResult engine_result_error(EngineError error);
-const char *engine_error_string(EngineError error);
+EngineResult error_result_value(bool value);
+EngineResult error_result_error(EngineError error);
+const char *error_string(EngineError error);
 
 #endif

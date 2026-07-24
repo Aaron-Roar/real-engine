@@ -1,20 +1,20 @@
 #include "error.h"
 
-EngineResult engine_result_value(bool value) {
+EngineResult error_result_value(bool value) {
     return (EngineResult){
-        .kind = RESULT_VALUE,
+        .kind = ERROR_RESULT_VALUE,
         .result.value = value
     };
 }
 
-EngineResult engine_result_error(EngineError error) {
+EngineResult error_result_error(EngineError error) {
     return (EngineResult){
-        .kind = RESULT_ERROR,
+        .kind = ERROR_RESULT_ERROR,
         .result.error = error
     };
 }
 
-const char *engine_error_string(EngineError error) {
+const char *error_string(EngineError error) {
     switch(error) {
         case ERROR_NONE:
             return "no error";

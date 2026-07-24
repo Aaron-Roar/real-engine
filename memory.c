@@ -20,7 +20,7 @@ void run_pool_test(void) {
      * allocation happens once here instead of every time an object is requested.
      */
     result = TestPool_init(&pool, 2);
-    if(result.kind == RESULT_ERROR) {
+    if(result.kind == ERROR_RESULT_ERROR) {
         return;
     }
 
@@ -33,13 +33,13 @@ void run_pool_test(void) {
      */
     first_object.value = 10;
     object_result = TestPool_store(&pool, first_object);
-    if(object_result.kind == RESULT_VALUE) {
+    if(object_result.kind == ERROR_RESULT_VALUE) {
         first = object_result.result.value;
     }
 
     second_object.value = 20;
     object_result = TestPool_store(&pool, second_object);
-    if(object_result.kind == RESULT_VALUE) {
+    if(object_result.kind == ERROR_RESULT_VALUE) {
         second = object_result.result.value;
     }
 
@@ -48,13 +48,13 @@ void run_pool_test(void) {
      * This avoids using stale pointers if the resize moves the backing memory.
      */
     result = TestPool_release(&pool, first);
-    if(result.kind == RESULT_ERROR) {
+    if(result.kind == ERROR_RESULT_ERROR) {
         (void)TestPool_destroy(&pool);
         return;
     }
 
     result = TestPool_release(&pool, second);
-    if(result.kind == RESULT_ERROR) {
+    if(result.kind == ERROR_RESULT_ERROR) {
         (void)TestPool_destroy(&pool);
         return;
     }
@@ -66,7 +66,7 @@ void run_pool_test(void) {
      * be treated as invalid after a successful expand.
      */
     result = TestPool_expand(&pool, 1);
-    if(result.kind == RESULT_ERROR) {
+    if(result.kind == ERROR_RESULT_ERROR) {
         (void)TestPool_destroy(&pool);
         return;
     }
@@ -78,7 +78,7 @@ void run_pool_test(void) {
      */
     third_object.value = 30;
     object_result = TestPool_store(&pool, third_object);
-    if(object_result.kind == RESULT_VALUE) {
+    if(object_result.kind == ERROR_RESULT_VALUE) {
         third = object_result.result.value;
     }
 
@@ -88,7 +88,7 @@ void run_pool_test(void) {
      * useful for repeatedly created and destroyed objects during gameplay.
      */
     result = TestPool_release(&pool, third);
-    if(result.kind == RESULT_ERROR) {
+    if(result.kind == ERROR_RESULT_ERROR) {
         (void)TestPool_destroy(&pool);
         return;
     }
@@ -99,7 +99,7 @@ void run_pool_test(void) {
      * This matters because it prevents silently invalidating live objects.
      */
     result = TestPool_shrink(&pool, 2);
-    if(result.kind == RESULT_ERROR) {
+    if(result.kind == ERROR_RESULT_ERROR) {
         (void)TestPool_destroy(&pool);
         return;
     }
@@ -110,7 +110,7 @@ void run_pool_test(void) {
      * pools where the memory should be reused immediately afterward.
      */
     result = TestPool_clear(&pool);
-    if(result.kind == RESULT_ERROR) {
+    if(result.kind == ERROR_RESULT_ERROR) {
         (void)TestPool_destroy(&pool);
         return;
     }

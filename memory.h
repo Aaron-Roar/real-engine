@@ -34,8 +34,8 @@
         size_t count; \
     } PoolType; \
     \
-    DECLARE_RESULT_TYPE(PoolType##Result, bool); \
-    DECLARE_RESULT_TYPE(PoolType##ObjectResult, ObjectType *); \
+    ERROR_DECLARE_RESULT_TYPE(PoolType##Result, bool); \
+    ERROR_DECLARE_RESULT_TYPE(PoolType##ObjectResult, ObjectType *); \
     \
     PoolType##Result PoolType##_init(PoolType *pool, size_t capacity); \
     PoolType##Result PoolType##_expand(PoolType *pool, size_t additional_capacity); \
@@ -52,24 +52,24 @@
 /*
  * Build a successful result value for one of the memory result types.
  *
- * ResultType must be a result type declared by DECLARE_RESULT_TYPE, and Value
+ * ResultType must be a result type declared by ERROR_DECLARE_RESULT_TYPE, and Value
  * must match that result type's value field.
  */
 #define MEMORY_POOL_VALUE(ResultType, Value) \
     (ResultType) { \
-        .kind = RESULT_VALUE, \
+        .kind = ERROR_RESULT_VALUE, \
         .result.value = (Value), \
     }
 
 /*
  * Build an error result for one of the memory result types.
  *
- * ResultType must be a result type declared by DECLARE_RESULT_TYPE, and
+ * ResultType must be a result type declared by ERROR_DECLARE_RESULT_TYPE, and
  * ErrorValue must be one of the EngineError enum values.
  */
 #define MEMORY_POOL_ERROR(ResultType, ErrorValue) \
     (ResultType) { \
-        .kind = RESULT_ERROR, \
+        .kind = ERROR_RESULT_ERROR, \
         .result.error = (ErrorValue), \
     }
 
@@ -298,7 +298,7 @@
         PoolType##ObjectResult result; \
         \
         result = PoolType##_acquire(pool); \
-        if(result.kind == RESULT_ERROR) { \
+        if(result.kind == ERROR_RESULT_ERROR) { \
             return result; \
         } \
         *result.result.value = object; \

@@ -32,21 +32,21 @@ typedef struct ScreenRecorder {
 static ScreenRecorder screen_recorder = {0};
 
 EngineResult graphics_tables_init(void) {
-    if(AnimatedSpritePool_init(&animated_sprites_pool, 0).kind == RESULT_ERROR) {
+    if(AnimatedSpritePool_init(&animated_sprites_pool, 0).kind == ERROR_RESULT_ERROR) {
         graphics_tables_destroy();
-        return engine_result_error(ERROR_ENGINE_GRAPHICS_TABLES_INIT_FAILED);
+        return error_result_error(ERROR_ENGINE_GRAPHICS_TABLES_INIT_FAILED);
     }
-    return engine_result_value(true);
+    return error_result_value(true);
 }
 
 EngineResult graphics_tables_ensure_capacity(size_t capacity) {
     size_t new_capacity;
 
     if(capacity > MAX_ENTITIES) {
-        return engine_result_error(ERROR_ENGINE_MAX_ENTITIES_EXCEEDED);
+        return error_result_error(ERROR_ENGINE_MAX_ENTITIES_EXCEEDED);
     }
     if(capacity <= animated_sprites_pool.capacity) {
-        return engine_result_value(true);
+        return error_result_value(true);
     }
     new_capacity = animated_sprites_pool.capacity == 0 ? 16 : animated_sprites_pool.capacity;
     while(new_capacity < capacity) {
@@ -58,10 +58,10 @@ EngineResult graphics_tables_ensure_capacity(size_t capacity) {
     if(AnimatedSpritePool_expand(
         &animated_sprites_pool,
         new_capacity - animated_sprites_pool.capacity
-    ).kind == RESULT_ERROR) {
-        return engine_result_error(ERROR_ENGINE_TABLE_EXPANSION_FAILED);
+    ).kind == ERROR_RESULT_ERROR) {
+        return error_result_error(ERROR_ENGINE_TABLE_EXPANSION_FAILED);
     }
-    return engine_result_value(true);
+    return error_result_value(true);
 }
 
 void graphics_tables_destroy(void) {
@@ -432,7 +432,7 @@ EngineResult graphics_start() {
     console_write(LOG_ENGINE, "---Initializing Graphics---\n");
     if (!SDL_InitSubSystem(SDL_INIT_VIDEO)) {
         SDL_Log("Couldn't initialize SDL: %s", SDL_GetError());
-        return engine_result_error(ERROR_ENGINE_GRAPHICS_INIT_FAILED);
+        return error_result_error(ERROR_ENGINE_GRAPHICS_INIT_FAILED);
     }
 
     console_write(LOG_ENGINE, "Starting game window and renderer\n");
@@ -447,7 +447,7 @@ EngineResult graphics_start() {
             &sdl_renderer
         )) {
         SDL_Log("Couldn't create window/renderer: %s", SDL_GetError());
-        return engine_result_error(ERROR_ENGINE_GRAPHICS_INIT_FAILED);
+        return error_result_error(ERROR_ENGINE_GRAPHICS_INIT_FAILED);
     }
 
     console_write(LOG_ENGINE, "Configuring renderer\n");
@@ -460,7 +460,7 @@ EngineResult graphics_start() {
 
     console_write(LOG_ENGINE, "Graphics initialization complete\n");
     console_write(LOG_ENGINE, "---Initializing Graphics---\n");
-    return engine_result_value(true);
+    return error_result_value(true);
 }
 
 void graphics_renderer_end() {

@@ -27,32 +27,32 @@ EngineResult engine_init() {
     EngineResult result;
 
     if(engine_running) {
-        return engine_result_error(ERROR_ENGINE_ALREADY_RUNNING);
+        return error_result_error(ERROR_ENGINE_ALREADY_RUNNING);
     }
 
     if(!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS)) {
-        return engine_result_error(ERROR_ENGINE_SDL_INIT_FAILED);
+        return error_result_error(ERROR_ENGINE_SDL_INIT_FAILED);
     }
     result = entity_tables_init();
-    if(result.kind == RESULT_ERROR) {
+    if(result.kind == ERROR_RESULT_ERROR) {
         SDL_Quit();
         return result;
     }
     result = physics_tables_init();
-    if(result.kind == RESULT_ERROR) {
+    if(result.kind == ERROR_RESULT_ERROR) {
         entity_tables_destroy();
         SDL_Quit();
         return result;
     }
     result = graphics_tables_init();
-    if(result.kind == RESULT_ERROR) {
+    if(result.kind == ERROR_RESULT_ERROR) {
         physics_tables_destroy();
         entity_tables_destroy();
         SDL_Quit();
         return result;
     }
     result = grid_tables_init();
-    if(result.kind == RESULT_ERROR) {
+    if(result.kind == ERROR_RESULT_ERROR) {
         graphics_tables_destroy();
         physics_tables_destroy();
         entity_tables_destroy();
@@ -69,7 +69,7 @@ EngineResult engine_init() {
 
     engine_paused = false;
     engine_running = true;
-    return engine_result_value(true);
+    return error_result_value(true);
 }
 
 void engine_pause() {

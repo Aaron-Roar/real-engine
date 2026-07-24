@@ -43,41 +43,41 @@ TransformLockPool transform_locks_pool = {0};
 JointPool joints_pool = {0};
 
 EngineResult physics_tables_init(void) {
-    if(PositionPool_init(&positions_pool, 0).kind == RESULT_ERROR) { goto fail; }
-    if(OrientationPool_init(&orientations_pool, 0).kind == RESULT_ERROR) { goto fail; }
-    if(VelocityPool_init(&velocities_pool, 0).kind == RESULT_ERROR) { goto fail; }
-    if(AccelerationPool_init(&accelerations_pool, 0).kind == RESULT_ERROR) { goto fail; }
-    if(AccelerationPool_init(&force_accelerations_pool, 0).kind == RESULT_ERROR) { goto fail; }
-    if(MassPool_init(&mass_pool, 0).kind == RESULT_ERROR) { goto fail; }
-    if(ForcePool_init(&forces_pool, 0).kind == RESULT_ERROR) { goto fail; }
-    if(ShapePool_init(&hit_boxes_pool, 0).kind == RESULT_ERROR) { goto fail; }
-    if(ShapePool_init(&world_hit_boxes_pool, 0).kind == RESULT_ERROR) { goto fail; }
-    if(CollisionReportPool_init(&collision_reports_pool, 0).kind == RESULT_ERROR) { goto fail; }
-    if(AngularVelocityPool_init(&angular_velocities_pool, 0).kind == RESULT_ERROR) { goto fail; }
-    if(AngularAccelerationPool_init(&angular_accelerations_pool, 0).kind == RESULT_ERROR) { goto fail; }
-    if(AngularVelocityPool_init(&torque_angular_accelerations_pool, 0).kind == RESULT_ERROR) { goto fail; }
-    if(TorquePool_init(&torques_pool, 0).kind == RESULT_ERROR) { goto fail; }
-    if(FrictionPool_init(&frictions_pool, 0).kind == RESULT_ERROR) { goto fail; }
-    if(RestitutionPool_init(&restitutions_pool, 0).kind == RESULT_ERROR) { goto fail; }
-    if(AngleLockPool_init(&angle_locks_pool, 0).kind == RESULT_ERROR) { goto fail; }
-    if(AxisLockPool_init(&axis_locks_pool, 0).kind == RESULT_ERROR) { goto fail; }
-    if(TransformLockPool_init(&transform_locks_pool, 0).kind == RESULT_ERROR) { goto fail; }
-    if(JointPool_init(&joints_pool, 0).kind == RESULT_ERROR) { goto fail; }
-    return engine_result_value(true);
+    if(PositionPool_init(&positions_pool, 0).kind == ERROR_RESULT_ERROR) { goto fail; }
+    if(OrientationPool_init(&orientations_pool, 0).kind == ERROR_RESULT_ERROR) { goto fail; }
+    if(VelocityPool_init(&velocities_pool, 0).kind == ERROR_RESULT_ERROR) { goto fail; }
+    if(AccelerationPool_init(&accelerations_pool, 0).kind == ERROR_RESULT_ERROR) { goto fail; }
+    if(AccelerationPool_init(&force_accelerations_pool, 0).kind == ERROR_RESULT_ERROR) { goto fail; }
+    if(MassPool_init(&mass_pool, 0).kind == ERROR_RESULT_ERROR) { goto fail; }
+    if(ForcePool_init(&forces_pool, 0).kind == ERROR_RESULT_ERROR) { goto fail; }
+    if(ShapePool_init(&hit_boxes_pool, 0).kind == ERROR_RESULT_ERROR) { goto fail; }
+    if(ShapePool_init(&world_hit_boxes_pool, 0).kind == ERROR_RESULT_ERROR) { goto fail; }
+    if(CollisionReportPool_init(&collision_reports_pool, 0).kind == ERROR_RESULT_ERROR) { goto fail; }
+    if(AngularVelocityPool_init(&angular_velocities_pool, 0).kind == ERROR_RESULT_ERROR) { goto fail; }
+    if(AngularAccelerationPool_init(&angular_accelerations_pool, 0).kind == ERROR_RESULT_ERROR) { goto fail; }
+    if(AngularVelocityPool_init(&torque_angular_accelerations_pool, 0).kind == ERROR_RESULT_ERROR) { goto fail; }
+    if(TorquePool_init(&torques_pool, 0).kind == ERROR_RESULT_ERROR) { goto fail; }
+    if(FrictionPool_init(&frictions_pool, 0).kind == ERROR_RESULT_ERROR) { goto fail; }
+    if(RestitutionPool_init(&restitutions_pool, 0).kind == ERROR_RESULT_ERROR) { goto fail; }
+    if(AngleLockPool_init(&angle_locks_pool, 0).kind == ERROR_RESULT_ERROR) { goto fail; }
+    if(AxisLockPool_init(&axis_locks_pool, 0).kind == ERROR_RESULT_ERROR) { goto fail; }
+    if(TransformLockPool_init(&transform_locks_pool, 0).kind == ERROR_RESULT_ERROR) { goto fail; }
+    if(JointPool_init(&joints_pool, 0).kind == ERROR_RESULT_ERROR) { goto fail; }
+    return error_result_value(true);
 
 fail:
     physics_tables_destroy();
-    return engine_result_error(ERROR_ENGINE_PHYSICS_TABLES_INIT_FAILED);
+    return error_result_error(ERROR_ENGINE_PHYSICS_TABLES_INIT_FAILED);
 }
 
 EngineResult physics_tables_ensure_capacity(size_t capacity) {
     size_t new_capacity;
 
     if(capacity > MAX_ENTITIES) {
-        return engine_result_error(ERROR_ENGINE_MAX_ENTITIES_EXCEEDED);
+        return error_result_error(ERROR_ENGINE_MAX_ENTITIES_EXCEEDED);
     }
     if(capacity <= positions_pool.capacity) {
-        return engine_result_value(true);
+        return error_result_value(true);
     }
     new_capacity = positions_pool.capacity == 0 ? 16 : positions_pool.capacity;
     while(new_capacity < capacity) {
@@ -86,27 +86,27 @@ EngineResult physics_tables_ensure_capacity(size_t capacity) {
     if(new_capacity > MAX_ENTITIES) {
         new_capacity = MAX_ENTITIES;
     }
-    if(new_capacity > positions_pool.capacity && PositionPool_expand(&positions_pool, new_capacity - positions_pool.capacity).kind == RESULT_ERROR) { return engine_result_error(ERROR_ENGINE_TABLE_EXPANSION_FAILED); }
-    if(new_capacity > orientations_pool.capacity && OrientationPool_expand(&orientations_pool, new_capacity - orientations_pool.capacity).kind == RESULT_ERROR) { return engine_result_error(ERROR_ENGINE_TABLE_EXPANSION_FAILED); }
-    if(new_capacity > velocities_pool.capacity && VelocityPool_expand(&velocities_pool, new_capacity - velocities_pool.capacity).kind == RESULT_ERROR) { return engine_result_error(ERROR_ENGINE_TABLE_EXPANSION_FAILED); }
-    if(new_capacity > accelerations_pool.capacity && AccelerationPool_expand(&accelerations_pool, new_capacity - accelerations_pool.capacity).kind == RESULT_ERROR) { return engine_result_error(ERROR_ENGINE_TABLE_EXPANSION_FAILED); }
-    if(new_capacity > force_accelerations_pool.capacity && AccelerationPool_expand(&force_accelerations_pool, new_capacity - force_accelerations_pool.capacity).kind == RESULT_ERROR) { return engine_result_error(ERROR_ENGINE_TABLE_EXPANSION_FAILED); }
-    if(new_capacity > mass_pool.capacity && MassPool_expand(&mass_pool, new_capacity - mass_pool.capacity).kind == RESULT_ERROR) { return engine_result_error(ERROR_ENGINE_TABLE_EXPANSION_FAILED); }
-    if(new_capacity > forces_pool.capacity && ForcePool_expand(&forces_pool, new_capacity - forces_pool.capacity).kind == RESULT_ERROR) { return engine_result_error(ERROR_ENGINE_TABLE_EXPANSION_FAILED); }
-    if(new_capacity > hit_boxes_pool.capacity && ShapePool_expand(&hit_boxes_pool, new_capacity - hit_boxes_pool.capacity).kind == RESULT_ERROR) { return engine_result_error(ERROR_ENGINE_TABLE_EXPANSION_FAILED); }
-    if(new_capacity > world_hit_boxes_pool.capacity && ShapePool_expand(&world_hit_boxes_pool, new_capacity - world_hit_boxes_pool.capacity).kind == RESULT_ERROR) { return engine_result_error(ERROR_ENGINE_TABLE_EXPANSION_FAILED); }
-    if(new_capacity > collision_reports_pool.capacity && CollisionReportPool_expand(&collision_reports_pool, new_capacity - collision_reports_pool.capacity).kind == RESULT_ERROR) { return engine_result_error(ERROR_ENGINE_TABLE_EXPANSION_FAILED); }
-    if(new_capacity > angular_velocities_pool.capacity && AngularVelocityPool_expand(&angular_velocities_pool, new_capacity - angular_velocities_pool.capacity).kind == RESULT_ERROR) { return engine_result_error(ERROR_ENGINE_TABLE_EXPANSION_FAILED); }
-    if(new_capacity > angular_accelerations_pool.capacity && AngularAccelerationPool_expand(&angular_accelerations_pool, new_capacity - angular_accelerations_pool.capacity).kind == RESULT_ERROR) { return engine_result_error(ERROR_ENGINE_TABLE_EXPANSION_FAILED); }
-    if(new_capacity > torque_angular_accelerations_pool.capacity && AngularVelocityPool_expand(&torque_angular_accelerations_pool, new_capacity - torque_angular_accelerations_pool.capacity).kind == RESULT_ERROR) { return engine_result_error(ERROR_ENGINE_TABLE_EXPANSION_FAILED); }
-    if(new_capacity > torques_pool.capacity && TorquePool_expand(&torques_pool, new_capacity - torques_pool.capacity).kind == RESULT_ERROR) { return engine_result_error(ERROR_ENGINE_TABLE_EXPANSION_FAILED); }
-    if(new_capacity > frictions_pool.capacity && FrictionPool_expand(&frictions_pool, new_capacity - frictions_pool.capacity).kind == RESULT_ERROR) { return engine_result_error(ERROR_ENGINE_TABLE_EXPANSION_FAILED); }
-    if(new_capacity > restitutions_pool.capacity && RestitutionPool_expand(&restitutions_pool, new_capacity - restitutions_pool.capacity).kind == RESULT_ERROR) { return engine_result_error(ERROR_ENGINE_TABLE_EXPANSION_FAILED); }
-    if(new_capacity > angle_locks_pool.capacity && AngleLockPool_expand(&angle_locks_pool, new_capacity - angle_locks_pool.capacity).kind == RESULT_ERROR) { return engine_result_error(ERROR_ENGINE_TABLE_EXPANSION_FAILED); }
-    if(new_capacity > axis_locks_pool.capacity && AxisLockPool_expand(&axis_locks_pool, new_capacity - axis_locks_pool.capacity).kind == RESULT_ERROR) { return engine_result_error(ERROR_ENGINE_TABLE_EXPANSION_FAILED); }
-    if(new_capacity > transform_locks_pool.capacity && TransformLockPool_expand(&transform_locks_pool, new_capacity - transform_locks_pool.capacity).kind == RESULT_ERROR) { return engine_result_error(ERROR_ENGINE_TABLE_EXPANSION_FAILED); }
-    if(new_capacity > joints_pool.capacity && JointPool_expand(&joints_pool, new_capacity - joints_pool.capacity).kind == RESULT_ERROR) { return engine_result_error(ERROR_ENGINE_TABLE_EXPANSION_FAILED); }
-    return engine_result_value(true);
+    if(new_capacity > positions_pool.capacity && PositionPool_expand(&positions_pool, new_capacity - positions_pool.capacity).kind == ERROR_RESULT_ERROR) { return error_result_error(ERROR_ENGINE_TABLE_EXPANSION_FAILED); }
+    if(new_capacity > orientations_pool.capacity && OrientationPool_expand(&orientations_pool, new_capacity - orientations_pool.capacity).kind == ERROR_RESULT_ERROR) { return error_result_error(ERROR_ENGINE_TABLE_EXPANSION_FAILED); }
+    if(new_capacity > velocities_pool.capacity && VelocityPool_expand(&velocities_pool, new_capacity - velocities_pool.capacity).kind == ERROR_RESULT_ERROR) { return error_result_error(ERROR_ENGINE_TABLE_EXPANSION_FAILED); }
+    if(new_capacity > accelerations_pool.capacity && AccelerationPool_expand(&accelerations_pool, new_capacity - accelerations_pool.capacity).kind == ERROR_RESULT_ERROR) { return error_result_error(ERROR_ENGINE_TABLE_EXPANSION_FAILED); }
+    if(new_capacity > force_accelerations_pool.capacity && AccelerationPool_expand(&force_accelerations_pool, new_capacity - force_accelerations_pool.capacity).kind == ERROR_RESULT_ERROR) { return error_result_error(ERROR_ENGINE_TABLE_EXPANSION_FAILED); }
+    if(new_capacity > mass_pool.capacity && MassPool_expand(&mass_pool, new_capacity - mass_pool.capacity).kind == ERROR_RESULT_ERROR) { return error_result_error(ERROR_ENGINE_TABLE_EXPANSION_FAILED); }
+    if(new_capacity > forces_pool.capacity && ForcePool_expand(&forces_pool, new_capacity - forces_pool.capacity).kind == ERROR_RESULT_ERROR) { return error_result_error(ERROR_ENGINE_TABLE_EXPANSION_FAILED); }
+    if(new_capacity > hit_boxes_pool.capacity && ShapePool_expand(&hit_boxes_pool, new_capacity - hit_boxes_pool.capacity).kind == ERROR_RESULT_ERROR) { return error_result_error(ERROR_ENGINE_TABLE_EXPANSION_FAILED); }
+    if(new_capacity > world_hit_boxes_pool.capacity && ShapePool_expand(&world_hit_boxes_pool, new_capacity - world_hit_boxes_pool.capacity).kind == ERROR_RESULT_ERROR) { return error_result_error(ERROR_ENGINE_TABLE_EXPANSION_FAILED); }
+    if(new_capacity > collision_reports_pool.capacity && CollisionReportPool_expand(&collision_reports_pool, new_capacity - collision_reports_pool.capacity).kind == ERROR_RESULT_ERROR) { return error_result_error(ERROR_ENGINE_TABLE_EXPANSION_FAILED); }
+    if(new_capacity > angular_velocities_pool.capacity && AngularVelocityPool_expand(&angular_velocities_pool, new_capacity - angular_velocities_pool.capacity).kind == ERROR_RESULT_ERROR) { return error_result_error(ERROR_ENGINE_TABLE_EXPANSION_FAILED); }
+    if(new_capacity > angular_accelerations_pool.capacity && AngularAccelerationPool_expand(&angular_accelerations_pool, new_capacity - angular_accelerations_pool.capacity).kind == ERROR_RESULT_ERROR) { return error_result_error(ERROR_ENGINE_TABLE_EXPANSION_FAILED); }
+    if(new_capacity > torque_angular_accelerations_pool.capacity && AngularVelocityPool_expand(&torque_angular_accelerations_pool, new_capacity - torque_angular_accelerations_pool.capacity).kind == ERROR_RESULT_ERROR) { return error_result_error(ERROR_ENGINE_TABLE_EXPANSION_FAILED); }
+    if(new_capacity > torques_pool.capacity && TorquePool_expand(&torques_pool, new_capacity - torques_pool.capacity).kind == ERROR_RESULT_ERROR) { return error_result_error(ERROR_ENGINE_TABLE_EXPANSION_FAILED); }
+    if(new_capacity > frictions_pool.capacity && FrictionPool_expand(&frictions_pool, new_capacity - frictions_pool.capacity).kind == ERROR_RESULT_ERROR) { return error_result_error(ERROR_ENGINE_TABLE_EXPANSION_FAILED); }
+    if(new_capacity > restitutions_pool.capacity && RestitutionPool_expand(&restitutions_pool, new_capacity - restitutions_pool.capacity).kind == ERROR_RESULT_ERROR) { return error_result_error(ERROR_ENGINE_TABLE_EXPANSION_FAILED); }
+    if(new_capacity > angle_locks_pool.capacity && AngleLockPool_expand(&angle_locks_pool, new_capacity - angle_locks_pool.capacity).kind == ERROR_RESULT_ERROR) { return error_result_error(ERROR_ENGINE_TABLE_EXPANSION_FAILED); }
+    if(new_capacity > axis_locks_pool.capacity && AxisLockPool_expand(&axis_locks_pool, new_capacity - axis_locks_pool.capacity).kind == ERROR_RESULT_ERROR) { return error_result_error(ERROR_ENGINE_TABLE_EXPANSION_FAILED); }
+    if(new_capacity > transform_locks_pool.capacity && TransformLockPool_expand(&transform_locks_pool, new_capacity - transform_locks_pool.capacity).kind == ERROR_RESULT_ERROR) { return error_result_error(ERROR_ENGINE_TABLE_EXPANSION_FAILED); }
+    if(new_capacity > joints_pool.capacity && JointPool_expand(&joints_pool, new_capacity - joints_pool.capacity).kind == ERROR_RESULT_ERROR) { return error_result_error(ERROR_ENGINE_TABLE_EXPANSION_FAILED); }
+    return error_result_value(true);
 }
 
 void physics_tables_destroy(void) {

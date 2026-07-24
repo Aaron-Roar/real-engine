@@ -13,21 +13,21 @@ Grid grid = {0};
 BooleanPairs pair_checked = {0};
 
 EngineResult grid_tables_init(void) {
-    if(AABBPool_init(&aabbs_pool, 0).kind == RESULT_ERROR) {
+    if(AABBPool_init(&aabbs_pool, 0).kind == ERROR_RESULT_ERROR) {
         grid_tables_destroy();
-        return engine_result_error(ERROR_ENGINE_GRID_TABLES_INIT_FAILED);
+        return error_result_error(ERROR_ENGINE_GRID_TABLES_INIT_FAILED);
     }
-    return engine_result_value(true);
+    return error_result_value(true);
 }
 
 EngineResult grid_tables_ensure_capacity(size_t capacity) {
     size_t new_capacity;
 
     if(capacity > MAX_ENTITIES) {
-        return engine_result_error(ERROR_ENGINE_MAX_ENTITIES_EXCEEDED);
+        return error_result_error(ERROR_ENGINE_MAX_ENTITIES_EXCEEDED);
     }
     if(capacity <= aabbs_pool.capacity) {
-        return engine_result_value(true);
+        return error_result_value(true);
     }
     new_capacity = aabbs_pool.capacity == 0 ? 16 : aabbs_pool.capacity;
     while(new_capacity < capacity) {
@@ -39,10 +39,10 @@ EngineResult grid_tables_ensure_capacity(size_t capacity) {
     if(AABBPool_expand(
         &aabbs_pool,
         new_capacity - aabbs_pool.capacity
-    ).kind == RESULT_ERROR) {
-        return engine_result_error(ERROR_ENGINE_TABLE_EXPANSION_FAILED);
+    ).kind == ERROR_RESULT_ERROR) {
+        return error_result_error(ERROR_ENGINE_TABLE_EXPANSION_FAILED);
     }
-    return engine_result_value(true);
+    return error_result_value(true);
 }
 
 void grid_tables_destroy(void) {
