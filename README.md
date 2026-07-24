@@ -146,7 +146,7 @@ Readable Markdown docs are committed in the repo:
 * [Architecture notes](docs/architecture.md)
 * [Entity ids](docs/entity_ids.md)
 * [Error handling](docs/errors.md)
-* [Public API header](include/rohr.h)
+* [Public API reference](docs/public_api.md)
 
 Generate the Doxygen docs with:
 

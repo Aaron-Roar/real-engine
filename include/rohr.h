@@ -16,147 +16,483 @@
 
 /**
  * @file rohr.h
- * Public Rohr Engine API facade.
+ * @brief Public Rohr Engine API facade.
  *
- * Applications can include this file to use the engine through rohr_-prefixed
- * functions while the implementation keeps its smaller internal modules.
+ * Include this header from application code to use the engine through the
+ * stable `rohr_`-prefixed API. Entity ids are stable handles, not component
+ * table indexes. Use the entity API to validate ids and resolve indexes.
  */
 
-/** Rohr-prefixed public API wrapper. */
+/**
+ * @brief Initializes core engine state.
+ * @return EngineResult containing true on success, or an engine error.
+ */
 EngineResult rohr_engine_init(void);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Releases core engine state.
+ */
 void rohr_engine_shutdown(void);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Updates accumulated engine time from the platform clock.
+ */
 void rohr_engine_update_time(void);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Returns the current engine time in seconds.
+ * @return Current engine time.
+ */
 Time rohr_engine_get_time(void);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Returns the current engine tick counter.
+ * @return Current tick.
+ */
 Tick rohr_engine_get_tick(void);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Pauses engine time-dependent updates.
+ */
 void rohr_engine_pause(void);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Resumes engine time-dependent updates.
+ */
 void rohr_engine_resume(void);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Advances the engine tick counter.
+ */
 void rohr_engine_update_tick(void);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Polls one SDL event.
+ * @return SDL event value returned by the engine event poller.
+ */
 SDL_Event rohr_engine_poll_event(void);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Checks whether the engine is paused.
+ * @return true when paused, false when running.
+ */
 bool rohr_engine_is_paused(void);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Returns the current fixed or calculated delta time.
+ * @return Delta time in seconds.
+ */
 Time rohr_engine_get_dt(void);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Calculates delta time from elapsed engine time.
+ */
 void rohr_engine_calculate_dt(void);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Sets the engine delta time manually.
+ * @param dt Delta time in seconds.
+ */
 void rohr_engine_set_dt(Time dt);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Resets the engine clock baseline.
+ */
 void rohr_engine_reset_clock(void);
 
-/** Rohr-prefixed public API wrapper. */
+/**
+ * @brief Creates a successful boolean engine result.
+ * @param value Boolean value to store in the result.
+ * @return EngineResult containing value.
+ */
 EngineResult rohr_error_result_value(bool value);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Creates a failed engine result.
+ * @param error Error code to store in the result.
+ * @return EngineResult containing error.
+ */
 EngineResult rohr_error_result_error(EngineError error);
-/** Return true when a Rohr result value contains an error. */
+
+/**
+ * @brief Checks whether a result contains an error.
+ * @param ResultValue Result value to inspect.
+ * @return true when ResultValue contains an error, false otherwise.
+ */
 #define rohr_error_check(ResultValue) error_check(ResultValue)
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Returns a user-facing default message for an engine error.
+ * @param error Error code to describe.
+ * @return Static string describing error.
+ */
 const char *rohr_error_default_message(EngineError error);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Returns the symbolic name for an engine error.
+ * @param error Error code to name.
+ * @return Static string containing the error name.
+ */
 const char *rohr_error_string(EngineError error);
 
-/** Rohr-prefixed public API wrapper. */
+/**
+ * @brief Prints buffered console log messages.
+ */
 void rohr_console_print_logs(void);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Initializes the engine console.
+ */
 void rohr_console_init(void);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Shuts down the engine console.
+ */
 void rohr_console_shutdown(void);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Reads one console log string.
+ * @param input Destination for the log string.
+ * @return true when a log string was read, false otherwise.
+ */
 bool rohr_console_read(ConsoleLogString *input);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Writes a formatted message to the engine console.
+ * @param source Source category for the log entry.
+ * @param fmt printf-style format string.
+ */
 void rohr_console_write(LogSourceType source, const char *fmt, ...);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Checks whether the console is active.
+ * @return true when active, false otherwise.
+ */
 bool rohr_console_is_active(void);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Writes a formatted debug message when debug logging is enabled.
+ * @param source Source category for the log entry.
+ * @param fmt printf-style format string.
+ */
 void rohr_console_debug_write(LogSourceType source, const char *fmt, ...);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Enables or disables debug console output.
+ * @param state true to enable debug logging, false to disable it.
+ */
 void rohr_console_set_debug(bool state);
 
-/** Rohr-prefixed public API wrapper. */
+/**
+ * @brief Checks whether an entity id currently refers to a live entity.
+ * @param entity Stable entity id to inspect.
+ * @return true when the entity is alive, false otherwise.
+ */
 bool rohr_entity_is_alive(Entity entity);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Checks whether an entity table index currently contains a live entity.
+ * @param index Component table index to inspect.
+ * @return true when the index contains a live entity, false otherwise.
+ */
 bool rohr_entity_index_is_alive(EntityIndex index);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Resolves a stable entity id to its current component table index.
+ * @param entity Stable entity id to resolve.
+ * @param index Destination for the resolved table index.
+ * @return true when entity was resolved, false otherwise.
+ */
 bool rohr_entity_get_index(Entity entity, EntityIndex *index);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Returns the stable entity id stored at a component table index.
+ * @param index Component table index to inspect.
+ * @return EntityResult containing the entity id, or an error.
+ */
 EntityResult rohr_entity_from_index(EntityIndex index);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Creates a new entity.
+ *
+ * Entity ids are stable handles and may not match component table indexes.
+ *
+ * @return EntityResult containing the new entity id, or an error if the entity
+ * limit is reached.
+ */
 EntityResult rohr_entity_add(void);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Deletes an entity and releases its slot for reuse.
+ * @param entity Stable entity id to delete.
+ * @return EngineResult describing success or failure.
+ */
 EngineResult rohr_entity_delete(Entity entity);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Adds components to an entity.
+ * @param entity Stable entity id to modify.
+ * @param mask Component mask to add.
+ * @return EngineResult describing success or failure.
+ */
 EngineResult rohr_entity_add_components(Entity entity, CMask mask);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Checks whether an entity has all requested components.
+ * @param entity Stable entity id to inspect.
+ * @param components Component mask to test.
+ * @return true when entity has every requested component, false otherwise.
+ */
 bool rohr_entity_has_components(Entity entity, CMask components);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Checks whether an entity table index has all requested components.
+ * @param index Component table index to inspect.
+ * @param components Component mask to test.
+ * @return true when index has every requested component, false otherwise.
+ */
 bool rohr_entity_index_has_components(EntityIndex index, CMask components);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Removes components from an entity.
+ * @param entity Stable entity id to modify.
+ * @param mask Component mask to remove.
+ * @return EngineResult describing success or failure.
+ */
 EngineResult rohr_entity_delete_components(Entity entity, CMask mask);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Adds a child relationship from parent to child.
+ * @param parent Parent entity id.
+ * @param child Child entity id.
+ * @return EngineResult describing success or failure.
+ */
 EngineResult rohr_entity_set_child(Entity parent, Entity child);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Sets an entity parent relationship.
+ * @param child Child entity id.
+ * @param parent Parent entity id.
+ * @return EngineResult describing success or failure.
+ */
 EngineResult rohr_entity_set_parent(Entity child, Entity parent);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Removes the parent relationship from an entity.
+ * @param child Child entity id.
+ * @return EngineResult describing success or failure.
+ */
 EngineResult rohr_entity_remove_parent(Entity child);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Removes a child relationship from a parent entity.
+ * @param parent Parent entity id.
+ * @param child Child entity id.
+ * @return EngineResult describing success or failure.
+ */
 EngineResult rohr_entity_remove_child(Entity parent, Entity child);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Returns the children assigned to an entity.
+ * @param entity Stable entity id to inspect.
+ * @return ChildrenResult containing child data, or an error.
+ */
 ChildrenResult rohr_entity_get_children(Entity entity);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Returns the parent assigned to an entity.
+ * @param entity Stable entity id to inspect.
+ * @return ParentResult containing parent id, or an error.
+ */
 ParentResult rohr_entity_get_parent(Entity entity);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Adds or updates an entity lifetime.
+ * @param entity Stable entity id to modify.
+ * @param expirey_time Engine time when the entity expires.
+ * @param expirey_tick Engine tick when the entity expires.
+ * @return EngineResult describing success or failure.
+ */
 EngineResult rohr_entity_set_life_time(Entity entity, Time expirey_time, Tick expirey_tick);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Removes lifetime data from an entity.
+ * @param entity Stable entity id to modify.
+ * @return EngineResult describing success or failure.
+ */
 EngineResult rohr_entity_remove_life_time(Entity entity);
 
-/** Rohr-prefixed public API wrapper. */
+/**
+ * @brief Translates a local shape into world space.
+ * @param shape Local shape to transform.
+ * @param position World position.
+ * @param angle World orientation in radians.
+ * @return World-space shape.
+ */
 Shape rohr_physics_shape_world_translate(Shape shape, Position position, Orientation angle);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Calculates polygon moment of inertia.
+ * @param shape Polygon shape.
+ * @param mass_value Shape mass.
+ * @return Moment of inertia value.
+ */
 float rohr_physics_polygon_moment_of_inertia(Shape shape, Mass mass_value);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Tests two shapes with separating axis theorem collision detection.
+ * @param shape_1 First shape.
+ * @param shape_2 Second shape.
+ * @return Collision information.
+ */
 Collision rohr_physics_sat_collision(Shape shape_1, Shape shape_2);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Calculates circle moment of inertia.
+ * @param circle Circle shape.
+ * @param mass_value Circle mass.
+ * @return Moment of inertia value.
+ */
 Vec1D rohr_physics_circle_moment_of_inertia(Shape circle, Mass mass_value);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Sets an entity acceleration component value.
+ * @param entity Entity to modify.
+ * @param a Acceleration value.
+ * @return EngineResult describing success or failure.
+ */
 EngineResult rohr_physics_set_acceleration(Entity entity, Acceleration a);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Sets an entity velocity component value.
+ * @param entity Entity to modify.
+ * @param v Velocity value.
+ * @return EngineResult describing success or failure.
+ */
 EngineResult rohr_physics_set_velocity(Entity entity, Velocity v);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Sets an entity position component value.
+ * @param entity Entity to modify.
+ * @param p Position value.
+ * @return EngineResult describing success or failure.
+ */
 EngineResult rohr_physics_set_position(Entity entity, Position p);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Sets an entity mass component value.
+ * @param entity Entity to modify.
+ * @param m Mass value.
+ * @return EngineResult describing success or failure.
+ */
 EngineResult rohr_physics_set_mass(Entity entity, Mass m);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Sets an entity force component value.
+ * @param entity Entity to modify.
+ * @param f Force value.
+ * @return EntityResult containing entity on success, or an error.
+ */
 EntityResult rohr_physics_set_force(Entity entity, Force f);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Sets an entity torque component value.
+ * @param entity Entity to modify.
+ * @param t Torque value.
+ * @return EntityResult containing entity on success, or an error.
+ */
 EntityResult rohr_physics_set_torque(Entity entity, Torque t);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Sets an entity hitbox component value.
+ * @param entity Entity to modify.
+ * @param hitbox Local-space hitbox shape.
+ * @return EngineResult describing success or failure.
+ */
 EngineResult rohr_physics_set_hitbox(Entity entity, Shape hitbox);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Sets an entity orientation component value.
+ * @param entity Entity to modify.
+ * @param angle Orientation in radians.
+ * @return EngineResult describing success or failure.
+ */
 EngineResult rohr_physics_set_orientation(Entity entity, Orientation angle);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Sets an entity angular velocity component value.
+ * @param entity Entity to modify.
+ * @param v Angular velocity value.
+ * @return EngineResult describing success or failure.
+ */
 EngineResult rohr_physics_set_angular_velocity(Entity entity, AngularVelocity v);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Returns an entity hitbox transformed into world space.
+ * @param entity Entity to inspect.
+ * @return ShapeResult containing the world-space hitbox, or an error.
+ */
 ShapeResult rohr_physics_get_global_hit_box(Entity entity);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Sets an entity restitution value.
+ * @param entity Entity to modify.
+ * @param restitution Restitution value.
+ * @return EngineResult describing success or failure.
+ */
 EngineResult rohr_physics_set_restitution(Entity entity, Restitution restitution);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Marks an entity as dynamic for physics simulation.
+ * @param entity Entity to modify.
+ * @return EngineResult describing success or failure.
+ */
 EngineResult rohr_physics_set_dynamic(Entity entity);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Marks an entity as static for physics simulation.
+ * @param entity Entity to modify.
+ * @return EngineResult describing success or failure.
+ */
 EngineResult rohr_physics_set_static(Entity entity);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Locks an entity orientation between minimum and maximum angles.
+ * @param entity Entity to modify.
+ * @param min Minimum orientation in radians.
+ * @param max Maximum orientation in radians.
+ * @return EngineResult describing success or failure.
+ */
 EngineResult rohr_physics_set_angle_lock(Entity entity, Orientation min, Orientation max);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Locks an entity position along an axis.
+ * @param entity Entity to modify.
+ * @param axis Axis to lock against.
+ * @param axis_point Point on the locked axis.
+ * @return EngineResult describing success or failure.
+ */
 EngineResult rohr_physics_set_axis_lock(Entity entity, Axis axis, Position axis_point);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Sets an entity friction value.
+ * @param entity Entity to modify.
+ * @param friction Friction value.
+ * @return EngineResult describing success or failure.
+ */
 EngineResult rohr_physics_set_friction(Entity entity, float friction);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Locks one entity transform to another entity.
+ * @param driven Entity whose transform is driven.
+ * @param driver Entity used as the transform source.
+ * @param local_offset Offset from driver to driven in driver-local space.
+ * @param local_angle Orientation offset from driver to driven.
+ * @param lock_position true to lock position.
+ * @param lock_orientation true to lock orientation.
+ * @param inherit_velocity true to inherit driver velocity.
+ * @return EngineResult describing success or failure.
+ */
 EngineResult rohr_physics_set_transform_lock(
     Entity driven,
     Entity driver,
@@ -166,9 +502,23 @@ EngineResult rohr_physics_set_transform_lock(
     bool lock_orientation,
     bool inherit_velocity
 );
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Removes an entity transform lock.
+ * @param entity Entity to modify.
+ * @return EngineResult describing success or failure.
+ */
 EngineResult rohr_physics_remove_transform_lock(Entity entity);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Locks one entity to another using their current transform offset.
+ * @param driven Entity whose transform is driven.
+ * @param driver Entity used as the transform source.
+ * @param lock_position true to lock position.
+ * @param lock_orientation true to lock orientation.
+ * @param inherit_velocity true to inherit driver velocity.
+ * @return EngineResult describing success or failure.
+ */
 EngineResult rohr_physics_set_transform_lock_current_transform(
     Entity driven,
     Entity driver,
@@ -176,7 +526,18 @@ EngineResult rohr_physics_set_transform_lock_current_transform(
     bool lock_orientation,
     bool inherit_velocity
 );
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Creates a joint between two entities.
+ * @param a First entity.
+ * @param b Second entity.
+ * @param type Joint behavior type.
+ * @param local_anchor_a Anchor on the first entity in local space.
+ * @param local_anchor_b Anchor on the second entity in local space.
+ * @param stiffness Spring stiffness.
+ * @param damping Spring damping.
+ * @return EntityResult containing the joint entity, or an error.
+ */
 EntityResult rohr_physics_set_joint(
     Entity a,
     Entity b,
@@ -186,156 +547,509 @@ EntityResult rohr_physics_set_joint(
     float stiffness,
     float damping
 );
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Tests two particle shapes for collision.
+ * @param shape_1 First shape.
+ * @param shape_2 Second shape.
+ * @return Collision information.
+ */
 Collision rohr_physics_particle_collision(Shape shape_1, Shape shape_2);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Enables or disables collision reporting between two entities.
+ * @param entity Reporting entity.
+ * @param target Target entity.
+ * @param state true to enable reporting, false to disable it.
+ * @return EngineResult describing success or failure.
+ */
 EngineResult rohr_physics_set_collision_report(Entity entity, Entity target, bool state);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Checks whether a collision report exists between two entities.
+ * @param entity Reporting entity.
+ * @param target Target entity.
+ * @return true when reporting is enabled, false otherwise.
+ */
 bool rohr_physics_get_collision_report(Entity entity, Entity target);
 
-/** Rohr-prefixed public API wrapper. */
+/**
+ * @brief Creates an engine color from a hexadecimal RGB or RGBA value.
+ * @param hex_color_code Hex color value.
+ * @return Color created from hex_color_code.
+ */
 Color rohr_graphics_create_color_hex(uint32_t hex_color_code);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Starts the graphics system.
+ * @return EngineResult describing success or failure.
+ */
 EngineResult rohr_graphics_start(void);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Shuts down the graphics system.
+ */
 void rohr_graphics_end(void);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Polls graphics/window events.
+ * @param event Destination for the SDL event.
+ * @return true when an event was read, false otherwise.
+ */
 bool rohr_graphics_poll_events(SDL_Event *event);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Draws the frame background.
+ * @param color Background color.
+ */
 void rohr_graphics_draw_background(Color color);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Presents the current graphics frame.
+ */
 void rohr_graphics_show(void);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Draws one entity hitbox.
+ * @param entity Entity whose hitbox should be drawn.
+ * @param fill_type Fill mode for drawing.
+ */
 void rohr_graphics_draw_hit_box(Entity entity, Fill fill_type);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Draws hitboxes for all renderable hitbox entities.
+ */
 void rohr_graphics_draw_hit_boxes(void);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Loads a texture asset.
+ * @param text_desc Texture descriptor containing load settings.
+ * @return TextureAssetResult containing the asset, or an error.
+ */
 TextureAssetResult rohr_graphics_load_texture(TextureDescriptor text_desc);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Loads an animation asset.
+ * @param anim_desc Animation descriptor containing load settings.
+ * @return AnimationAssetResult containing the asset, or an error.
+ */
 AnimationAssetResult rohr_graphics_load_animation(AnimationDescriptor anim_desc);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Creates an animated sprite from an animation asset.
+ * @param asset_ptr Animation asset to use.
+ * @param scale Sprite scale.
+ * @return Animated sprite value.
+ */
 AnimatedSprite rohr_graphics_create_animated_sprite(AnimationAsset asset_ptr, Scale scale);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Adds an animated sprite to an entity.
+ * @param entity Entity to modify.
+ * @param sprite Animated sprite component value.
+ * @return EngineResult describing success or failure.
+ */
 EngineResult rohr_graphics_add_animated_sprite(Entity entity, AnimatedSprite sprite);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Draws all animated sprite components.
+ */
 void rohr_graphics_draw_animated_sprites(void);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Updates animated sprite frames.
+ * @param current_tick Current engine tick.
+ * @param current_time Current engine time.
+ */
 void rohr_graphics_update_sprite_frames(Tick current_tick, Time current_time);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Scales textures attached to an entity.
+ * @param entity Entity to modify.
+ * @param scale Scale value.
+ */
 void rohr_graphics_scale_textures(Entity entity, Scale scale);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Converts a world position to screen coordinates.
+ * @param pos World position.
+ * @return Screen-space position.
+ */
 Position rohr_graphics_world_to_screen(Position pos);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Converts a screen position to world coordinates.
+ * @param screen Screen-space position.
+ * @return World-space position.
+ */
 Position rohr_graphics_screen_to_world(Position screen);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Returns the current mouse position in screen coordinates.
+ * @return Mouse screen position.
+ */
 Position rohr_graphics_get_mouse_screen_position(void);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Draws the spatial grid overlay.
+ */
 void rohr_graphics_draw_grid(void);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Starts recording rendered frames to a video file.
+ * @param output_path Path where the recording should be written.
+ * @param fps Recording frame rate.
+ * @return true when recording starts successfully, false otherwise.
+ */
 bool rohr_graphics_recording_start(const char *output_path, int fps);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Draws active particle components.
+ */
 void rohr_graphics_draw_particles(void);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Draws local origin markers for entities.
+ */
 void rohr_graphics_draw_local_origins(void);
 
-/** Rohr-prefixed public API wrapper. */
+/**
+ * @brief Creates normalized edge normals for a shape.
+ * @param shape Shape to inspect.
+ * @return List of normal vectors.
+ */
 Vec2DList rohr_math_create_normals(Shape shape);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Normalizes a vector.
+ * @param vector Vector to normalize.
+ * @return Normalized vector.
+ */
 Vec2D rohr_math_normalize_vector(Vec2D vector);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Normalizes all vectors in a list.
+ * @param vectors Vector list to normalize.
+ * @return Normalized vector list.
+ */
 Vec2DList rohr_math_normalize_vectors(Vec2DList vectors);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Calculates the dot product of two vectors.
+ * @param vector_1 First vector.
+ * @param vector_2 Second vector.
+ * @return Dot product.
+ */
 float rohr_math_dot_product(Vec2D vector_1, Vec2D vector_2);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Creates a rectangular polygon shape.
+ * @param width Rectangle width.
+ * @param height Rectangle height.
+ * @return Shape containing rectangle vertices.
+ */
 Shape rohr_math_create_square(float width, float height);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Creates a circle approximation shape.
+ * @param radius Circle radius.
+ * @param verticies Number of vertices used to approximate the circle.
+ * @return Shape containing circle vertices.
+ */
 Shape rohr_math_create_circle(float radius, uint8_t verticies);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Projects a shape onto an axis.
+ * @param shape Shape to project.
+ * @param axis Axis to project onto.
+ * @return Projection interval.
+ */
 Projection rohr_math_project_shape_on_axis(Shape shape, Axis axis);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Calculates the scalar 2D cross product.
+ * @param a First vector.
+ * @param b Second vector.
+ * @return Cross product value.
+ */
 float rohr_math_cross_2d(Vec2D a, Vec2D b);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Calculates angular velocity crossed with a vector.
+ * @param omega Angular velocity.
+ * @param r Radius or offset vector.
+ * @return Tangential velocity vector.
+ */
 Vec2D rohr_math_angular_velocity_cross_vec(float omega, Vec2D r);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Projects a vector onto an axis.
+ * @param v Vector to project.
+ * @param axis Axis to project onto.
+ * @return Projected vector.
+ */
 Vec2D rohr_math_project_onto_axis(Vec2D v, Axis axis);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Calculates axis magnitude.
+ * @param axis Axis vector.
+ * @return Magnitude.
+ */
 float rohr_math_axis_magnitude(Axis axis);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Calculates vector magnitude.
+ * @param vector Vector to inspect.
+ * @return Magnitude.
+ */
 float rohr_math_vector_magnitude(Vec2D vector);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Rotates a vector by an angle.
+ * @param vector Vector to rotate.
+ * @param angle Angle in radians.
+ * @return Rotated vector.
+ */
 Vec2D rohr_math_rotate_vector(Vec2D vector, float angle);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Calculates a circle radius from its shape and centroid.
+ * @param circle Circle shape.
+ * @param centroid Circle centroid.
+ * @return Circle radius.
+ */
 Vec1D rohr_math_circle_radius(Shape circle, Vec2D centroid);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Subtracts one vector from another.
+ * @param vector_a Vector to subtract from.
+ * @param vector_b Vector to subtract.
+ * @return vector_a minus vector_b.
+ */
 Vec2D rohr_math_vector_subtract(Vec2D vector_a, Vec2D vector_b);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Calculates overlap depth between two circles.
+ * @param centroid_1 First circle centroid.
+ * @param radius_1 First circle radius.
+ * @param centroid_2 Second circle centroid.
+ * @param radius_2 Second circle radius.
+ * @return Circle overlap depth.
+ */
 Vec1D rohr_math_circle_overlap_depth(Vec2D centroid_1, Vec1D radius_1, Vec2D centroid_2, Vec1D radius_2);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Calculates overlap between two projection intervals.
+ * @param projection_1 First projection.
+ * @param projection_2 Second projection.
+ * @return Overlap depth.
+ */
 float rohr_math_projection_overlap(Projection projection_1, Projection projection_2);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Scales a shape uniformly.
+ * @param shape Shape to scale.
+ * @param scale Uniform scale value.
+ * @return Scaled shape.
+ */
 Shape rohr_math_scale_shape(Shape shape, float scale);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Scales a shape along the y axis.
+ * @param shape Shape to scale.
+ * @param scale Y-axis scale value.
+ * @return Scaled shape.
+ */
 Shape rohr_math_scale_shape_y(Shape shape, float scale);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Scales a shape along the x axis.
+ * @param shape Shape to scale.
+ * @param scale X-axis scale value.
+ * @return Scaled shape.
+ */
 Shape rohr_math_scale_shape_x(Shape shape, float scale);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Calculates a polygon centroid.
+ * @param shape Polygon shape.
+ * @return Centroid position.
+ */
 Vec2D rohr_math_polygon_centroid(Shape shape);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Adds a vertex slot to a shape.
+ * @param shape Shape to modify.
+ * @return Shape with an additional vertex slot.
+ */
 Shape rohr_math_add_vertex(Shape shape);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Deletes the last vertex slot from a shape.
+ * @param shape Shape to modify.
+ * @return Shape with one fewer vertex slot.
+ */
 Shape rohr_math_delete_vertex(Shape shape);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Creates an axis-aligned bounding box for a world-space shape.
+ * @param world_shape World-space shape.
+ * @return Axis-aligned bounding box.
+ */
 AABB rohr_math_create_aabb(Shape world_shape);
 
-/** Rohr-prefixed public API wrapper. */
+/**
+ * @brief Runs one physics-system update.
+ * @param dt Simulation delta time in seconds.
+ */
 void rohr_system_update_physics(double dt);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Deletes entities whose lifetime has expired.
+ */
 void rohr_system_clean_entities_past_lifetime(void);
 
-/** Rohr-prefixed public API wrapper. */
+/**
+ * @brief Initializes the level editor.
+ * @return EngineResult describing success or failure.
+ */
 EngineResult rohr_level_editor_init(void);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Updates the level editor.
+ * @return EngineResult describing success or failure.
+ */
 EngineResult rohr_level_editor_update(void);
 
-/** Rohr-prefixed public API wrapper. */
+/**
+ * @brief Prints a keyboard event for debugging.
+ * @param event Keyboard event to print.
+ */
 void rohr_controller_print_keyboard_event(KeyboardEvent event);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Updates keyboard key states for the frame.
+ * @param keyboard Keyboard state table to update.
+ */
 void rohr_controller_update_key_states(KeyboardState *keyboard);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Adds a keyboard event to a keyboard state table.
+ * @param keyboard Keyboard state table to modify.
+ * @param key_event Keyboard event to add.
+ */
 void rohr_controller_add_key_event(KeyboardState *keyboard, KeyboardEvent key_event);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Converts an SDL event into a Rohr keyboard event.
+ * @param sdl_event SDL event to inspect.
+ * @return KeyboardEvent derived from sdl_event.
+ */
 KeyboardEvent rohr_controller_capture_keyboard_event(const SDL_Event *sdl_event);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Prints a mouse event for debugging.
+ * @param event Mouse event to print.
+ */
 void rohr_controller_print_mouse_event(MouseEvent event);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Updates mouse button states for the frame.
+ * @param mouse Mouse state table to update.
+ */
 void rohr_controller_update_mouse_states(MouseState *mouse);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Adds a mouse event to a mouse state table.
+ * @param mouse Mouse state table to modify.
+ * @param mouse_event Mouse event to add.
+ */
 void rohr_controller_add_mouse_event(MouseState *mouse, MouseEvent mouse_event);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Converts an SDL event into a Rohr mouse event.
+ * @param sdl_event SDL event to inspect.
+ * @return MouseEvent derived from sdl_event.
+ */
 MouseEvent rohr_controller_capture_mouse_event(const SDL_Event *sdl_event);
 
-/** Rohr-prefixed public API wrapper. */
+/**
+ * @brief Adds an entity to the spatial grid tables.
+ * @param entity Entity to add.
+ */
 void rohr_grid_add_entity_to_grids(Entity entity);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Checks whether a pair of entities has already been processed.
+ * @param entity_1 First entity.
+ * @param entity_2 Second entity.
+ * @return true when the pair was already checked, false otherwise.
+ */
 bool rohr_grid_checked_pair(Entity entity_1, Entity entity_2);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Stores a processed entity pair.
+ * @param entity_1 First entity.
+ * @param entity_2 Second entity.
+ */
 void rohr_grid_add_pair(Entity entity_1, Entity entity_2);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Clears spatial grid state.
+ */
 void rohr_grid_clear(void);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Updates an entity axis-aligned bounding box in the grid.
+ * @param entity Entity to update.
+ */
 void rohr_grid_update_aabb(Entity entity);
 
-/** Rohr-prefixed public API wrapper. */
+/**
+ * @brief Delays execution for a number of seconds.
+ * @param seconds Number of seconds to delay.
+ */
 void rohr_tools_delay(int seconds);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Writes a binary string representation of a value.
+ * @param value Value to convert.
+ * @param buffer Destination buffer.
+ * @param size Size of buffer in bytes.
+ */
 void rohr_tools_binary_to_string(uint32_t value, char *buffer, size_t size);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Appends one string to another using explicit buffer sizes.
+ * @param src Source string.
+ * @param dst Destination string.
+ * @param src_size Source buffer size.
+ * @param dst_size Destination buffer size.
+ */
 void rohr_tools_append_string(char *src, char *dst, size_t src_size, size_t dst_size);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Counts characters in a string until a delimiter.
+ * @param str String to inspect.
+ * @param delimiter Delimiter that stops counting.
+ * @return Number of characters before delimiter.
+ */
 uint32_t rohr_tools_sizeof_string(char *str, char delimiter);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Returns a random integer in a range.
+ * @param min Minimum value.
+ * @param max Maximum value.
+ * @return Random integer between min and max.
+ */
 int rohr_tools_random_range(int min, int max);
-/** Rohr-prefixed public API wrapper. */
+
+/**
+ * @brief Returns a random float in a range.
+ * @param min Minimum value.
+ * @param max Maximum value.
+ * @return Random float between min and max.
+ */
 float rohr_tools_random_range_float(float min, float max);
 
 #endif
