@@ -236,6 +236,8 @@ Collision physics_sat_collision(Shape shape_1, Shape shape_2);
  */
 Vec1D physics_circle_moment_of_inertia(Shape circle, Mass mass_value);
 
+/** Check whether an entity index has HOLD. */
+bool physics_entity_is_held(EntityIndex index);
 /** Check whether an entity index can be moved by physics update stages. */
 bool physics_entity_can_move(EntityIndex index);
 

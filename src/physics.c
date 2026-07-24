@@ -326,14 +326,20 @@ static EngineResult physics_get_live_index(Entity entity, EntityIndex *index) {
     return error_result_value(true);
 }
 
+bool physics_entity_is_held(EntityIndex index) {
+    if(!entity_index_is_alive(index)) {
+        return false;
+    }
+    return entity_index_has_components(index, HOLD);
+}
+
 bool physics_entity_can_move(EntityIndex index) {
     if(!entity_index_is_alive(index)) {
         return false;
     }
-    if(entity_index_has_components(index, STATIC) || entity_index_has_components(index, HOLD)) {
-        return false;
-    }
-    return entity_index_has_components(index, DYNAMIC);
+    return entity_index_has_components(index, DYNAMIC)
+        && !entity_index_has_components(index, STATIC)
+        && !physics_entity_is_held(index);
 }
 
 static Vec2D physics_direction_between_positions(Position from, Position to) {

@@ -70,6 +70,7 @@ Shape rohr_physics_shape_world_translate(Shape shape, Position position, Orienta
 float rohr_physics_polygon_moment_of_inertia(Shape shape, Mass mass_value) { return physics_polygon_moment_of_inertia(shape, mass_value); }
 Collision rohr_physics_sat_collision(Shape shape_1, Shape shape_2) { return physics_sat_collision(shape_1, shape_2); }
 Vec1D rohr_physics_circle_moment_of_inertia(Shape circle, Mass mass_value) { return physics_circle_moment_of_inertia(circle, mass_value); }
+bool rohr_physics_entity_is_held(EntityIndex index) { return physics_entity_is_held(index); }
 EngineResult rohr_physics_set_acceleration(Entity entity, Acceleration a) { return physics_set_acceleration(entity, a); }
 EngineResult rohr_physics_set_acceleration_toward_position(Entity entity, float acceleration_magnitude, Position position) {
     return physics_set_acceleration_toward_position(entity, acceleration_magnitude, position);

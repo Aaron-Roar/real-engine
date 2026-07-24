@@ -373,6 +373,13 @@ Collision rohr_physics_sat_collision(Shape shape_1, Shape shape_2);
 Vec1D rohr_physics_circle_moment_of_inertia(Shape circle, Mass mass_value);
 
 /**
+ * @brief Checks whether an entity index has HOLD.
+ * @param index Entity table index to inspect.
+ * @return true when index is live and held, false otherwise.
+ */
+bool rohr_physics_entity_is_held(EntityIndex index);
+
+/**
  * @brief Sets an entity acceleration component value.
  * @param entity Entity to modify.
  * @param a Acceleration value.

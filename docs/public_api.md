@@ -669,6 +669,20 @@ Calculates circle moment of inertia.
 
 **Returns:** Moment of inertia value.
 
+### `rohr_physics_entity_is_held`
+
+```c
+bool rohr_physics_entity_is_held(EntityIndex index);
+```
+
+Checks whether an entity index has HOLD.
+
+| Parameter | Description |
+| --- | --- |
+| `index` | Entity table index to inspect. |
+
+**Returns:** true when index is live and held, false otherwise.
+
 ### `rohr_physics_set_acceleration`
 
 ```c
