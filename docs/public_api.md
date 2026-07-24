@@ -1,30 +1,1910 @@
 # Public API Reference
 
-The public application-facing API lives in:
+This page is the GitHub-readable reference for the public Rohr Engine C API.
+The source of truth is [`include/rohr.h`](../include/rohr.h), which uses Doxygen comments for the generated HTML documentation.
 
-- [include/rohr.h](../include/rohr.h)
-
-Application code should include only this facade when possible:
+Application code should include the public facade:
 
 ```c
 #include "rohr.h"
 ```
 
-Every public function uses the `rohr_` prefix and is documented in the header
-with Doxygen comments covering its purpose, parameters, return value, and error
-result behavior where applicable.
+Entity values are stable ids, not component table indexes. Use the public entity functions to validate ids and resolve indexes.
 
-For the full generated API reference with searchable function pages, run:
+## Contents
 
-```sh
-make docs
+- <a href="#engine">Engine</a>
+- <a href="#errors-and-results">Errors and Results</a>
+- <a href="#console">Console</a>
+- <a href="#entities">Entities</a>
+- <a href="#physics">Physics</a>
+- <a href="#graphics">Graphics</a>
+- <a href="#math">Math</a>
+- <a href="#systems">Systems</a>
+- <a href="#level-editor">Level Editor</a>
+- <a href="#controller-input">Controller Input</a>
+- <a href="#spatial-grid">Spatial Grid</a>
+- <a href="#tools">Tools</a>
+
+## Engine
+
+### `rohr_engine_init`
+
+```c
+EngineResult rohr_engine_init(void);
 ```
 
-Then open:
+Initializes core engine state.
 
-```text
-build/docs/html/rohr_8h.html
+**Returns:** EngineResult containing true on success, or an engine error.
+
+### `rohr_engine_shutdown`
+
+```c
+void rohr_engine_shutdown(void);
 ```
 
-The generated Doxygen output is local build output and is not committed to the
-repo.
+Releases core engine state.
+
+### `rohr_engine_update_time`
+
+```c
+void rohr_engine_update_time(void);
+```
+
+Updates accumulated engine time from the platform clock.
+
+### `rohr_engine_get_time`
+
+```c
+Time rohr_engine_get_time(void);
+```
+
+Returns the current engine time in seconds.
+
+**Returns:** Current engine time.
+
+### `rohr_engine_get_tick`
+
+```c
+Tick rohr_engine_get_tick(void);
+```
+
+Returns the current engine tick counter.
+
+**Returns:** Current tick.
+
+### `rohr_engine_pause`
+
+```c
+void rohr_engine_pause(void);
+```
+
+Pauses engine time-dependent updates.
+
+### `rohr_engine_resume`
+
+```c
+void rohr_engine_resume(void);
+```
+
+Resumes engine time-dependent updates.
+
+### `rohr_engine_update_tick`
+
+```c
+void rohr_engine_update_tick(void);
+```
+
+Advances the engine tick counter.
+
+### `rohr_engine_poll_event`
+
+```c
+SDL_Event rohr_engine_poll_event(void);
+```
+
+Polls one SDL event.
+
+**Returns:** SDL event value returned by the engine event poller.
+
+### `rohr_engine_is_paused`
+
+```c
+bool rohr_engine_is_paused(void);
+```
+
+Checks whether the engine is paused.
+
+**Returns:** true when paused, false when running.
+
+### `rohr_engine_get_dt`
+
+```c
+Time rohr_engine_get_dt(void);
+```
+
+Returns the current fixed or calculated delta time.
+
+**Returns:** Delta time in seconds.
+
+### `rohr_engine_calculate_dt`
+
+```c
+void rohr_engine_calculate_dt(void);
+```
+
+Calculates delta time from elapsed engine time.
+
+### `rohr_engine_set_dt`
+
+```c
+void rohr_engine_set_dt(Time dt);
+```
+
+Sets the engine delta time manually.
+
+| Parameter | Description |
+| --- | --- |
+| `dt` | Delta time in seconds. |
+
+### `rohr_engine_reset_clock`
+
+```c
+void rohr_engine_reset_clock(void);
+```
+
+Resets the engine clock baseline.
+
+## Errors and Results
+
+### `rohr_error_result_value`
+
+```c
+EngineResult rohr_error_result_value(bool value);
+```
+
+Creates a successful boolean engine result.
+
+| Parameter | Description |
+| --- | --- |
+| `value` | Boolean value to store in the result. |
+
+**Returns:** EngineResult containing value.
+
+### `rohr_error_result_error`
+
+```c
+EngineResult rohr_error_result_error(EngineError error);
+```
+
+Creates a failed engine result.
+
+| Parameter | Description |
+| --- | --- |
+| `error` | Error code to store in the result. |
+
+**Returns:** EngineResult containing error.
+
+### `rohr_error_check`
+
+```c
+#define rohr_error_check(ResultValue) error_check(ResultValue)
+```
+
+Checks whether a result contains an error.
+
+| Parameter | Description |
+| --- | --- |
+| `ResultValue` | Result value to inspect. |
+
+**Returns:** true when ResultValue contains an error, false otherwise.
+
+### `rohr_error_default_message`
+
+```c
+const char *rohr_error_default_message(EngineError error);
+```
+
+Returns a user-facing default message for an engine error.
+
+| Parameter | Description |
+| --- | --- |
+| `error` | Error code to describe. |
+
+**Returns:** Static string describing error.
+
+### `rohr_error_string`
+
+```c
+const char *rohr_error_string(EngineError error);
+```
+
+Returns the symbolic name for an engine error.
+
+| Parameter | Description |
+| --- | --- |
+| `error` | Error code to name. |
+
+**Returns:** Static string containing the error name.
+
+## Console
+
+### `rohr_console_print_logs`
+
+```c
+void rohr_console_print_logs(void);
+```
+
+Prints buffered console log messages.
+
+### `rohr_console_init`
+
+```c
+void rohr_console_init(void);
+```
+
+Initializes the engine console.
+
+### `rohr_console_shutdown`
+
+```c
+void rohr_console_shutdown(void);
+```
+
+Shuts down the engine console.
+
+### `rohr_console_read`
+
+```c
+bool rohr_console_read(ConsoleLogString *input);
+```
+
+Reads one console log string.
+
+| Parameter | Description |
+| --- | --- |
+| `input` | Destination for the log string. |
+
+**Returns:** true when a log string was read, false otherwise.
+
+### `rohr_console_write`
+
+```c
+void rohr_console_write(LogSourceType source, const char *fmt, ...);
+```
+
+Writes a formatted message to the engine console.
+
+| Parameter | Description |
+| --- | --- |
+| `source` | Source category for the log entry. |
+| `fmt` | printf-style format string. |
+
+### `rohr_console_is_active`
+
+```c
+bool rohr_console_is_active(void);
+```
+
+Checks whether the console is active.
+
+**Returns:** true when active, false otherwise.
+
+### `rohr_console_debug_write`
+
+```c
+void rohr_console_debug_write(LogSourceType source, const char *fmt, ...);
+```
+
+Writes a formatted debug message when debug logging is enabled.
+
+| Parameter | Description |
+| --- | --- |
+| `source` | Source category for the log entry. |
+| `fmt` | printf-style format string. |
+
+### `rohr_console_set_debug`
+
+```c
+void rohr_console_set_debug(bool state);
+```
+
+Enables or disables debug console output.
+
+| Parameter | Description |
+| --- | --- |
+| `state` | true to enable debug logging, false to disable it. |
+
+## Entities
+
+### `rohr_entity_is_alive`
+
+```c
+bool rohr_entity_is_alive(Entity entity);
+```
+
+Checks whether an entity id currently refers to a live entity.
+
+| Parameter | Description |
+| --- | --- |
+| `entity` | Stable entity id to inspect. |
+
+**Returns:** true when the entity is alive, false otherwise.
+
+### `rohr_entity_index_is_alive`
+
+```c
+bool rohr_entity_index_is_alive(EntityIndex index);
+```
+
+Checks whether an entity table index currently contains a live entity.
+
+| Parameter | Description |
+| --- | --- |
+| `index` | Component table index to inspect. |
+
+**Returns:** true when the index contains a live entity, false otherwise.
+
+### `rohr_entity_get_index`
+
+```c
+bool rohr_entity_get_index(Entity entity, EntityIndex *index);
+```
+
+Resolves a stable entity id to its current component table index.
+
+| Parameter | Description |
+| --- | --- |
+| `entity` | Stable entity id to resolve. |
+| `index` | Destination for the resolved table index. |
+
+**Returns:** true when entity was resolved, false otherwise.
+
+### `rohr_entity_from_index`
+
+```c
+EntityResult rohr_entity_from_index(EntityIndex index);
+```
+
+Returns the stable entity id stored at a component table index.
+
+| Parameter | Description |
+| --- | --- |
+| `index` | Component table index to inspect. |
+
+**Returns:** EntityResult containing the entity id, or an error.
+
+### `rohr_entity_add`
+
+```c
+EntityResult rohr_entity_add(void);
+```
+
+Creates a new entity.
+
+Entity ids are stable handles and may not match component table indexes.
+
+**Returns:** EntityResult containing the new entity id, or an error if the entity limit is reached.
+
+### `rohr_entity_delete`
+
+```c
+EngineResult rohr_entity_delete(Entity entity);
+```
+
+Deletes an entity and releases its slot for reuse.
+
+| Parameter | Description |
+| --- | --- |
+| `entity` | Stable entity id to delete. |
+
+**Returns:** EngineResult describing success or failure.
+
+### `rohr_entity_add_components`
+
+```c
+EngineResult rohr_entity_add_components(Entity entity, CMask mask);
+```
+
+Adds components to an entity.
+
+| Parameter | Description |
+| --- | --- |
+| `entity` | Stable entity id to modify. |
+| `mask` | Component mask to add. |
+
+**Returns:** EngineResult describing success or failure.
+
+### `rohr_entity_has_components`
+
+```c
+bool rohr_entity_has_components(Entity entity, CMask components);
+```
+
+Checks whether an entity has all requested components.
+
+| Parameter | Description |
+| --- | --- |
+| `entity` | Stable entity id to inspect. |
+| `components` | Component mask to test. |
+
+**Returns:** true when entity has every requested component, false otherwise.
+
+### `rohr_entity_index_has_components`
+
+```c
+bool rohr_entity_index_has_components(EntityIndex index, CMask components);
+```
+
+Checks whether an entity table index has all requested components.
+
+| Parameter | Description |
+| --- | --- |
+| `index` | Component table index to inspect. |
+| `components` | Component mask to test. |
+
+**Returns:** true when index has every requested component, false otherwise.
+
+### `rohr_entity_delete_components`
+
+```c
+EngineResult rohr_entity_delete_components(Entity entity, CMask mask);
+```
+
+Removes components from an entity.
+
+| Parameter | Description |
+| --- | --- |
+| `entity` | Stable entity id to modify. |
+| `mask` | Component mask to remove. |
+
+**Returns:** EngineResult describing success or failure.
+
+### `rohr_entity_set_child`
+
+```c
+EngineResult rohr_entity_set_child(Entity parent, Entity child);
+```
+
+Adds a child relationship from parent to child.
+
+| Parameter | Description |
+| --- | --- |
+| `parent` | Parent entity id. |
+| `child` | Child entity id. |
+
+**Returns:** EngineResult describing success or failure.
+
+### `rohr_entity_set_parent`
+
+```c
+EngineResult rohr_entity_set_parent(Entity child, Entity parent);
+```
+
+Sets an entity parent relationship.
+
+| Parameter | Description |
+| --- | --- |
+| `child` | Child entity id. |
+| `parent` | Parent entity id. |
+
+**Returns:** EngineResult describing success or failure.
+
+### `rohr_entity_remove_parent`
+
+```c
+EngineResult rohr_entity_remove_parent(Entity child);
+```
+
+Removes the parent relationship from an entity.
+
+| Parameter | Description |
+| --- | --- |
+| `child` | Child entity id. |
+
+**Returns:** EngineResult describing success or failure.
+
+### `rohr_entity_remove_child`
+
+```c
+EngineResult rohr_entity_remove_child(Entity parent, Entity child);
+```
+
+Removes a child relationship from a parent entity.
+
+| Parameter | Description |
+| --- | --- |
+| `parent` | Parent entity id. |
+| `child` | Child entity id. |
+
+**Returns:** EngineResult describing success or failure.
+
+### `rohr_entity_get_children`
+
+```c
+ChildrenResult rohr_entity_get_children(Entity entity);
+```
+
+Returns the children assigned to an entity.
+
+| Parameter | Description |
+| --- | --- |
+| `entity` | Stable entity id to inspect. |
+
+**Returns:** ChildrenResult containing child data, or an error.
+
+### `rohr_entity_get_parent`
+
+```c
+ParentResult rohr_entity_get_parent(Entity entity);
+```
+
+Returns the parent assigned to an entity.
+
+| Parameter | Description |
+| --- | --- |
+| `entity` | Stable entity id to inspect. |
+
+**Returns:** ParentResult containing parent id, or an error.
+
+### `rohr_entity_set_life_time`
+
+```c
+EngineResult rohr_entity_set_life_time(Entity entity, Time expirey_time, Tick expirey_tick);
+```
+
+Adds or updates an entity lifetime.
+
+| Parameter | Description |
+| --- | --- |
+| `entity` | Stable entity id to modify. |
+| `expirey_time` | Engine time when the entity expires. |
+| `expirey_tick` | Engine tick when the entity expires. |
+
+**Returns:** EngineResult describing success or failure.
+
+### `rohr_entity_remove_life_time`
+
+```c
+EngineResult rohr_entity_remove_life_time(Entity entity);
+```
+
+Removes lifetime data from an entity.
+
+| Parameter | Description |
+| --- | --- |
+| `entity` | Stable entity id to modify. |
+
+**Returns:** EngineResult describing success or failure.
+
+## Physics
+
+### `rohr_physics_shape_world_translate`
+
+```c
+Shape rohr_physics_shape_world_translate(Shape shape, Position position, Orientation angle);
+```
+
+Translates a local shape into world space.
+
+| Parameter | Description |
+| --- | --- |
+| `shape` | Local shape to transform. |
+| `position` | World position. |
+| `angle` | World orientation in radians. |
+
+**Returns:** World-space shape.
+
+### `rohr_physics_polygon_moment_of_inertia`
+
+```c
+float rohr_physics_polygon_moment_of_inertia(Shape shape, Mass mass_value);
+```
+
+Calculates polygon moment of inertia.
+
+| Parameter | Description |
+| --- | --- |
+| `shape` | Polygon shape. |
+| `mass_value` | Shape mass. |
+
+**Returns:** Moment of inertia value.
+
+### `rohr_physics_sat_collision`
+
+```c
+Collision rohr_physics_sat_collision(Shape shape_1, Shape shape_2);
+```
+
+Tests two shapes with separating axis theorem collision detection.
+
+| Parameter | Description |
+| --- | --- |
+| `shape_1` | First shape. |
+| `shape_2` | Second shape. |
+
+**Returns:** Collision information.
+
+### `rohr_physics_circle_moment_of_inertia`
+
+```c
+Vec1D rohr_physics_circle_moment_of_inertia(Shape circle, Mass mass_value);
+```
+
+Calculates circle moment of inertia.
+
+| Parameter | Description |
+| --- | --- |
+| `circle` | Circle shape. |
+| `mass_value` | Circle mass. |
+
+**Returns:** Moment of inertia value.
+
+### `rohr_physics_set_acceleration`
+
+```c
+EngineResult rohr_physics_set_acceleration(Entity entity, Acceleration a);
+```
+
+Sets an entity acceleration component value.
+
+| Parameter | Description |
+| --- | --- |
+| `entity` | Entity to modify. |
+| `a` | Acceleration value. |
+
+**Returns:** EngineResult describing success or failure.
+
+### `rohr_physics_set_velocity`
+
+```c
+EngineResult rohr_physics_set_velocity(Entity entity, Velocity v);
+```
+
+Sets an entity velocity component value.
+
+| Parameter | Description |
+| --- | --- |
+| `entity` | Entity to modify. |
+| `v` | Velocity value. |
+
+**Returns:** EngineResult describing success or failure.
+
+### `rohr_physics_set_position`
+
+```c
+EngineResult rohr_physics_set_position(Entity entity, Position p);
+```
+
+Sets an entity position component value.
+
+| Parameter | Description |
+| --- | --- |
+| `entity` | Entity to modify. |
+| `p` | Position value. |
+
+**Returns:** EngineResult describing success or failure.
+
+### `rohr_physics_set_mass`
+
+```c
+EngineResult rohr_physics_set_mass(Entity entity, Mass m);
+```
+
+Sets an entity mass component value.
+
+| Parameter | Description |
+| --- | --- |
+| `entity` | Entity to modify. |
+| `m` | Mass value. |
+
+**Returns:** EngineResult describing success or failure.
+
+### `rohr_physics_set_force`
+
+```c
+EntityResult rohr_physics_set_force(Entity entity, Force f);
+```
+
+Sets an entity force component value.
+
+| Parameter | Description |
+| --- | --- |
+| `entity` | Entity to modify. |
+| `f` | Force value. |
+
+**Returns:** EntityResult containing entity on success, or an error.
+
+### `rohr_physics_set_torque`
+
+```c
+EntityResult rohr_physics_set_torque(Entity entity, Torque t);
+```
+
+Sets an entity torque component value.
+
+| Parameter | Description |
+| --- | --- |
+| `entity` | Entity to modify. |
+| `t` | Torque value. |
+
+**Returns:** EntityResult containing entity on success, or an error.
+
+### `rohr_physics_set_hitbox`
+
+```c
+EngineResult rohr_physics_set_hitbox(Entity entity, Shape hitbox);
+```
+
+Sets an entity hitbox component value.
+
+| Parameter | Description |
+| --- | --- |
+| `entity` | Entity to modify. |
+| `hitbox` | Local-space hitbox shape. |
+
+**Returns:** EngineResult describing success or failure.
+
+### `rohr_physics_set_orientation`
+
+```c
+EngineResult rohr_physics_set_orientation(Entity entity, Orientation angle);
+```
+
+Sets an entity orientation component value.
+
+| Parameter | Description |
+| --- | --- |
+| `entity` | Entity to modify. |
+| `angle` | Orientation in radians. |
+
+**Returns:** EngineResult describing success or failure.
+
+### `rohr_physics_set_angular_velocity`
+
+```c
+EngineResult rohr_physics_set_angular_velocity(Entity entity, AngularVelocity v);
+```
+
+Sets an entity angular velocity component value.
+
+| Parameter | Description |
+| --- | --- |
+| `entity` | Entity to modify. |
+| `v` | Angular velocity value. |
+
+**Returns:** EngineResult describing success or failure.
+
+### `rohr_physics_get_global_hit_box`
+
+```c
+ShapeResult rohr_physics_get_global_hit_box(Entity entity);
+```
+
+Returns an entity hitbox transformed into world space.
+
+| Parameter | Description |
+| --- | --- |
+| `entity` | Entity to inspect. |
+
+**Returns:** ShapeResult containing the world-space hitbox, or an error.
+
+### `rohr_physics_set_restitution`
+
+```c
+EngineResult rohr_physics_set_restitution(Entity entity, Restitution restitution);
+```
+
+Sets an entity restitution value.
+
+| Parameter | Description |
+| --- | --- |
+| `entity` | Entity to modify. |
+| `restitution` | Restitution value. |
+
+**Returns:** EngineResult describing success or failure.
+
+### `rohr_physics_set_dynamic`
+
+```c
+EngineResult rohr_physics_set_dynamic(Entity entity);
+```
+
+Marks an entity as dynamic for physics simulation.
+
+| Parameter | Description |
+| --- | --- |
+| `entity` | Entity to modify. |
+
+**Returns:** EngineResult describing success or failure.
+
+### `rohr_physics_set_static`
+
+```c
+EngineResult rohr_physics_set_static(Entity entity);
+```
+
+Marks an entity as static for physics simulation.
+
+| Parameter | Description |
+| --- | --- |
+| `entity` | Entity to modify. |
+
+**Returns:** EngineResult describing success or failure.
+
+### `rohr_physics_set_angle_lock`
+
+```c
+EngineResult rohr_physics_set_angle_lock(Entity entity, Orientation min, Orientation max);
+```
+
+Locks an entity orientation between minimum and maximum angles.
+
+| Parameter | Description |
+| --- | --- |
+| `entity` | Entity to modify. |
+| `min` | Minimum orientation in radians. |
+| `max` | Maximum orientation in radians. |
+
+**Returns:** EngineResult describing success or failure.
+
+### `rohr_physics_set_axis_lock`
+
+```c
+EngineResult rohr_physics_set_axis_lock(Entity entity, Axis axis, Position axis_point);
+```
+
+Locks an entity position along an axis.
+
+| Parameter | Description |
+| --- | --- |
+| `entity` | Entity to modify. |
+| `axis` | Axis to lock against. |
+| `axis_point` | Point on the locked axis. |
+
+**Returns:** EngineResult describing success or failure.
+
+### `rohr_physics_set_friction`
+
+```c
+EngineResult rohr_physics_set_friction(Entity entity, float friction);
+```
+
+Sets an entity friction value.
+
+| Parameter | Description |
+| --- | --- |
+| `entity` | Entity to modify. |
+| `friction` | Friction value. |
+
+**Returns:** EngineResult describing success or failure.
+
+### `rohr_physics_set_transform_lock`
+
+```c
+EngineResult rohr_physics_set_transform_lock( Entity driven, Entity driver, Vec2D local_offset, Orientation local_angle, bool lock_position, bool lock_orientation, bool inherit_velocity );
+```
+
+Locks one entity transform to another entity.
+
+| Parameter | Description |
+| --- | --- |
+| `driven` | Entity whose transform is driven. |
+| `driver` | Entity used as the transform source. |
+| `local_offset` | Offset from driver to driven in driver-local space. |
+| `local_angle` | Orientation offset from driver to driven. |
+| `lock_position` | true to lock position. |
+| `lock_orientation` | true to lock orientation. |
+| `inherit_velocity` | true to inherit driver velocity. |
+
+**Returns:** EngineResult describing success or failure.
+
+### `rohr_physics_remove_transform_lock`
+
+```c
+EngineResult rohr_physics_remove_transform_lock(Entity entity);
+```
+
+Removes an entity transform lock.
+
+| Parameter | Description |
+| --- | --- |
+| `entity` | Entity to modify. |
+
+**Returns:** EngineResult describing success or failure.
+
+### `rohr_physics_set_transform_lock_current_transform`
+
+```c
+EngineResult rohr_physics_set_transform_lock_current_transform( Entity driven, Entity driver, bool lock_position, bool lock_orientation, bool inherit_velocity );
+```
+
+Locks one entity to another using their current transform offset.
+
+| Parameter | Description |
+| --- | --- |
+| `driven` | Entity whose transform is driven. |
+| `driver` | Entity used as the transform source. |
+| `lock_position` | true to lock position. |
+| `lock_orientation` | true to lock orientation. |
+| `inherit_velocity` | true to inherit driver velocity. |
+
+**Returns:** EngineResult describing success or failure.
+
+### `rohr_physics_set_joint`
+
+```c
+EntityResult rohr_physics_set_joint( Entity a, Entity b, JointType type, Vec2D local_anchor_a, Vec2D local_anchor_b, float stiffness, float damping );
+```
+
+Creates a joint between two entities.
+
+| Parameter | Description |
+| --- | --- |
+| `a` | First entity. |
+| `b` | Second entity. |
+| `type` | Joint behavior type. |
+| `local_anchor_a` | Anchor on the first entity in local space. |
+| `local_anchor_b` | Anchor on the second entity in local space. |
+| `stiffness` | Spring stiffness. |
+| `damping` | Spring damping. |
+
+**Returns:** EntityResult containing the joint entity, or an error.
+
+### `rohr_physics_particle_collision`
+
+```c
+Collision rohr_physics_particle_collision(Shape shape_1, Shape shape_2);
+```
+
+Tests two particle shapes for collision.
+
+| Parameter | Description |
+| --- | --- |
+| `shape_1` | First shape. |
+| `shape_2` | Second shape. |
+
+**Returns:** Collision information.
+
+### `rohr_physics_set_collision_report`
+
+```c
+EngineResult rohr_physics_set_collision_report(Entity entity, Entity target, bool state);
+```
+
+Enables or disables collision reporting between two entities.
+
+| Parameter | Description |
+| --- | --- |
+| `entity` | Reporting entity. |
+| `target` | Target entity. |
+| `state` | true to enable reporting, false to disable it. |
+
+**Returns:** EngineResult describing success or failure.
+
+### `rohr_physics_get_collision_report`
+
+```c
+bool rohr_physics_get_collision_report(Entity entity, Entity target);
+```
+
+Checks whether a collision report exists between two entities.
+
+| Parameter | Description |
+| --- | --- |
+| `entity` | Reporting entity. |
+| `target` | Target entity. |
+
+**Returns:** true when reporting is enabled, false otherwise.
+
+## Graphics
+
+### `rohr_graphics_create_color_hex`
+
+```c
+Color rohr_graphics_create_color_hex(uint32_t hex_color_code);
+```
+
+Creates an engine color from a hexadecimal RGB or RGBA value.
+
+| Parameter | Description |
+| --- | --- |
+| `hex_color_code` | Hex color value. |
+
+**Returns:** Color created from hex_color_code.
+
+### `rohr_graphics_start`
+
+```c
+EngineResult rohr_graphics_start(void);
+```
+
+Starts the graphics system.
+
+**Returns:** EngineResult describing success or failure.
+
+### `rohr_graphics_end`
+
+```c
+void rohr_graphics_end(void);
+```
+
+Shuts down the graphics system.
+
+### `rohr_graphics_poll_events`
+
+```c
+bool rohr_graphics_poll_events(SDL_Event *event);
+```
+
+Polls graphics/window events.
+
+| Parameter | Description |
+| --- | --- |
+| `event` | Destination for the SDL event. |
+
+**Returns:** true when an event was read, false otherwise.
+
+### `rohr_graphics_draw_background`
+
+```c
+void rohr_graphics_draw_background(Color color);
+```
+
+Draws the frame background.
+
+| Parameter | Description |
+| --- | --- |
+| `color` | Background color. |
+
+### `rohr_graphics_show`
+
+```c
+void rohr_graphics_show(void);
+```
+
+Presents the current graphics frame.
+
+### `rohr_graphics_draw_hit_box`
+
+```c
+void rohr_graphics_draw_hit_box(Entity entity, Fill fill_type);
+```
+
+Draws one entity hitbox.
+
+| Parameter | Description |
+| --- | --- |
+| `entity` | Entity whose hitbox should be drawn. |
+| `fill_type` | Fill mode for drawing. |
+
+### `rohr_graphics_draw_hit_boxes`
+
+```c
+void rohr_graphics_draw_hit_boxes(void);
+```
+
+Draws hitboxes for all renderable hitbox entities.
+
+### `rohr_graphics_load_texture`
+
+```c
+TextureAssetResult rohr_graphics_load_texture(TextureDescriptor text_desc);
+```
+
+Loads a texture asset.
+
+| Parameter | Description |
+| --- | --- |
+| `text_desc` | Texture descriptor containing load settings. |
+
+**Returns:** TextureAssetResult containing the asset, or an error.
+
+### `rohr_graphics_load_animation`
+
+```c
+AnimationAssetResult rohr_graphics_load_animation(AnimationDescriptor anim_desc);
+```
+
+Loads an animation asset.
+
+| Parameter | Description |
+| --- | --- |
+| `anim_desc` | Animation descriptor containing load settings. |
+
+**Returns:** AnimationAssetResult containing the asset, or an error.
+
+### `rohr_graphics_create_animated_sprite`
+
+```c
+AnimatedSprite rohr_graphics_create_animated_sprite(AnimationAsset asset_ptr, Scale scale);
+```
+
+Creates an animated sprite from an animation asset.
+
+| Parameter | Description |
+| --- | --- |
+| `asset_ptr` | Animation asset to use. |
+| `scale` | Sprite scale. |
+
+**Returns:** Animated sprite value.
+
+### `rohr_graphics_add_animated_sprite`
+
+```c
+EngineResult rohr_graphics_add_animated_sprite(Entity entity, AnimatedSprite sprite);
+```
+
+Adds an animated sprite to an entity.
+
+| Parameter | Description |
+| --- | --- |
+| `entity` | Entity to modify. |
+| `sprite` | Animated sprite component value. |
+
+**Returns:** EngineResult describing success or failure.
+
+### `rohr_graphics_draw_animated_sprites`
+
+```c
+void rohr_graphics_draw_animated_sprites(void);
+```
+
+Draws all animated sprite components.
+
+### `rohr_graphics_update_sprite_frames`
+
+```c
+void rohr_graphics_update_sprite_frames(Tick current_tick, Time current_time);
+```
+
+Updates animated sprite frames.
+
+| Parameter | Description |
+| --- | --- |
+| `current_tick` | Current engine tick. |
+| `current_time` | Current engine time. |
+
+### `rohr_graphics_scale_textures`
+
+```c
+void rohr_graphics_scale_textures(Entity entity, Scale scale);
+```
+
+Scales textures attached to an entity.
+
+| Parameter | Description |
+| --- | --- |
+| `entity` | Entity to modify. |
+| `scale` | Scale value. |
+
+### `rohr_graphics_world_to_screen`
+
+```c
+Position rohr_graphics_world_to_screen(Position pos);
+```
+
+Converts a world position to screen coordinates.
+
+| Parameter | Description |
+| --- | --- |
+| `pos` | World position. |
+
+**Returns:** Screen-space position.
+
+### `rohr_graphics_screen_to_world`
+
+```c
+Position rohr_graphics_screen_to_world(Position screen);
+```
+
+Converts a screen position to world coordinates.
+
+| Parameter | Description |
+| --- | --- |
+| `screen` | Screen-space position. |
+
+**Returns:** World-space position.
+
+### `rohr_graphics_get_mouse_screen_position`
+
+```c
+Position rohr_graphics_get_mouse_screen_position(void);
+```
+
+Returns the current mouse position in screen coordinates.
+
+**Returns:** Mouse screen position.
+
+### `rohr_graphics_draw_grid`
+
+```c
+void rohr_graphics_draw_grid(void);
+```
+
+Draws the spatial grid overlay.
+
+### `rohr_graphics_recording_start`
+
+```c
+bool rohr_graphics_recording_start(const char *output_path, int fps);
+```
+
+Starts recording rendered frames to a video file.
+
+| Parameter | Description |
+| --- | --- |
+| `output_path` | Path where the recording should be written. |
+| `fps` | Recording frame rate. |
+
+**Returns:** true when recording starts successfully, false otherwise.
+
+### `rohr_graphics_draw_particles`
+
+```c
+void rohr_graphics_draw_particles(void);
+```
+
+Draws active particle components.
+
+### `rohr_graphics_draw_local_origins`
+
+```c
+void rohr_graphics_draw_local_origins(void);
+```
+
+Draws local origin markers for entities.
+
+## Math
+
+### `rohr_math_create_normals`
+
+```c
+Vec2DList rohr_math_create_normals(Shape shape);
+```
+
+Creates normalized edge normals for a shape.
+
+| Parameter | Description |
+| --- | --- |
+| `shape` | Shape to inspect. |
+
+**Returns:** List of normal vectors.
+
+### `rohr_math_normalize_vector`
+
+```c
+Vec2D rohr_math_normalize_vector(Vec2D vector);
+```
+
+Normalizes a vector.
+
+| Parameter | Description |
+| --- | --- |
+| `vector` | Vector to normalize. |
+
+**Returns:** Normalized vector.
+
+### `rohr_math_normalize_vectors`
+
+```c
+Vec2DList rohr_math_normalize_vectors(Vec2DList vectors);
+```
+
+Normalizes all vectors in a list.
+
+| Parameter | Description |
+| --- | --- |
+| `vectors` | Vector list to normalize. |
+
+**Returns:** Normalized vector list.
+
+### `rohr_math_dot_product`
+
+```c
+float rohr_math_dot_product(Vec2D vector_1, Vec2D vector_2);
+```
+
+Calculates the dot product of two vectors.
+
+| Parameter | Description |
+| --- | --- |
+| `vector_1` | First vector. |
+| `vector_2` | Second vector. |
+
+**Returns:** Dot product.
+
+### `rohr_math_create_square`
+
+```c
+Shape rohr_math_create_square(float width, float height);
+```
+
+Creates a rectangular polygon shape.
+
+| Parameter | Description |
+| --- | --- |
+| `width` | Rectangle width. |
+| `height` | Rectangle height. |
+
+**Returns:** Shape containing rectangle vertices.
+
+### `rohr_math_create_circle`
+
+```c
+Shape rohr_math_create_circle(float radius, uint8_t verticies);
+```
+
+Creates a circle approximation shape.
+
+| Parameter | Description |
+| --- | --- |
+| `radius` | Circle radius. |
+| `verticies` | Number of vertices used to approximate the circle. |
+
+**Returns:** Shape containing circle vertices.
+
+### `rohr_math_project_shape_on_axis`
+
+```c
+Projection rohr_math_project_shape_on_axis(Shape shape, Axis axis);
+```
+
+Projects a shape onto an axis.
+
+| Parameter | Description |
+| --- | --- |
+| `shape` | Shape to project. |
+| `axis` | Axis to project onto. |
+
+**Returns:** Projection interval.
+
+### `rohr_math_cross_2d`
+
+```c
+float rohr_math_cross_2d(Vec2D a, Vec2D b);
+```
+
+Calculates the scalar 2D cross product.
+
+| Parameter | Description |
+| --- | --- |
+| `a` | First vector. |
+| `b` | Second vector. |
+
+**Returns:** Cross product value.
+
+### `rohr_math_angular_velocity_cross_vec`
+
+```c
+Vec2D rohr_math_angular_velocity_cross_vec(float omega, Vec2D r);
+```
+
+Calculates angular velocity crossed with a vector.
+
+| Parameter | Description |
+| --- | --- |
+| `omega` | Angular velocity. |
+| `r` | Radius or offset vector. |
+
+**Returns:** Tangential velocity vector.
+
+### `rohr_math_project_onto_axis`
+
+```c
+Vec2D rohr_math_project_onto_axis(Vec2D v, Axis axis);
+```
+
+Projects a vector onto an axis.
+
+| Parameter | Description |
+| --- | --- |
+| `v` | Vector to project. |
+| `axis` | Axis to project onto. |
+
+**Returns:** Projected vector.
+
+### `rohr_math_axis_magnitude`
+
+```c
+float rohr_math_axis_magnitude(Axis axis);
+```
+
+Calculates axis magnitude.
+
+| Parameter | Description |
+| --- | --- |
+| `axis` | Axis vector. |
+
+**Returns:** Magnitude.
+
+### `rohr_math_vector_magnitude`
+
+```c
+float rohr_math_vector_magnitude(Vec2D vector);
+```
+
+Calculates vector magnitude.
+
+| Parameter | Description |
+| --- | --- |
+| `vector` | Vector to inspect. |
+
+**Returns:** Magnitude.
+
+### `rohr_math_rotate_vector`
+
+```c
+Vec2D rohr_math_rotate_vector(Vec2D vector, float angle);
+```
+
+Rotates a vector by an angle.
+
+| Parameter | Description |
+| --- | --- |
+| `vector` | Vector to rotate. |
+| `angle` | Angle in radians. |
+
+**Returns:** Rotated vector.
+
+### `rohr_math_circle_radius`
+
+```c
+Vec1D rohr_math_circle_radius(Shape circle, Vec2D centroid);
+```
+
+Calculates a circle radius from its shape and centroid.
+
+| Parameter | Description |
+| --- | --- |
+| `circle` | Circle shape. |
+| `centroid` | Circle centroid. |
+
+**Returns:** Circle radius.
+
+### `rohr_math_vector_subtract`
+
+```c
+Vec2D rohr_math_vector_subtract(Vec2D vector_a, Vec2D vector_b);
+```
+
+Subtracts one vector from another.
+
+| Parameter | Description |
+| --- | --- |
+| `vector_a` | Vector to subtract from. |
+| `vector_b` | Vector to subtract. |
+
+**Returns:** vector_a minus vector_b.
+
+### `rohr_math_circle_overlap_depth`
+
+```c
+Vec1D rohr_math_circle_overlap_depth(Vec2D centroid_1, Vec1D radius_1, Vec2D centroid_2, Vec1D radius_2);
+```
+
+Calculates overlap depth between two circles.
+
+| Parameter | Description |
+| --- | --- |
+| `centroid_1` | First circle centroid. |
+| `radius_1` | First circle radius. |
+| `centroid_2` | Second circle centroid. |
+| `radius_2` | Second circle radius. |
+
+**Returns:** Circle overlap depth.
+
+### `rohr_math_projection_overlap`
+
+```c
+float rohr_math_projection_overlap(Projection projection_1, Projection projection_2);
+```
+
+Calculates overlap between two projection intervals.
+
+| Parameter | Description |
+| --- | --- |
+| `projection_1` | First projection. |
+| `projection_2` | Second projection. |
+
+**Returns:** Overlap depth.
+
+### `rohr_math_scale_shape`
+
+```c
+Shape rohr_math_scale_shape(Shape shape, float scale);
+```
+
+Scales a shape uniformly.
+
+| Parameter | Description |
+| --- | --- |
+| `shape` | Shape to scale. |
+| `scale` | Uniform scale value. |
+
+**Returns:** Scaled shape.
+
+### `rohr_math_scale_shape_y`
+
+```c
+Shape rohr_math_scale_shape_y(Shape shape, float scale);
+```
+
+Scales a shape along the y axis.
+
+| Parameter | Description |
+| --- | --- |
+| `shape` | Shape to scale. |
+| `scale` | Y-axis scale value. |
+
+**Returns:** Scaled shape.
+
+### `rohr_math_scale_shape_x`
+
+```c
+Shape rohr_math_scale_shape_x(Shape shape, float scale);
+```
+
+Scales a shape along the x axis.
+
+| Parameter | Description |
+| --- | --- |
+| `shape` | Shape to scale. |
+| `scale` | X-axis scale value. |
+
+**Returns:** Scaled shape.
+
+### `rohr_math_polygon_centroid`
+
+```c
+Vec2D rohr_math_polygon_centroid(Shape shape);
+```
+
+Calculates a polygon centroid.
+
+| Parameter | Description |
+| --- | --- |
+| `shape` | Polygon shape. |
+
+**Returns:** Centroid position.
+
+### `rohr_math_add_vertex`
+
+```c
+Shape rohr_math_add_vertex(Shape shape);
+```
+
+Adds a vertex slot to a shape.
+
+| Parameter | Description |
+| --- | --- |
+| `shape` | Shape to modify. |
+
+**Returns:** Shape with an additional vertex slot.
+
+### `rohr_math_delete_vertex`
+
+```c
+Shape rohr_math_delete_vertex(Shape shape);
+```
+
+Deletes the last vertex slot from a shape.
+
+| Parameter | Description |
+| --- | --- |
+| `shape` | Shape to modify. |
+
+**Returns:** Shape with one fewer vertex slot.
+
+### `rohr_math_create_aabb`
+
+```c
+AABB rohr_math_create_aabb(Shape world_shape);
+```
+
+Creates an axis-aligned bounding box for a world-space shape.
+
+| Parameter | Description |
+| --- | --- |
+| `world_shape` | World-space shape. |
+
+**Returns:** Axis-aligned bounding box.
+
+## Systems
+
+### `rohr_system_update_physics`
+
+```c
+void rohr_system_update_physics(double dt);
+```
+
+Runs one physics-system update.
+
+| Parameter | Description |
+| --- | --- |
+| `dt` | Simulation delta time in seconds. |
+
+### `rohr_system_clean_entities_past_lifetime`
+
+```c
+void rohr_system_clean_entities_past_lifetime(void);
+```
+
+Deletes entities whose lifetime has expired.
+
+## Level Editor
+
+### `rohr_level_editor_init`
+
+```c
+EngineResult rohr_level_editor_init(void);
+```
+
+Initializes the level editor.
+
+**Returns:** EngineResult describing success or failure.
+
+### `rohr_level_editor_update`
+
+```c
+EngineResult rohr_level_editor_update(void);
+```
+
+Updates the level editor.
+
+**Returns:** EngineResult describing success or failure.
+
+## Controller Input
+
+### `rohr_controller_print_keyboard_event`
+
+```c
+void rohr_controller_print_keyboard_event(KeyboardEvent event);
+```
+
+Prints a keyboard event for debugging.
+
+| Parameter | Description |
+| --- | --- |
+| `event` | Keyboard event to print. |
+
+### `rohr_controller_update_key_states`
+
+```c
+void rohr_controller_update_key_states(KeyboardState *keyboard);
+```
+
+Updates keyboard key states for the frame.
+
+| Parameter | Description |
+| --- | --- |
+| `keyboard` | Keyboard state table to update. |
+
+### `rohr_controller_add_key_event`
+
+```c
+void rohr_controller_add_key_event(KeyboardState *keyboard, KeyboardEvent key_event);
+```
+
+Adds a keyboard event to a keyboard state table.
+
+| Parameter | Description |
+| --- | --- |
+| `keyboard` | Keyboard state table to modify. |
+| `key_event` | Keyboard event to add. |
+
+### `rohr_controller_capture_keyboard_event`
+
+```c
+KeyboardEvent rohr_controller_capture_keyboard_event(const SDL_Event *sdl_event);
+```
+
+Converts an SDL event into a Rohr keyboard event.
+
+| Parameter | Description |
+| --- | --- |
+| `sdl_event` | SDL event to inspect. |
+
+**Returns:** KeyboardEvent derived from sdl_event.
+
+### `rohr_controller_print_mouse_event`
+
+```c
+void rohr_controller_print_mouse_event(MouseEvent event);
+```
+
+Prints a mouse event for debugging.
+
+| Parameter | Description |
+| --- | --- |
+| `event` | Mouse event to print. |
+
+### `rohr_controller_update_mouse_states`
+
+```c
+void rohr_controller_update_mouse_states(MouseState *mouse);
+```
+
+Updates mouse button states for the frame.
+
+| Parameter | Description |
+| --- | --- |
+| `mouse` | Mouse state table to update. |
+
+### `rohr_controller_add_mouse_event`
+
+```c
+void rohr_controller_add_mouse_event(MouseState *mouse, MouseEvent mouse_event);
+```
+
+Adds a mouse event to a mouse state table.
+
+| Parameter | Description |
+| --- | --- |
+| `mouse` | Mouse state table to modify. |
+| `mouse_event` | Mouse event to add. |
+
+### `rohr_controller_capture_mouse_event`
+
+```c
+MouseEvent rohr_controller_capture_mouse_event(const SDL_Event *sdl_event);
+```
+
+Converts an SDL event into a Rohr mouse event.
+
+| Parameter | Description |
+| --- | --- |
+| `sdl_event` | SDL event to inspect. |
+
+**Returns:** MouseEvent derived from sdl_event.
+
+## Spatial Grid
+
+### `rohr_grid_add_entity_to_grids`
+
+```c
+void rohr_grid_add_entity_to_grids(Entity entity);
+```
+
+Adds an entity to the spatial grid tables.
+
+| Parameter | Description |
+| --- | --- |
+| `entity` | Entity to add. |
+
+### `rohr_grid_checked_pair`
+
+```c
+bool rohr_grid_checked_pair(Entity entity_1, Entity entity_2);
+```
+
+Checks whether a pair of entities has already been processed.
+
+| Parameter | Description |
+| --- | --- |
+| `entity_1` | First entity. |
+| `entity_2` | Second entity. |
+
+**Returns:** true when the pair was already checked, false otherwise.
+
+### `rohr_grid_add_pair`
+
+```c
+void rohr_grid_add_pair(Entity entity_1, Entity entity_2);
+```
+
+Stores a processed entity pair.
+
+| Parameter | Description |
+| --- | --- |
+| `entity_1` | First entity. |
+| `entity_2` | Second entity. |
+
+### `rohr_grid_clear`
+
+```c
+void rohr_grid_clear(void);
+```
+
+Clears spatial grid state.
+
+### `rohr_grid_update_aabb`
+
+```c
+void rohr_grid_update_aabb(Entity entity);
+```
+
+Updates an entity axis-aligned bounding box in the grid.
+
+| Parameter | Description |
+| --- | --- |
+| `entity` | Entity to update. |
+
+## Tools
+
+### `rohr_tools_delay`
+
+```c
+void rohr_tools_delay(int seconds);
+```
+
+Delays execution for a number of seconds.
+
+| Parameter | Description |
+| --- | --- |
+| `seconds` | Number of seconds to delay. |
+
+### `rohr_tools_binary_to_string`
+
+```c
+void rohr_tools_binary_to_string(uint32_t value, char *buffer, size_t size);
+```
+
+Writes a binary string representation of a value.
+
+| Parameter | Description |
+| --- | --- |
+| `value` | Value to convert. |
+| `buffer` | Destination buffer. |
+| `size` | Size of buffer in bytes. |
+
+### `rohr_tools_append_string`
+
+```c
+void rohr_tools_append_string(char *src, char *dst, size_t src_size, size_t dst_size);
+```
+
+Appends one string to another using explicit buffer sizes.
+
+| Parameter | Description |
+| --- | --- |
+| `src` | Source string. |
+| `dst` | Destination string. |
+| `src_size` | Source buffer size. |
+| `dst_size` | Destination buffer size. |
+
+### `rohr_tools_sizeof_string`
+
+```c
+uint32_t rohr_tools_sizeof_string(char *str, char delimiter);
+```
+
+Counts characters in a string until a delimiter.
+
+| Parameter | Description |
+| --- | --- |
+| `str` | String to inspect. |
+| `delimiter` | Delimiter that stops counting. |
+
+**Returns:** Number of characters before delimiter.
+
+### `rohr_tools_random_range`
+
+```c
+int rohr_tools_random_range(int min, int max);
+```
+
+Returns a random integer in a range.
+
+| Parameter | Description |
+| --- | --- |
+| `min` | Minimum value. |
+| `max` | Maximum value. |
+
+**Returns:** Random integer between min and max.
+
+### `rohr_tools_random_range_float`
+
+```c
+float rohr_tools_random_range_float(float min, float max);
+```
+
+Returns a random float in a range.
+
+| Parameter | Description |
+| --- | --- |
+| `min` | Minimum value. |
+| `max` | Maximum value. |
+
+**Returns:** Random float between min and max.
