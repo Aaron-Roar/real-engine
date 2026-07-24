@@ -195,7 +195,7 @@ EntityResult entity_from_index(EntityIndex index);
  *
  * @return EntityResult containing a stable entity id, or an error.
  */
-EntityResult entity_add();
+EntityResult entity_add(void);
 
 /**
  * Delete an entity and make its id/index slots reusable.

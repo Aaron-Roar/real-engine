@@ -40,7 +40,7 @@ EngineResult engine_tables_ensure_capacity(size_t capacity) {
     return result;
 }
 
-EngineResult engine_init() {
+EngineResult engine_init(void) {
     EngineResult result;
 
     if(engine_running) {
@@ -91,21 +91,21 @@ EngineResult engine_init() {
     return error_result_value(true);
 }
 
-void engine_pause() {
+void engine_pause(void) {
     engine_paused = true;
 }
-bool engine_is_paused() {
+bool engine_is_paused(void) {
     if(engine_paused) {
         return true;
     }
     return false;
 }
 
-void engine_resume() {
+void engine_resume(void) {
     engine_paused = false;
 }
 
-void engine_update_time() {
+void engine_update_time(void) {
     SDLTime current_counter = SDL_GetPerformanceCounter();
 
     Time real_dt =
@@ -127,7 +127,7 @@ void engine_update_time() {
     engine_time += engine_dt;
 }
 
-void engine_update_tick() {
+void engine_update_tick(void) {
     if(engine_paused || !engine_running) {
         return;
     }
@@ -135,14 +135,14 @@ void engine_update_tick() {
 
 }
 
-Tick engine_get_tick() {
+Tick engine_get_tick(void) {
     return engine_tick_count;
 }
 
-Time engine_get_time() {
+Time engine_get_time(void) {
     return engine_time;
 }
-void engine_reset_clock() {
+void engine_reset_clock(void) {
     sdl_prev_counter = SDL_GetPerformanceCounter();
     engine_dt = engine_dt_overwritten ? engine_override_dt : 0.0;
 }
@@ -153,16 +153,16 @@ void engine_set_dt(Time dt) {
     engine_dt_overwritten = true;
 }
 
-void engine_calculate_dt() {
+void engine_calculate_dt(void) {
     engine_override_dt = 0.0;
     engine_dt_overwritten = false;
 }
 
-Time engine_get_dt() {
+Time engine_get_dt(void) {
     return engine_dt;
 }
 
-void engine_shutdown() {
+void engine_shutdown(void) {
     grid_tables_destroy();
     graphics_tables_destroy();
     physics_tables_destroy();
@@ -171,7 +171,7 @@ void engine_shutdown() {
     SDL_Quit();
 }
 
-SDL_Event engine_poll_event() {
+SDL_Event engine_poll_event(void) {
     while (SDL_PollEvent(&sdl_event)) {
         return sdl_event;
     }

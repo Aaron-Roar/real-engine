@@ -70,7 +70,7 @@ static void system_remove_transform_lock_by_index(EntityIndex index) {
     physics_remove_transform_lock(entity);
 }
 
-void system_generate_global_hitboxes() {
+void system_generate_global_hitboxes(void) {
     CMask filter = HIT_BOX;
 
     for(uint32_t alive_position = 0; alive_position < entity_alive_count(); alive_position += 1) {
@@ -168,7 +168,7 @@ void system_update_velocities(double dt) {
     }
 }
 
-void system_apply_forces() {
+void system_apply_forces(void) {
   CMask filter = FORCE | TARGETABLE;
   CMask target_filter = DYNAMIC | MASS;
 
@@ -200,7 +200,7 @@ void system_apply_forces() {
   }
 }
 
-void system_apply_torques() {
+void system_apply_torques(void) {
     //Apply force offset from centroid and torque applied directly
   CMask filter = TORQUE | TARGETABLE;
   CMask target_filter = DYNAMIC | MASS;
@@ -232,7 +232,7 @@ void system_apply_torques() {
   }
 }
 
-void system_clear_force_torque_accelerations() {
+void system_clear_force_torque_accelerations(void) {
     for(uint32_t alive_position = 0; alive_position < entity_alive_count(); alive_position += 1) {
         EntityIndex i;
 
@@ -658,7 +658,7 @@ void system_resolve_collision(Entity entity_1, Entity entity_2, Collision collis
     );
 }
 
-void system_add_entities_to_grid() {
+void system_add_entities_to_grid(void) {
     for(uint32_t alive_position = 0; alive_position < entity_alive_count(); alive_position += 1) {
         EntityIndex i;
 
@@ -671,7 +671,7 @@ void system_add_entities_to_grid() {
     }
 }
 
-void system_apply_collisions_tuned() {
+void system_apply_collisions_tuned(void) {
     for(int row = 0; row < GRID_ROWS; row += 1) {
         for(int col = 0; col < GRID_COLS; col += 1) {
 
@@ -718,7 +718,7 @@ void system_apply_collisions_tuned() {
     }
 }
 
-void system_apply_collisions() {
+void system_apply_collisions(void) {
     for(int i = 0; i < MAX_ENTITIES; i += 1) {
         if(!entity_index_is_alive(i)) {
             continue;
@@ -732,7 +732,6 @@ void system_apply_collisions() {
                 continue;
             }
 
-            const CMask filter = HIT_BOX;
             if(!entity_index_has_components(i, HIT_BOX) || !entity_index_has_components(j, HIT_BOX)) {
                 continue;
             }
@@ -756,7 +755,7 @@ void system_apply_collisions() {
     }
 }
 
-void system_apply_angle_locks() {
+void system_apply_angle_locks(void) {
     for(Entity entity = 0; entity < MAX_ENTITIES; entity += 1) {
         if(!entity_index_is_alive(entity)) {
             continue;
@@ -826,7 +825,7 @@ void system_apply_angle_locks() {
     }
 }
 
-void system_apply_axis_locks() {
+void system_apply_axis_locks(void) {
     for(Entity entity = 0; entity < MAX_ENTITIES; entity += 1) {
         if(!entity_index_is_alive(entity)) {
             continue;
@@ -868,7 +867,7 @@ void system_apply_axis_locks() {
     }
 }
 
-void system_apply_transform_locks() {
+void system_apply_transform_locks(void) {
     for(Entity driven = 0; driven < MAX_ENTITIES; driven += 1) {
         if(!entity_index_is_alive(driven)) {
             continue;
@@ -919,7 +918,7 @@ void system_apply_transform_locks() {
     }
 }
 
-void system_clean_entities_past_lifetime() {
+void system_clean_entities_past_lifetime(void) {
     for(int i = 0; i < MAX_ENTITIES; i += 1) {
         if(!entity_index_is_alive(i)) {
             continue;
@@ -1190,7 +1189,7 @@ void system_apply_distance_joint(Entity joint_entity) {
         system_add_joint_torque_for_one_tick(b, torque_on_b);
 
 }
-void system_apply_joints()
+void system_apply_joints(void)
 {
     for(Entity joint_entity = 0; joint_entity < MAX_ENTITIES; joint_entity += 1) {
         if(!entity_index_is_alive(joint_entity)) {
@@ -1218,7 +1217,7 @@ void system_apply_joints()
     }
 }
 
-void system_update_aabbs() {
+void system_update_aabbs(void) {
     for(uint32_t alive_position = 0; alive_position < entity_alive_count(); alive_position += 1) {
         EntityIndex i;
 

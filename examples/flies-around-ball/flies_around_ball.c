@@ -9,7 +9,7 @@ const int amount_of_entities = 20;
 AnimationAsset animation = {0};
 AnimatedSprite sprite = {0};
 
-int main() {
+int main(void) {
     EngineResult result;
     EntityResult entity_result;
     AnimationAssetResult animation_result;
@@ -26,7 +26,6 @@ int main() {
         rohr_engine_shutdown();
         return 1;
     }
-    SDL_Event event = {0};
     if(rohr_error_check(result = rohr_graphics_start())) {
         rohr_console_write(LOG_ENGINE, rohr_error_default_message(result.result.error));
         rohr_engine_shutdown();

@@ -73,7 +73,7 @@ void grid_update_aabb(Entity entity) {
     (void)AABBPool_store_at(&aabbs_pool, entity, math_create_aabb(world_hit_boxes[entity]));
 }
 
-void clear_grid() {
+void clear_grid(void) {
     memset(&grid, 0, sizeof(Grid));
     memset(&pair_checked, 0, sizeof(BooleanPairs));
 }
@@ -123,8 +123,8 @@ void add_entity_to_grids(Entity entity) {
     uint32_t left_col = world_x_to_col(aabb.min_x);
     uint32_t right_col = world_x_to_col(aabb.max_x);
 
-    for(int row = bot_row; row <= top_row; row += 1) {
-        for(int col = left_col; col <= right_col; col += 1) {
+    for(uint32_t row = bot_row; row <= top_row; row += 1) {
+        for(uint32_t col = left_col; col <= right_col; col += 1) {
             add_entity_to_grid(entity, row, col);
         }
     }

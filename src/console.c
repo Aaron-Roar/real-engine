@@ -25,7 +25,7 @@ typedef struct TermWindow {
     int cols;
     int rows;
 } TermWindow;
-TermWindow capture_window();
+TermWindow capture_window(void);
 typedef enum ConsoleKey {
     Console_KEY_NONE      = ERR,
     Console_KEY_ESC       = 27,
@@ -52,16 +52,16 @@ int cmd_line_input_index = 0;
 bool console_active = false;
 int console_scroll_offset = 0;
 
-bool console_is_active() {
+bool console_is_active(void) {
     return console_active;
 }
-TermWindow capture_window() {
+TermWindow capture_window(void) {
     TermWindow window = {0};
     getmaxyx(stdscr, window.rows, window.cols);
     return window;
 }
 
-int console_count_logs() {
+int console_count_logs(void) {
     int log_count = 0;
     for(int i = 0; i < MAX_LOGS; i++) {
         if(logs[i].log.string[0] != 0)
@@ -82,7 +82,7 @@ void console_clear_row(int row) {
     }
 }
 
-void console_clear_logs() {
+void console_clear_logs(void) {
     TermWindow window = capture_window();
 
     int log_size = console_count_logs();
@@ -93,7 +93,7 @@ void console_clear_logs() {
     }
 }
 
-void console_print_logs() {
+void console_print_logs(void) {
     if(console_active) {
         TermWindow window = capture_window();
 
@@ -108,7 +108,7 @@ void console_print_logs() {
 }
 
 
-void console_print_input() {
+void console_print_input(void) {
     if(console_active) {
         TermWindow w = capture_window();
         char input_line[w.cols - 1];
@@ -135,14 +135,14 @@ void console_log_input(ConsoleLogString input) {
     console_print_logs();
 }
 
-void console_clear_input() {
+void console_clear_input(void) {
     TermWindow w = capture_window();
 
     memset(cmd_line_input.string, 0, sizeof(ConsoleLogString));
     console_clear_row(w.rows - INPUT_ROW_OFFSET);
 }
 
-void console_init() {
+void console_init(void) {
     initscr(); //Hands control of the terminal to <ncurses.h>
     cbreak(); //Makes input available imediatley instead of waiting for enter press
     noecho(); //Stops the terminal from auto showing typed characters. We want to do this our own way instead.
@@ -151,7 +151,7 @@ void console_init() {
     console_active = true;
 }
 
-void console_backspace() {
+void console_backspace(void) {
     if(cmd_line_input_index != 0) {
         cmd_line_input.string[cmd_line_input_index] = 0;
         cmd_line_input.string[cmd_line_input_index - 1] = 0;
@@ -159,7 +159,7 @@ void console_backspace() {
     }
 }
 
-void console_shutdown() {
+void console_shutdown(void) {
     //Goodbye MSG
     console_write(LOG_CONSOLE, "<ESC-Key> Recived.\nConsole Shutting...\n");
     console_clear_logs();
@@ -171,11 +171,11 @@ void console_shutdown() {
     endwin(); //Kills ncurses now terminal is back to normal
 }
 
-void console_scroll_logs_up() {
+void console_scroll_logs_up(void) {
 
 }
 
-void console_scroll_logs_down() {
+void console_scroll_logs_down(void) {
 
 }
 

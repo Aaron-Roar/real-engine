@@ -16,5 +16,5 @@ void system_update_physics(double dt);
 /**
  * Delete entities whose lifetime has expired.
  */
-void system_clean_entities_past_lifetime();
+void system_clean_entities_past_lifetime(void);
 #endif

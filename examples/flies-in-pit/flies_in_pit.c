@@ -9,7 +9,7 @@ AnimationAsset animation_elderfly = {0};
 AnimatedSprite sprite_elderfly = {0};
 const int amount_of_entities = 500;
 
-int main() {
+int main(void) {
     EngineResult result;
     EntityResult entity_result;
     AnimationAssetResult animation_result;
@@ -126,7 +126,6 @@ int main() {
     }
 
     rohr_engine_reset_clock();
-    Time dt = rohr_engine_get_dt();
     //Game Loop
     rohr_graphics_recording_start("examples/flies-in-pit/recording.mp4",60);
     bool phase_1 = false;

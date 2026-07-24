@@ -248,7 +248,7 @@ void print_keyboard_event(KeyboardEvent event)
     );
 }
 
-Vec2D get_mouse_position() {
+Vec2D get_mouse_position(void) {
     Position world_position =
         graphics_screen_to_world(graphics_get_mouse_screen_position());
 

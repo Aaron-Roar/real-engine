@@ -19,74 +19,74 @@ typedef uint64_t Tick;
  * @return EngineResult containing true on success, or an error describing the
  * failing subsystem.
  */
-EngineResult engine_init();
+EngineResult engine_init(void);
 
 /**
  * Shut down all engine subsystems and SDL.
  */
-void engine_shutdown();
+void engine_shutdown(void);
 
 /**
  * Update engine time and delta time from SDL's performance counter.
  *
  * If the engine is paused, delta time is set to zero.
  */
-void engine_update_time();
+void engine_update_time(void);
 
 /**
  * Get accumulated engine time in seconds.
  *
  * @return Current simulated engine time.
  */
-Time engine_get_time();
+Time engine_get_time(void);
 
 /**
  * Get the current engine tick count.
  *
  * @return Number of ticks advanced since initialization or reset.
  */
-Tick engine_get_tick();
+Tick engine_get_tick(void);
 
 /**
  * Pause engine time and tick advancement.
  */
-void engine_pause();
+void engine_pause(void);
 
 /**
  * Resume engine time and tick advancement.
  */
-void engine_resume();
+void engine_resume(void);
 
 /**
  * Advance the engine tick count by one when the engine is running.
  */
-void engine_update_tick();
+void engine_update_tick(void);
 
 /**
  * Poll one SDL event.
  *
  * @return The next SDL event, or a zeroed SDL_Event when no event is pending.
  */
-SDL_Event engine_poll_event();
+SDL_Event engine_poll_event(void);
 
 /**
  * Check whether the engine is paused.
  *
  * @return true when paused, false otherwise.
  */
-bool engine_is_paused();
+bool engine_is_paused(void);
 
 /**
  * Get the current engine delta time.
  *
  * @return Delta time in seconds from the last engine_update_time() call.
  */
-Time engine_get_dt();
+Time engine_get_dt(void);
 
 /**
  * Return delta time calculation to real elapsed time.
  */
-void engine_calculate_dt();
+void engine_calculate_dt(void);
 
 /**
  * Override the engine delta time with a fixed value.
@@ -98,5 +98,5 @@ void engine_set_dt(Time dt);
 /**
  * Reset the internal timing baseline without advancing time.
  */
-void engine_reset_clock();
+void engine_reset_clock(void);
 #endif

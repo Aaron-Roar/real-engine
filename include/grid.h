@@ -37,11 +37,11 @@ bool checked_pair(Entity entity_1, Entity entity_2);
 /** Mark an entity pair as processed. */
 void add_pair(Entity entity_1, Entity entity_2);
 /** Clear all grid cells and checked-pair state. */
-void clear_grid();
+void clear_grid(void);
 /** Recompute and store an entity AABB from its world hitbox. */
 void grid_update_aabb(Entity entity);
 /** Global collision grid. */
 extern Grid grid;
 /** Global checked-pair table. */
-extern BooleanPairs pair_checked;;
+extern BooleanPairs pair_checked;
 #endif

@@ -195,7 +195,7 @@ typedef struct {
     bool super;
 } EditorInput;
 
-Vec2D get_mouse_coordinates() {
+Vec2D get_mouse_coordinates(void) {
     Position position = graphics_get_mouse_screen_position();
 
     return (Vec2D) {
@@ -805,7 +805,7 @@ EngineResult editor_select(EditorInput input) {
         }
         //Do something here??
         console_write(LOG_APP, "Pressed\n");
-        for(int i = 0; i < MAX_ENTITIES; i += 1) {
+        for(EntityIndex i = 0; i < MAX_ENTITIES; i += 1) {
             if(i == selection_index) {
                 continue;
             }
@@ -1036,7 +1036,7 @@ EngineResult resolve_mode(LevelEditorMode mode, EditorInput input) {
     return error_result_value(true);
 }
 
-EngineResult bind_selection_to_mouse() {
+EngineResult bind_selection_to_mouse(void) {
     return physics_set_position(selection, graphics_screen_to_world(get_mouse_coordinates()));
 }
 
@@ -1197,7 +1197,7 @@ void print_editor_controls(void)
 }
 
 
-EngineResult level_editor_init() {
+EngineResult level_editor_init(void) {
     EntityResult selection_result = entity_add();
     EngineResult result;
 
@@ -1226,7 +1226,7 @@ EngineResult level_editor_init() {
     return error_result_value(true);
 }
 
-EngineResult level_editor_update() {
+EngineResult level_editor_update(void) {
         SDL_Event event = engine_poll_event();
         EditorInput input = sdl_event_to_editor_input(event);
         EngineResult result;

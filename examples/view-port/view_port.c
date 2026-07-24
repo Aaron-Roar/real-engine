@@ -8,7 +8,7 @@ const Color background_color = (Color){255,255,255,255};
 AnimationAsset animation_elderfly = {0};
 AnimatedSprite sprite_elderfly = {0};
 
-int main() {
+int main(void) {
     EngineResult result;
     EntityResult entity_result;
     AnimationAssetResult animation_result;
@@ -52,7 +52,6 @@ int main() {
     rohr_graphics_add_animated_sprite(water_smash, sprite_elderfly);
 
     rohr_engine_reset_clock();
-    Time dt = rohr_engine_get_dt();
     //Game Loop
     //rohr_graphics_recording_start("examples/view-port/recording.mp4",60);
     while (rohr_console_is_active()) {

@@ -147,12 +147,12 @@ Color graphics_creat_color_hex(uint32_t hex_color_code);
 /**
  * Create the SDL window and renderer.
  */
-EngineResult graphics_start();
+EngineResult graphics_start(void);
 
 /**
  * Destroy graphics resources and stop SDL video.
  */
-void graphics_end();
+void graphics_end(void);
 
 /**
  * Poll graphics events and close the console on quit.
@@ -163,13 +163,13 @@ bool graphics_poll_events(SDL_Event *event);
 void graphics_draw_background(Color color);
 
 /** Present the current frame. */
-void graphics_show();
+void graphics_show(void);
 
 /** Draw one entity hitbox. */
 void graphics_draw_hit_box(Entity entity, Fill fill_type);
 
 /** Draw every live entity hitbox. */
-void graphics_draw_hit_boxes();
+void graphics_draw_hit_boxes(void);
 
 /** Load a texture from a descriptor. */
 TextureAssetResult graphics_load_texture(TextureDescriptor text_desc);
@@ -184,7 +184,7 @@ AnimatedSprite graphics_create_animated_sprite(AnimationAsset asset_ptr, Scale s
 EngineResult graphics_add_animated_sprite(Entity entity, AnimatedSprite sprite);
 
 /** Draw all live animated sprites. */
-void graphics_draw_animated_sprites();
+void graphics_draw_animated_sprites(void);
 
 /** Update frame state for all live animated sprites. */
 void graphics_update_sprite_frames(Tick current_tick, Time current_time);
@@ -202,7 +202,7 @@ Position graphics_screen_to_world(Position screen);
 Position graphics_get_mouse_screen_position(void);
 
 /** Draw the editor/debug grid. */
-void graphics_draw_grid();
+void graphics_draw_grid(void);
 
 /** Start recording frames to an output file through ffmpeg. */
 bool graphics_recording_start(
@@ -211,8 +211,8 @@ bool graphics_recording_start(
 );
 
 /** Draw all particle entities. */
-void graphics_draw_particles();
+void graphics_draw_particles(void);
 
 /** Draw local origin axes for all live hitbox entities. */
-void graphics_draw_local_origins();
+void graphics_draw_local_origins(void);
 #endif

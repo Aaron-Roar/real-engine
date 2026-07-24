@@ -202,7 +202,7 @@ EntityResult entity_from_index(EntityIndex index) {
     return ERROR_RESULT_MAKE_VALUE(EntityResult, index_to_entity[index]);
 }
 
-EntityResult entity_add() {
+EntityResult entity_add(void) {
     Entity entity;
     uint32_t slot;
     EntityIndex index;

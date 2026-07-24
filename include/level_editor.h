@@ -7,12 +7,12 @@
  *
  * @return EngineResult describing success or failure.
  */
-EngineResult level_editor_init();
+EngineResult level_editor_init(void);
 
 /**
  * Process level editor input and update selected entity state.
  *
  * @return EngineResult describing success or failure.
  */
-EngineResult level_editor_update();
+EngineResult level_editor_update(void);
 #endif

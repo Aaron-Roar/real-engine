@@ -148,7 +148,7 @@ static bool graphics_recording_open_ffmpeg(int width, int height) {
     return true;
 }
 
-static bool graphics_record_frame()
+static bool graphics_record_frame(void)
 {
     if(!screen_recorder.recording) {
         return true;
@@ -300,7 +300,7 @@ void graphics_recording_stop(void) {
     );
 }
 
-void graphics_draw_grid() {
+void graphics_draw_grid(void) {
     Color grid_color = {100, 100, 100, 255};
 
     SDL_SetRenderDrawColor(
@@ -454,7 +454,7 @@ Position graphics_get_mouse_screen_position(void) {
     };
 }
 
-EngineResult graphics_start() {
+EngineResult graphics_start(void) {
     console_write(LOG_ENGINE, "---Initializing Graphics---\n");
     if (!SDL_InitSubSystem(SDL_INIT_VIDEO)) {
         SDL_Log("Couldn't initialize SDL: %s", SDL_GetError());
@@ -489,17 +489,17 @@ EngineResult graphics_start() {
     return error_result_value(true);
 }
 
-void graphics_renderer_end() {
+void graphics_renderer_end(void) {
     SDL_DestroyRenderer(sdl_renderer);
     console_write(LOG_ENGINE, "Renderer terminated\n");
 }
 
-void graphics_window_end() {
+void graphics_window_end(void) {
     SDL_DestroyWindow(sdl_window);
     console_write(LOG_ENGINE, "Window terminated\n");
 }
 
-void graphics_end() {
+void graphics_end(void) {
     console_write(LOG_ENGINE, "---Graphics Termination---\n");
     graphics_recording_stop();
     graphics_renderer_end();
@@ -528,6 +528,7 @@ void graphics_draw_background(Color color) {
 
 void graphics_draw_rect(Shape rect, Position pos) {
     SDL_FRect sdl_rect;
+    (void)rect;
     /* draw a filled rectangle in the middle of the canvas. */
     SDL_SetRenderDrawColor(sdl_renderer, 0, 0, 255, SDL_ALPHA_OPAQUE);  /* blue, full alpha */
     Position screen_loc = graphics_world_to_screen(pos);
@@ -538,7 +539,7 @@ void graphics_draw_rect(Shape rect, Position pos) {
     SDL_RenderFillRect(sdl_renderer, &sdl_rect);
 }
 
-void graphics_show() {
+void graphics_show(void) {
       if(screen_recorder.recording) {
         if(!graphics_record_frame()) {
             graphics_recording_stop();
@@ -621,7 +622,7 @@ void graphics_draw_hit_box(Entity entity, Fill fill_type) {
     }
 }
 
-void graphics_draw_hit_boxes() {
+void graphics_draw_hit_boxes(void) {
   for(int i = 0; i < MAX_ENTITIES; i += 1) {
     if(entity_index_is_alive(i)) {
         if( entity_index_has_components(i, HIT_BOX)) {
@@ -655,7 +656,7 @@ void graphics_draw_particle(Entity entity, Fill fill_type) {
         graphics_draw_shape_outline(world_circle, particle_color);
     }
 }
-void graphics_draw_particles() {
+void graphics_draw_particles(void) {
   for(int i = 0; i < MAX_ENTITIES; i += 1) {
     if(entity_index_is_alive(i)) {
         if( entity_index_has_components(i, HIT_BOX)) {
@@ -782,7 +783,7 @@ EngineResult graphics_add_animated_sprite(Entity entity, AnimatedSprite sprite) 
     return error_result_value(true);
 }
 
-void graphics_draw_animated_sprites() {
+void graphics_draw_animated_sprites(void) {
     CMask filter = ANIMATED_SPRITE;
     for(int i = 0; i < MAX_ENTITIES; i += 1) {
         if(entity_index_is_alive(i) && entity_index_has_components(i, filter)) {
@@ -910,7 +911,7 @@ void graphics_draw_local_origin(Entity entity) {
     );
 }
 
-void graphics_draw_local_origins() {
+void graphics_draw_local_origins(void) {
     for(int i = 0; i < MAX_ENTITIES; i += 1) {
         if(!entity_index_is_alive(i)) {
             continue;
