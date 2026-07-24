@@ -18,9 +18,6 @@ typedef struct {
 typedef struct {
     bool pairs[MAX_ENTITIES][MAX_ENTITIES];
 } BooleanPairs;
-EngineResult grid_tables_init(void);
-EngineResult grid_tables_ensure_capacity(size_t capacity);
-void grid_tables_destroy(void);
 void add_entity_to_grids(Entity entity);
 bool checked_pair(Entity entity_1, Entity entity_2);
 void add_pair(Entity entity_1, Entity entity_2);

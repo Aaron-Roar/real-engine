@@ -70,9 +70,6 @@ extern TargetPool targets_pool;
 #define targets targets_pool.objects
 //Target Capable Effects
 
-EngineResult entity_tables_init(void);
-EngineResult entity_tables_ensure_capacity(size_t capacity);
-void entity_tables_destroy(void);
 bool entity_is_alive(Entity entity);
 bool entity_index_is_alive(EntityIndex index);
 bool entity_get_index(Entity entity, EntityIndex *index);

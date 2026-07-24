@@ -1,6 +1,6 @@
 #ifndef CONTROLLER_H
 #define CONTROLLER_H
-#include "graphics.h"
+#include <SDL3/SDL.h>
 #include "math2d.h"
 typedef enum KeyboardKey {
     KEY_NONE = 0,

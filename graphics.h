@@ -10,7 +10,6 @@
 #include "math2d.h"
 #include "math.h"
 
-extern SDL_Renderer *sdl_renderer;
 #define WINDOW_WIDTH 640
 #define WINDOW_HEIGHT 480
 #define MAX_TEXTURES 50
@@ -91,9 +90,6 @@ typedef struct Color {
 } Color;
 
 Color graphics_creat_color_hex(uint32_t hex_color_code);
-EngineResult graphics_tables_init(void);
-EngineResult graphics_tables_ensure_capacity(size_t capacity);
-void graphics_tables_destroy(void);
 EngineResult graphics_start();
 void graphics_end();
 bool graphics_poll_events(SDL_Event *event);
@@ -110,6 +106,7 @@ void graphics_update_sprite_frames(Tick current_tick, Time current_time);
 void graphics_scale_textures(Entity entity, Scale scale);
 Position graphics_world_to_screen(Position pos);
 Position graphics_screen_to_world(Position screen);
+Position graphics_get_mouse_screen_position(void);
 void graphics_draw_grid();
 bool graphics_recording_start(
     const char *output_path,

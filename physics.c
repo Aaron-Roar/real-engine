@@ -1,4 +1,5 @@
 #include "physics.h"
+#include "engine_internal.h"
 #include "float.h"
 #include <math.h>
 #include "console.h"

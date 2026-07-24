@@ -1,4 +1,5 @@
 #include "graphics.h"
+#include "engine_internal.h"
 #include "console.h"
 #include "engine.h"
 #include "systems.h"
@@ -6,8 +7,8 @@
 #include <stdio.h>
 #include "grid.h"
 
-SDL_Renderer *sdl_renderer = NULL;
-SDL_Window *sdl_window = NULL;
+static SDL_Renderer *sdl_renderer = NULL;
+static SDL_Window *sdl_window = NULL;
 
 MEMORY_DEFINE_OBJECT_POOL(AnimatedSpritePool, AnimatedSprite)
 
@@ -425,6 +426,31 @@ Position graphics_screen_to_world(Position screen) {
     return (Position){
         .x = screen.x - WINDOW_WIDTH * 0.5f,
         .y = WINDOW_HEIGHT * 0.5f - screen.y
+    };
+}
+
+Position graphics_get_mouse_screen_position(void) {
+    float window_x;
+    float window_y;
+    float screen_x;
+    float screen_y;
+
+    if(sdl_renderer == NULL) {
+        return (Position){0};
+    }
+    SDL_GetMouseState(&window_x, &window_y);
+    if(!SDL_RenderCoordinatesFromWindow(
+        sdl_renderer,
+        window_x,
+        window_y,
+        &screen_x,
+        &screen_y
+    )) {
+        return (Position){0};
+    }
+    return (Position){
+        .x = screen_x,
+        .y = screen_y,
     };
 }
 

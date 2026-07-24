@@ -1,13 +1,7 @@
 #include "entity_components.h"
-#include "console.h"
-#include "physics.h"
-#include "graphics.h"
-#include "grid.h"
-#include "tools.h"
+#include "engine_internal.h"
 #include <stdbool.h>
-#include <stdio.h>
 #include <string.h>
-#include <math.h>
 
 MEMORY_DECLARE_OBJECT_POOL(EntityAlivePool, bool);
 MEMORY_DEFINE_OBJECT_POOL(EntityAlivePool, bool)
@@ -227,16 +221,7 @@ EntityResult entity_add() {
     }
 
     required_capacity = (size_t)index + 1;
-    result = entity_tables_ensure_capacity(required_capacity);
-    if(result.kind != ERROR_RESULT_ERROR) {
-        result = physics_tables_ensure_capacity(required_capacity);
-    }
-    if(result.kind != ERROR_RESULT_ERROR) {
-        result = graphics_tables_ensure_capacity(required_capacity);
-    }
-    if(result.kind != ERROR_RESULT_ERROR) {
-        result = grid_tables_ensure_capacity(required_capacity);
-    }
+    result = engine_tables_ensure_capacity(required_capacity);
     if(result.kind == ERROR_RESULT_ERROR) {
         if(reused_slot && entity_id_pool.free_count < MAX_ENTITIES) {
             entity_id_pool.free_ids[entity_id_pool.free_count] = slot;

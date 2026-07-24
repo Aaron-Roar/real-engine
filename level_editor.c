@@ -196,17 +196,12 @@ typedef struct {
 } EditorInput;
 
 Vec2D get_mouse_coordinates() {
-    float window_x, window_y;
-    SDL_GetMouseState(&window_x, &window_y);
-    float render_x, render_y;
-    SDL_RenderCoordinatesFromWindow(
-        sdl_renderer,
-        window_x,
-        window_y,
-        &render_x,
-        &render_y
-    );
-    return (Vec2D) {render_x, render_y};
+    Position position = graphics_get_mouse_screen_position();
+
+    return (Vec2D) {
+        .x = position.x,
+        .y = position.y,
+    };
 }
 
 EditorInput sdl_event_to_editor_input(SDL_Event event)

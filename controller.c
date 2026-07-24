@@ -1,5 +1,6 @@
 #include "controller.h"
 #include "console.h"
+#include "graphics.h"
 
 static const KeyboardKey SDL_TO_ENGINE_KEY[SDL_SCANCODE_COUNT] = {
     [SDL_SCANCODE_0] = KEY_0,
@@ -248,32 +249,8 @@ void print_keyboard_event(KeyboardEvent event)
 }
 
 Vec2D get_mouse_position() {
-    if (sdl_renderer == NULL) {
-        return (Vec2D){0};
-    }
-
-    float window_x;
-    float window_y;
-
-    SDL_GetMouseState(&window_x, &window_y);
-
-    float screen_x;
-    float screen_y;
-
-    if (!SDL_RenderCoordinatesFromWindow(
-            sdl_renderer,
-            window_x,
-            window_y,
-            &screen_x,
-            &screen_y)) {
-        return (Vec2D){0};
-    }
-
     Position world_position =
-        graphics_screen_to_world((Position){
-            .x = screen_x,
-            .y = screen_y,
-        });
+        graphics_screen_to_world(graphics_get_mouse_screen_position());
 
     return (Vec2D){
         .x = world_position.x,

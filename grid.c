@@ -1,4 +1,5 @@
 #include "grid.h"
+#include "engine_internal.h"
 #include "entity_components.h"
 #include "physics.h"
 #include "math2d.h"

@@ -2,12 +2,11 @@
 #include "systems.h"
 #include "console.h"
 #include "grid.h"
-#include <math2d.h>
+#include "math2d.h"
 #include <math.h>
 #include <float.h>
 #include <stdio.h>
 #include <time.h>
-#include "grid.h"
 
 Shape system_generate_global_hitbox(Entity entity);
 

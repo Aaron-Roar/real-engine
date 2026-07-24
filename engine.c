@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <SDL3/SDL.h>
 #include "engine.h"
+#include "engine_internal.h"
 #include "entity_components.h"
 #include "physics.h"
 #include "graphics.h"
@@ -22,6 +23,22 @@ bool engine_dt_overwritten = false;
 
 SDLTime sdl_prev_counter = 0;
 SDLTime sdl_frequency = 0;
+
+EngineResult engine_tables_ensure_capacity(size_t capacity) {
+    EngineResult result;
+
+    result = entity_tables_ensure_capacity(capacity);
+    if(result.kind != ERROR_RESULT_ERROR) {
+        result = physics_tables_ensure_capacity(capacity);
+    }
+    if(result.kind != ERROR_RESULT_ERROR) {
+        result = graphics_tables_ensure_capacity(capacity);
+    }
+    if(result.kind != ERROR_RESULT_ERROR) {
+        result = grid_tables_ensure_capacity(capacity);
+    }
+    return result;
+}
 
 EngineResult engine_init() {
     EngineResult result;
