@@ -152,6 +152,28 @@ bool entity_is_alive(Entity entity);
 bool entity_index_is_alive(EntityIndex index);
 
 /**
+ * Return the number of currently alive entities.
+ *
+ * Systems can use this with entity_alive_at() to iterate only live entities
+ * instead of scanning every possible entity slot.
+ *
+ * @return Number of alive entities.
+ */
+uint32_t entity_alive_count(void);
+
+/**
+ * Return the entity id stored at a dense alive-list position.
+ *
+ * The position is not a component table index and can change when entities are
+ * deleted. Resolve the returned id with entity_get_index() before accessing
+ * component tables.
+ *
+ * @param position Dense alive-list position.
+ * @return EntityResult containing the entity id, or an error.
+ */
+EntityResult entity_alive_at(uint32_t position);
+
+/**
  * Resolve an entity id to its current table index.
  *
  * @param entity Entity id to resolve.

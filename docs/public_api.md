@@ -346,6 +346,34 @@ Checks whether an entity table index currently contains a live entity.
 
 **Returns:** true when the index contains a live entity, false otherwise.
 
+### `rohr_entity_alive_count`
+
+```c
+uint32_t rohr_entity_alive_count(void);
+```
+
+Returns the number of currently alive entities.
+
+**Returns:** Number of alive entities.
+
+### `rohr_entity_alive_at`
+
+```c
+EntityResult rohr_entity_alive_at(uint32_t position);
+```
+
+Returns the entity id stored at a dense alive-list position.
+
+The position is not a component table index and can change when entities are
+
+deleted.
+
+| Parameter | Description |
+| --- | --- |
+| `position` | Dense alive-list position. |
+
+**Returns:** EntityResult containing the entity id, or an error.
+
 ### `rohr_entity_get_index`
 
 ```c

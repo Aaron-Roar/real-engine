@@ -47,6 +47,8 @@ void rohr_console_set_debug(bool state) { console_set_debug(state); }
 
 bool rohr_entity_is_alive(Entity entity) { return entity_is_alive(entity); }
 bool rohr_entity_index_is_alive(EntityIndex index) { return entity_index_is_alive(index); }
+uint32_t rohr_entity_alive_count(void) { return entity_alive_count(); }
+EntityResult rohr_entity_alive_at(uint32_t position) { return entity_alive_at(position); }
 bool rohr_entity_get_index(Entity entity, EntityIndex *index) { return entity_get_index(entity, index); }
 EntityResult rohr_entity_from_index(EntityIndex index) { return entity_from_index(index); }
 EntityResult rohr_entity_add(void) { return entity_add(); }

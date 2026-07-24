@@ -198,6 +198,23 @@ bool rohr_entity_is_alive(Entity entity);
 bool rohr_entity_index_is_alive(EntityIndex index);
 
 /**
+ * @brief Returns the number of currently alive entities.
+ * @return Number of alive entities.
+ */
+uint32_t rohr_entity_alive_count(void);
+
+/**
+ * @brief Returns the entity id stored at a dense alive-list position.
+ *
+ * The position is not a component table index and can change when entities are
+ * deleted.
+ *
+ * @param position Dense alive-list position.
+ * @return EntityResult containing the entity id, or an error.
+ */
+EntityResult rohr_entity_alive_at(uint32_t position);
+
+/**
  * @brief Resolves a stable entity id to its current component table index.
  * @param entity Stable entity id to resolve.
  * @param index Destination for the resolved table index.

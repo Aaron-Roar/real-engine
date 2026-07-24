@@ -27,6 +27,8 @@ static EntityIdPool entity_id_pool = {0};
 static EntityIndex entity_to_index[MAX_ENTITIES + 1] = {0};
 static Entity index_to_entity[MAX_ENTITIES] = {0};
 static uint16_t entity_generations[MAX_ENTITIES + 1] = {0};
+static Entity entity_alive_entities[MAX_ENTITIES] = {0};
+static EntityIndex entity_alive_positions[MAX_ENTITIES + 1] = {0};
 
 //Moveable Objects
 TargetPool targets_pool = {0};
@@ -40,6 +42,8 @@ static void entity_id_pool_init(void) {
     memset(entity_to_index, 0, sizeof(entity_to_index));
     memset(index_to_entity, 0, sizeof(index_to_entity));
     memset(entity_generations, 0, sizeof(entity_generations));
+    memset(entity_alive_entities, 0, sizeof(entity_alive_entities));
+    memset(entity_alive_positions, 0, sizeof(entity_alive_positions));
     entity_id_pool.free_count = 0;
     entity_id_pool.free_index_count = 0;
     entity_id_pool.live_count = 0;
@@ -157,6 +161,17 @@ bool entity_index_is_alive(EntityIndex index) {
     return entity_alive_pool.objects[index];
 }
 
+uint32_t entity_alive_count(void) {
+    return (uint32_t)entity_id_pool.live_count;
+}
+
+EntityResult entity_alive_at(uint32_t position) {
+    if(position >= entity_id_pool.live_count) {
+        return ERROR_RESULT_MAKE_ERROR(EntityResult, ERROR_ENGINE_ENTITY_NOT_FOUND);
+    }
+    return ERROR_RESULT_MAKE_VALUE(EntityResult, entity_alive_entities[position]);
+}
+
 bool entity_get_index(Entity entity, EntityIndex *index) {
     uint32_t slot;
 
@@ -247,6 +262,8 @@ EntityResult entity_add() {
     entity_id_pool.live_count += 1;
     entity_to_index[slot] = index;
     index_to_entity[index] = entity;
+    entity_alive_positions[slot] = (EntityIndex)(entity_id_pool.live_count - 1);
+    entity_alive_entities[entity_alive_positions[slot]] = entity;
 
     (void)EntityAlivePool_store_at(&entity_alive_pool, index, true);
     (void)EntityMaskPool_store_at(&entity_mask_pool, index, 0);
@@ -279,6 +296,10 @@ static void entity_clear_index(EntityIndex index) {
 
 EngineResult entity_delete(Entity entity) {
     EntityIndex index;
+    EntityIndex removed_alive_position;
+    EntityIndex last_alive_position;
+    Entity moved_entity;
+    uint32_t moved_slot;
     uint32_t slot;
 
     if(!entity_id_valid(entity)) {
@@ -289,6 +310,15 @@ EngineResult entity_delete(Entity entity) {
     }
     entity_clear_index(index);
     slot = entity_slot(entity);
+    removed_alive_position = entity_alive_positions[slot];
+    last_alive_position = (EntityIndex)(entity_id_pool.live_count - 1);
+    moved_entity = entity_alive_entities[last_alive_position];
+    moved_slot = entity_slot(moved_entity);
+
+    entity_alive_entities[removed_alive_position] = moved_entity;
+    entity_alive_positions[moved_slot] = removed_alive_position;
+    entity_alive_entities[last_alive_position] = ENTITY_INVALID;
+    entity_alive_positions[slot] = 0;
     entity_to_index[slot] = 0;
     index_to_entity[index] = ENTITY_INVALID;
     entity_generations[slot] += 1;

@@ -20,6 +20,19 @@ static bool system_entity_from_index(EntityIndex index, Entity *entity) {
     return true;
 }
 
+static bool system_alive_index_at(uint32_t alive_position, EntityIndex *index) {
+    EntityResult result;
+
+    if(index == NULL) {
+        return false;
+    }
+    result = entity_alive_at(alive_position);
+    if(result.kind == ERROR_RESULT_ERROR) {
+        return false;
+    }
+    return entity_get_index(result.result.value, index) && entity_index_is_alive(*index);
+}
+
 static void system_set_collision_report_by_index(EntityIndex entity_1, EntityIndex entity_2, bool state) {
     Entity entity_1_id;
     Entity entity_2_id;
@@ -60,17 +73,19 @@ static void system_remove_transform_lock_by_index(EntityIndex index) {
 void system_generate_global_hitboxes() {
     CMask filter = HIT_BOX;
 
-    for(int i = 0; i < MAX_ENTITIES; i += 1) {
-        if(entity_index_is_alive(i)) {
-            if( entity_index_has_components(i, filter) ) {
-                Position pos = positions[i];
-                Orientation ort = orientations[i];
-                Shape hit_box = hit_boxes[i];
+    for(uint32_t alive_position = 0; alive_position < entity_alive_count(); alive_position += 1) {
+        EntityIndex i;
 
-                world_hit_boxes[i] = physics_shape_world_translate(hit_box, pos, ort);
-            }
+        if(!system_alive_index_at(alive_position, &i)) {
+            continue;
         }
+        if( entity_index_has_components(i, filter) ) {
+            Position pos = positions[i];
+            Orientation ort = orientations[i];
+            Shape hit_box = hit_boxes[i];
 
+            world_hit_boxes[i] = physics_shape_world_translate(hit_box, pos, ort);
+        }
     }
 }
 
@@ -92,25 +107,31 @@ Shape system_generate_global_hitbox(Entity entity) {
 
 void system_update_positions(double dt) {
     CMask filter = DYNAMIC;
-    for (int i = 0; i < MAX_ENTITIES; i++) {
-        if(entity_index_is_alive(i)) {
-            if( entity_index_has_components(i, filter) ) {
-                positions[i] = (Position){
-                    .x = positions[i].x + (velocities[i].x)*dt,
-                    .y = positions[i].y + (velocities[i].y)*dt
-                };
-            }
+    for(uint32_t alive_position = 0; alive_position < entity_alive_count(); alive_position += 1) {
+        EntityIndex i;
+
+        if(!system_alive_index_at(alive_position, &i)) {
+            continue;
+        }
+        if( entity_index_has_components(i, filter) ) {
+            positions[i] = (Position){
+                .x = positions[i].x + (velocities[i].x)*dt,
+                .y = positions[i].y + (velocities[i].y)*dt
+            };
         }
     }
 }
 
 void system_update_orientations(double dt) {
     CMask filter = DYNAMIC;
-    for (int i = 0; i < MAX_ENTITIES; i++) {
-        if(entity_index_is_alive(i)) {
-            if( entity_index_has_components(i, filter) ) {
-                orientations[i] = orientations[i] + angular_velocities[i]*dt;
-            }
+    for(uint32_t alive_position = 0; alive_position < entity_alive_count(); alive_position += 1) {
+        EntityIndex i;
+
+        if(!system_alive_index_at(alive_position, &i)) {
+            continue;
+        }
+        if( entity_index_has_components(i, filter) ) {
+            orientations[i] = orientations[i] + angular_velocities[i]*dt;
         }
     }
 }
@@ -118,25 +139,31 @@ void system_update_orientations(double dt) {
 
 void system_update_angular_velocities(double dt) {
     CMask filter = DYNAMIC;
-    for (int i = 0; i < MAX_ENTITIES; i++) {
-        if(entity_index_is_alive(i)) {
-            if( entity_index_has_components(i, filter)) {
-                angular_velocities[i] += (angular_accelerations[i] + torque_angular_accelerations[i]) * dt;
-            }
+    for(uint32_t alive_position = 0; alive_position < entity_alive_count(); alive_position += 1) {
+        EntityIndex i;
+
+        if(!system_alive_index_at(alive_position, &i)) {
+            continue;
+        }
+        if( entity_index_has_components(i, filter)) {
+            angular_velocities[i] += (angular_accelerations[i] + torque_angular_accelerations[i]) * dt;
         }
     }
 }
 
 void system_update_velocities(double dt) {
     CMask filter = DYNAMIC;
-    for (int i = 0; i < MAX_ENTITIES; i++) {
-        if(entity_index_is_alive(i)) {
-            if( entity_index_has_components(i, filter)) {
-                velocities[i] = (Velocity){
-                    .x = velocities[i].x + (accelerations[i].x + force_accelerations[i].x)*dt,
-                    .y = velocities[i].y + (accelerations[i].y + force_accelerations[i].y)*dt
-                };
-            }
+    for(uint32_t alive_position = 0; alive_position < entity_alive_count(); alive_position += 1) {
+        EntityIndex i;
+
+        if(!system_alive_index_at(alive_position, &i)) {
+            continue;
+        }
+        if( entity_index_has_components(i, filter)) {
+            velocities[i] = (Velocity){
+                .x = velocities[i].x + (accelerations[i].x + force_accelerations[i].x)*dt,
+                .y = velocities[i].y + (accelerations[i].y + force_accelerations[i].y)*dt
+            };
         }
     }
 }
@@ -206,8 +233,10 @@ void system_apply_torques() {
 }
 
 void system_clear_force_torque_accelerations() {
-    for(int i = 0; i < MAX_ENTITIES; i++) {
-        if(!entity_index_is_alive(i)) {
+    for(uint32_t alive_position = 0; alive_position < entity_alive_count(); alive_position += 1) {
+        EntityIndex i;
+
+        if(!system_alive_index_at(alive_position, &i)) {
             continue;
         }
         force_accelerations[i].x = 0;
@@ -630,8 +659,10 @@ void system_resolve_collision(Entity entity_1, Entity entity_2, Collision collis
 }
 
 void system_add_entities_to_grid() {
-    for(int i = 0; i < MAX_ENTITIES; i += 1) {
-        if(!entity_index_is_alive(i)) {
+    for(uint32_t alive_position = 0; alive_position < entity_alive_count(); alive_position += 1) {
+        EntityIndex i;
+
+        if(!system_alive_index_at(alive_position, &i)) {
             continue;
         }
         if( entity_index_has_components(i, HIT_BOX)) {
@@ -1188,8 +1219,10 @@ void system_apply_joints()
 }
 
 void system_update_aabbs() {
-    for(int i = 0; i < MAX_ENTITIES; i += 1) {
-        if(!entity_index_is_alive(i)) {
+    for(uint32_t alive_position = 0; alive_position < entity_alive_count(); alive_position += 1) {
+        EntityIndex i;
+
+        if(!system_alive_index_at(alive_position, &i)) {
             continue;
         }
         if( entity_index_has_components(i, HIT_BOX)) {
