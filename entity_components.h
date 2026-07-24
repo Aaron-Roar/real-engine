@@ -5,19 +5,30 @@
 #include <stdbool.h>
 #include <time.h>
 #include "engine.h"
+#include "memory.h"
 
 
 //Entities
 typedef uint32_t Entity; //An id for an entity
 #define MAX_ENTITIES 10000
 #define MAX_COMPONENTS 100
-extern bool entity_alive[MAX_ENTITIES]; //What entities are active
+typedef struct EntityIdPool {
+    Entity free_ids[MAX_ENTITIES];
+    size_t free_count;
+    size_t live_count;
+} EntityIdPool;
+extern EntityIdPool entity_id_pool;
+MEMORY_DECLARE_OBJECT_POOL(EntityAlivePool, bool);
+extern EntityAlivePool entity_alive_pool;
+#define entity_alive entity_alive_pool.objects
 typedef struct EntityList {
     uint32_t entity_amount;
     Entity concerned_entities[MAX_ENTITIES];
 } EntityList;
 typedef uint32_t CMask; //The bit mask for an entities components
-extern CMask entity_mask[MAX_ENTITIES]; //Bit map of the components each entity has
+MEMORY_DECLARE_OBJECT_POOL(EntityMaskPool, CMask);
+extern EntityMaskPool entity_mask_pool;
+#define entity_mask entity_mask_pool.objects
 //Enum for the component mask
 typedef enum {
     NONE                    = 0,
@@ -68,12 +79,22 @@ typedef struct LifeTime {
     Tick expirey_tick;
 } LifeTime;
 
-extern Parent parents[MAX_ENTITIES];
-extern Children children[MAX_ENTITIES];
-extern LifeTime life_times[MAX_ENTITIES];
-extern Entity targets[MAX_ENTITIES];
+MEMORY_DECLARE_OBJECT_POOL(ParentPool, Parent);
+MEMORY_DECLARE_OBJECT_POOL(ChildrenPool, Children);
+MEMORY_DECLARE_OBJECT_POOL(LifeTimePool, LifeTime);
+MEMORY_DECLARE_OBJECT_POOL(TargetPool, Entity);
+extern ParentPool parents_pool;
+extern ChildrenPool children_pool;
+extern LifeTimePool life_times_pool;
+extern TargetPool targets_pool;
+#define parents parents_pool.objects
+#define children children_pool.objects
+#define life_times life_times_pool.objects
+#define targets targets_pool.objects
 //Target Capable Effects
 
+bool entity_tables_init(void);
+void entity_tables_destroy(void);
 Entity entity_add();
 void entity_delete(Entity entity);
 void entity_add_components(Entity entity, CMask mask);

@@ -5,22 +5,44 @@
 #include "console.h"
 #include "math.h"
 
+MEMORY_DEFINE_OBJECT_POOL(AABBPool, AABB)
 
-AABB aabbs[MAX_ENTITIES] = {0};
+AABBPool aabbs_pool = {0};
 
 Grid grid = {0};
 BooleanPairs pair_checked = {0};
 
+bool grid_tables_init(void) {
+    if(AABBPool_init(&aabbs_pool, MAX_ENTITIES).kind == RESULT_ERROR) {
+        grid_tables_destroy();
+        return false;
+    }
+    return true;
+}
+
+void grid_tables_destroy(void) {
+    (void)AABBPool_destroy(&aabbs_pool);
+}
+
 bool checked_pair(Entity entity_1, Entity entity_2) {
+    if(entity_1 >= MAX_ENTITIES || entity_2 >= MAX_ENTITIES) {
+        return true;
+    }
     return pair_checked.pairs[entity_1][entity_2];
 }
 void add_pair(Entity entity_1, Entity entity_2) {
+    if(entity_1 >= MAX_ENTITIES || entity_2 >= MAX_ENTITIES) {
+        return;
+    }
     pair_checked.pairs[entity_1][entity_2] = true;
     pair_checked.pairs[entity_2][entity_1] = true;
 }
 
 void grid_update_aabb(Entity entity) {
-    aabbs[entity] = math_create_aabb(world_hit_boxes[entity]);
+    if(entity >= MAX_ENTITIES) {
+        return;
+    }
+    (void)AABBPool_store_at(&aabbs_pool, entity, math_create_aabb(world_hit_boxes[entity]));
 }
 
 void clear_grid() {
@@ -51,6 +73,9 @@ uint32_t world_y_to_row(Vec1D y) {
 }
 
 void add_entity_to_grid(Entity entity, uint32_t row, uint32_t col) {
+    if(entity >= MAX_ENTITIES || row >= GRID_ROWS || col >= GRID_COLS) {
+        return;
+    }
     for(int i = 0; i < MAX_ENTITIES; i += 1) {
         if(!grid.cells[row][col].entity_present[i]) {
             grid.cells[row][col].entities[i] = entity;
@@ -61,6 +86,9 @@ void add_entity_to_grid(Entity entity, uint32_t row, uint32_t col) {
 }
 
 void add_entity_to_grids(Entity entity) {
+    if(entity >= MAX_ENTITIES) {
+        return;
+    }
     AABB aabb = aabbs[entity];
     uint32_t top_row = world_y_to_row(aabb.max_y);
     uint32_t bot_row = world_y_to_row(aabb.min_y);
@@ -73,4 +101,3 @@ void add_entity_to_grids(Entity entity) {
         }
     }
 }
-

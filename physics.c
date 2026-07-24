@@ -3,26 +3,100 @@
 #include <math.h>
 #include "console.h"
 
-Position positions[MAX_ENTITIES] = {0};
-Orientation orientations[MAX_ENTITIES] = {0};
-Velocity velocities[MAX_ENTITIES] = {0};
-Acceleration accelerations[MAX_ENTITIES] = {0};
-Acceleration force_accelerations[MAX_ENTITIES] = {0};
-float mass[MAX_ENTITIES] = {0};
-Force forces[MAX_ENTITIES] = {0};
-Shape hit_boxes[MAX_ENTITIES] = {0};
-Shape world_hit_boxes[MAX_ENTITIES] = {0};
-CollisionReport collision_reports[MAX_ENTITIES] = {0};
-AngularVelocity angular_velocities[MAX_ENTITIES] = {0};
-AngularAcceleration angular_accelerations[MAX_ENTITIES] = {0};
-AngularVelocity torque_angular_accelerations[MAX_ENTITIES] = {0};
-Torque torques[MAX_ENTITIES] = {0};
-Friction frictions[MAX_ENTITIES] = {0};
-Restitution restitutions[MAX_ENTITIES] = {0};
-AngleLock angle_locks[MAX_ENTITIES] = {0};
-AxisLock axis_locks[MAX_ENTITIES] = {0};
-TransformLock transform_locks[MAX_ENTITIES] = {0};
-Joint joints[MAX_ENTITIES] = {0};
+MEMORY_DEFINE_OBJECT_POOL(PositionPool, Position)
+MEMORY_DEFINE_OBJECT_POOL(VelocityPool, Velocity)
+MEMORY_DEFINE_OBJECT_POOL(AccelerationPool, Acceleration)
+MEMORY_DEFINE_OBJECT_POOL(MassPool, float)
+MEMORY_DEFINE_OBJECT_POOL(ForcePool, Force)
+MEMORY_DEFINE_OBJECT_POOL(ShapePool, Shape)
+MEMORY_DEFINE_OBJECT_POOL(CollisionReportPool, CollisionReport)
+MEMORY_DEFINE_OBJECT_POOL(OrientationPool, Orientation)
+MEMORY_DEFINE_OBJECT_POOL(AngularVelocityPool, AngularVelocity)
+MEMORY_DEFINE_OBJECT_POOL(AngularAccelerationPool, AngularAcceleration)
+MEMORY_DEFINE_OBJECT_POOL(TorquePool, Torque)
+MEMORY_DEFINE_OBJECT_POOL(FrictionPool, Friction)
+MEMORY_DEFINE_OBJECT_POOL(RestitutionPool, Restitution)
+MEMORY_DEFINE_OBJECT_POOL(AngleLockPool, AngleLock)
+MEMORY_DEFINE_OBJECT_POOL(AxisLockPool, AxisLock)
+MEMORY_DEFINE_OBJECT_POOL(TransformLockPool, TransformLock)
+MEMORY_DEFINE_OBJECT_POOL(JointPool, Joint)
+
+PositionPool positions_pool = {0};
+OrientationPool orientations_pool = {0};
+VelocityPool velocities_pool = {0};
+AccelerationPool accelerations_pool = {0};
+AccelerationPool force_accelerations_pool = {0};
+MassPool mass_pool = {0};
+ForcePool forces_pool = {0};
+ShapePool hit_boxes_pool = {0};
+ShapePool world_hit_boxes_pool = {0};
+CollisionReportPool collision_reports_pool = {0};
+AngularVelocityPool angular_velocities_pool = {0};
+AngularAccelerationPool angular_accelerations_pool = {0};
+AngularVelocityPool torque_angular_accelerations_pool = {0};
+TorquePool torques_pool = {0};
+FrictionPool frictions_pool = {0};
+RestitutionPool restitutions_pool = {0};
+AngleLockPool angle_locks_pool = {0};
+AxisLockPool axis_locks_pool = {0};
+TransformLockPool transform_locks_pool = {0};
+JointPool joints_pool = {0};
+
+bool physics_tables_init(void) {
+    if(PositionPool_init(&positions_pool, MAX_ENTITIES).kind == RESULT_ERROR) { goto fail; }
+    if(OrientationPool_init(&orientations_pool, MAX_ENTITIES).kind == RESULT_ERROR) { goto fail; }
+    if(VelocityPool_init(&velocities_pool, MAX_ENTITIES).kind == RESULT_ERROR) { goto fail; }
+    if(AccelerationPool_init(&accelerations_pool, MAX_ENTITIES).kind == RESULT_ERROR) { goto fail; }
+    if(AccelerationPool_init(&force_accelerations_pool, MAX_ENTITIES).kind == RESULT_ERROR) { goto fail; }
+    if(MassPool_init(&mass_pool, MAX_ENTITIES).kind == RESULT_ERROR) { goto fail; }
+    if(ForcePool_init(&forces_pool, MAX_ENTITIES).kind == RESULT_ERROR) { goto fail; }
+    if(ShapePool_init(&hit_boxes_pool, MAX_ENTITIES).kind == RESULT_ERROR) { goto fail; }
+    if(ShapePool_init(&world_hit_boxes_pool, MAX_ENTITIES).kind == RESULT_ERROR) { goto fail; }
+    if(CollisionReportPool_init(&collision_reports_pool, MAX_ENTITIES).kind == RESULT_ERROR) { goto fail; }
+    if(AngularVelocityPool_init(&angular_velocities_pool, MAX_ENTITIES).kind == RESULT_ERROR) { goto fail; }
+    if(AngularAccelerationPool_init(&angular_accelerations_pool, MAX_ENTITIES).kind == RESULT_ERROR) { goto fail; }
+    if(AngularVelocityPool_init(&torque_angular_accelerations_pool, MAX_ENTITIES).kind == RESULT_ERROR) { goto fail; }
+    if(TorquePool_init(&torques_pool, MAX_ENTITIES).kind == RESULT_ERROR) { goto fail; }
+    if(FrictionPool_init(&frictions_pool, MAX_ENTITIES).kind == RESULT_ERROR) { goto fail; }
+    if(RestitutionPool_init(&restitutions_pool, MAX_ENTITIES).kind == RESULT_ERROR) { goto fail; }
+    if(AngleLockPool_init(&angle_locks_pool, MAX_ENTITIES).kind == RESULT_ERROR) { goto fail; }
+    if(AxisLockPool_init(&axis_locks_pool, MAX_ENTITIES).kind == RESULT_ERROR) { goto fail; }
+    if(TransformLockPool_init(&transform_locks_pool, MAX_ENTITIES).kind == RESULT_ERROR) { goto fail; }
+    if(JointPool_init(&joints_pool, MAX_ENTITIES).kind == RESULT_ERROR) { goto fail; }
+    return true;
+
+fail:
+    physics_tables_destroy();
+    return false;
+}
+
+void physics_tables_destroy(void) {
+    (void)PositionPool_destroy(&positions_pool);
+    (void)OrientationPool_destroy(&orientations_pool);
+    (void)VelocityPool_destroy(&velocities_pool);
+    (void)AccelerationPool_destroy(&accelerations_pool);
+    (void)AccelerationPool_destroy(&force_accelerations_pool);
+    (void)MassPool_destroy(&mass_pool);
+    (void)ForcePool_destroy(&forces_pool);
+    (void)ShapePool_destroy(&hit_boxes_pool);
+    (void)ShapePool_destroy(&world_hit_boxes_pool);
+    (void)CollisionReportPool_destroy(&collision_reports_pool);
+    (void)AngularVelocityPool_destroy(&angular_velocities_pool);
+    (void)AngularAccelerationPool_destroy(&angular_accelerations_pool);
+    (void)AngularVelocityPool_destroy(&torque_angular_accelerations_pool);
+    (void)TorquePool_destroy(&torques_pool);
+    (void)FrictionPool_destroy(&frictions_pool);
+    (void)RestitutionPool_destroy(&restitutions_pool);
+    (void)AngleLockPool_destroy(&angle_locks_pool);
+    (void)AxisLockPool_destroy(&axis_locks_pool);
+    (void)TransformLockPool_destroy(&transform_locks_pool);
+    (void)JointPool_destroy(&joints_pool);
+}
+
+static bool physics_entity_valid(Entity entity) {
+    return entity < MAX_ENTITIES;
+}
+
 Shape physics_shape_world_translate(Shape shape, Position position, Orientation angle) {
     Shape world_shape = {0};
     world_shape.amount_of_vertices = shape.amount_of_vertices;
@@ -45,7 +119,7 @@ Shape physics_shape_world_translate(Shape shape, Position position, Orientation 
 
     return world_shape;
 }
-float physics_polygon_moment_of_inertia(Shape shape, Mass mass) {
+float physics_polygon_moment_of_inertia(Shape shape, Mass mass_value) {
     Position c = math_polygon_centroid(shape);
 
     float area_sum = 0.0f;
@@ -77,7 +151,7 @@ float physics_polygon_moment_of_inertia(Shape shape, Mass mass) {
         return 0;
     }
 
-    float density = mass / fabsf(area);
+    float density = mass_value / fabsf(area);
     float inertia = density * fabsf(area_moment);
 
     return inertia;
@@ -195,101 +269,137 @@ Position physics_approximate_contact_point(Position p1, Position p2)
         .y = (p1.y + p2.y) * 0.5f
     };
 }
-Vec1D physics_circle_moment_of_inertia(Shape circle, Mass mass) {
+Vec1D physics_circle_moment_of_inertia(Shape circle, Mass mass_value) {
   Vec1D radius = math_circle_radius(circle, math_polygon_centroid(circle));
   Vec1D area = PI_F*radius*radius;
-  Vec1D density = mass/fabsf(area);
+  Vec1D density = mass_value/fabsf(area);
   Vec1D area_moment = 0.5f * area * radius * radius;
   return density * area_moment;
 }
 
 //Entity
 void physics_set_velocity(Entity entity, Velocity v) {
+    if(!physics_entity_valid(entity)) {
+        return;
+    }
     if(!entity_alive[entity]) {
         //Error
         return;
     }
-    velocities[entity] = v;
+    (void)VelocityPool_store_at(&velocities_pool, entity, v);
     console_debug_write(LOG_ENGINE, "Set Entity: %d Velocity: {x: %f, y: %f}\n", entity, v.x, v.y);
 }
 void physics_set_position(Entity entity, Position p) {
+    if(!physics_entity_valid(entity)) {
+        return;
+    }
     if(!entity_alive[entity]) {
         //Error
         return;
     }
-    positions[entity] = p;
+    (void)PositionPool_store_at(&positions_pool, entity, p);
     console_debug_write(LOG_ENGINE, "Set Entity: %d Position: {x: %f, y: %f}\n", entity, p.x, p.y);
 }
 
 void physics_set_mass(Entity entity, Mass m) {
+    if(!physics_entity_valid(entity)) {
+        return;
+    }
     if(!entity_alive[entity]) {
         //Error
         return;
     }
     entity_mask[entity] |= MASS;
-    mass[entity] = m;
+    (void)MassPool_store_at(&mass_pool, entity, m);
     console_debug_write(LOG_ENGINE, "Set Entity: %d Mass: %f\n", entity, m);
 }
 Entity physics_set_force(Entity entity, Force f) {
+    if(!physics_entity_valid(entity)) {
+        return 0;
+    }
     if(!entity_alive[entity]) {
         //Error
         return 0;
     }
     Entity force_entity = entity_add();
-    forces[force_entity] = f;
-    targets[force_entity] = entity;
+    if(!physics_entity_valid(force_entity) || !entity_alive[force_entity]) {
+        return 0;
+    }
+    (void)ForcePool_store_at(&forces_pool, force_entity, f);
+    (void)TargetPool_store_at(&targets_pool, force_entity, entity);
     entity_mask[force_entity] |= TARGETABLE | FORCE;
     console_debug_write(LOG_ENGINE, "Set Entity: %d Force: {x: %f, y: %f}\n", entity, f.x, f.y);
     return force_entity;
 }
 void physics_set_acceleration(Entity entity, Acceleration a) {
+    if(!physics_entity_valid(entity)) {
+        return;
+    }
     if(!entity_alive[entity]) {
         //Error
         return;
     }
-    accelerations[entity] = a;
+    (void)AccelerationPool_store_at(&accelerations_pool, entity, a);
     console_debug_write(LOG_ENGINE, "Set Entity: %d Acceleration: {x: %f, y: %f}\n", entity, a.x, a.y);
 }
 Entity physics_set_torque(Entity entity, Torque t) {
+    if(!physics_entity_valid(entity)) {
+        return 0;
+    }
     if(!entity_alive[entity]) {
         //Error
         return 0;
     }
     Entity torque_entity = entity_add();
-    torques[torque_entity] = t;
-    targets[torque_entity] = entity;
+    if(!physics_entity_valid(torque_entity) || !entity_alive[torque_entity]) {
+        return 0;
+    }
+    (void)TorquePool_store_at(&torques_pool, torque_entity, t);
+    (void)TargetPool_store_at(&targets_pool, torque_entity, entity);
     entity_mask[torque_entity] |= TARGETABLE | TORQUE;
     console_debug_write(LOG_ENGINE, "Set Entity: %d Torque: %f\n", entity, t);
     return torque_entity;
 }
 void physics_set_hitbox(Entity entity, Shape hitbox) {
+    if(!physics_entity_valid(entity)) {
+        return;
+    }
     if(!entity_alive[entity]) {
         //Error
         return;
     }
     entity_mask[entity] |= COLLISION | HIT_BOX;
-    hit_boxes[entity] = hitbox;
+    (void)ShapePool_store_at(&hit_boxes_pool, entity, hitbox);
   console_debug_write(LOG_ENGINE, "Set Entity: %d to have a hit box\n", entity);
 }
 void physics_set_orientation(Entity entity, Orientation angle) {
+    if(!physics_entity_valid(entity)) {
+        return;
+    }
     if(!entity_alive[entity]) {
         //Error
         return;
     }
-  orientations[entity] = angle;
+  (void)OrientationPool_store_at(&orientations_pool, entity, angle);
   console_debug_write(LOG_ENGINE, "Set Entity: %d Orientation: %f\n", entity, angle);
 }
 void physics_set_angular_velocity(Entity entity, AngularVelocity v) {
+    if(!physics_entity_valid(entity)) {
+        return;
+    }
     if(!entity_alive[entity]) {
         //Error
         return;
     }
     physics_set_dynamic(entity);
-    angular_velocities[entity] = v;
+    (void)AngularVelocityPool_store_at(&angular_velocities_pool, entity, v);
     console_debug_write(LOG_ENGINE, "Set Entity: %d Angular Velocity: %f\n", entity, v);
 }
 Shape physics_get_global_hit_box(Entity entity) {
     CMask filter = HIT_BOX;
+    if(!physics_entity_valid(entity)) {
+        return (Shape){0};
+    }
     if(entity_alive[entity]) {
         if( (entity_mask[entity] & filter) == filter ) {
             return world_hit_boxes[entity];
@@ -298,25 +408,31 @@ Shape physics_get_global_hit_box(Entity entity) {
     return (Shape){0};
 }
  void physics_set_restitution(Entity entity, Restitution restitution) {
+    if(!physics_entity_valid(entity)) {
+        return;
+    }
     if(!entity_alive[entity]) {
         //Error
         return;
     }
      if(restitution < 0) {
-        restitutions[entity] = 0;
+        (void)RestitutionPool_store_at(&restitutions_pool, entity, 0);
         console_debug_write(LOG_ENGINE, "Set Entity: %d Restitution: %f\n", entity, 0);
      }
      else if(restitution > 1) {
-        restitutions[entity] = 1;
+        (void)RestitutionPool_store_at(&restitutions_pool, entity, 1);
         console_debug_write(LOG_ENGINE, "Set Entity: %d Restitution: %f\n", entity, 1);
      }
      else {
-        restitutions[entity] = restitution;
+        (void)RestitutionPool_store_at(&restitutions_pool, entity, restitution);
         console_debug_write(LOG_ENGINE, "Set Entity: %d Restitution: %f\n", entity, restitution);
      }
      entity_add_components(entity, COLLISION);
  }
 void physics_set_dynamic(Entity entity) {
+    if(!physics_entity_valid(entity)) {
+        return;
+    }
     if(!entity_alive[entity]) {
         //Error
         return;
@@ -326,6 +442,9 @@ void physics_set_dynamic(Entity entity) {
     console_debug_write(LOG_ENGINE, "Set Entity: %d to STATIC\n", entity);
 }
 void physics_set_static(Entity entity) {
+    if(!physics_entity_valid(entity)) {
+        return;
+    }
     if(!entity_alive[entity]) {
         //Error
         return;
@@ -335,24 +454,30 @@ void physics_set_static(Entity entity) {
     console_debug_write(LOG_ENGINE, "Set Entity: %d to DYNAMIC\n", entity);
 }
 void physics_set_angle_lock(Entity entity, Orientation min, Orientation max) {
+    if(!physics_entity_valid(entity)) {
+        return;
+    }
     if(!entity_alive[entity]) {
         //Error
         return;
     }
     entity_add_components(entity, ANGLE_LOCK);
-    angle_locks[entity] = (AngleLock){
+    (void)AngleLockPool_store_at(&angle_locks_pool, entity, (AngleLock){
         .min = min,
         .max = max
-    };
+    });
 }
 void physics_set_axis_lock(Entity entity, Axis axis, Position axis_point) {
+    if(!physics_entity_valid(entity)) {
+        return;
+    }
     if(!entity_alive[entity]) {
         //Error
         return;
     }
     entity_add_components(entity, AXIS_LOCK);
     Axis normalized_axis = math_normalize_vector(axis);
-    axis_locks[entity] = (AxisLock){
+    (void)AxisLockPool_store_at(&axis_locks_pool, entity, (AxisLock){
         .axis = (Axis){
             .x = normalized_axis.x,
             .y = normalized_axis.y
@@ -361,18 +486,21 @@ void physics_set_axis_lock(Entity entity, Axis axis, Position axis_point) {
             .x = axis_point.x,
             .y = axis_point.y
         }
-    };
+    });
 }
 void physics_set_friction(Entity entity, float friction) {
+    if(!physics_entity_valid(entity)) {
+        return;
+    }
     if(!entity_alive[entity]) {
         //Error
         return;
     }
     if(friction < 0) {
-        frictions[entity] = 0;
+        (void)FrictionPool_store_at(&frictions_pool, entity, 0);
     }
     else if(friction >= 0) {
-        frictions[entity] = friction;
+        (void)FrictionPool_store_at(&frictions_pool, entity, friction);
     }
 }
 void physics_set_transform_lock(
@@ -384,27 +512,35 @@ void physics_set_transform_lock(
         bool lock_orientation,
         bool inherit_velocity
         ) {
+    if(!physics_entity_valid(driven) || !physics_entity_valid(driver)) {
+        return;
+    }
     if(!entity_alive[driven] || !entity_alive[driver]) {
         //Error
         return;
     }
     entity_add_components(driven, TRANSFORM_LOCK);
-    transform_locks[driven] = (TransformLock) {
+    (void)TransformLockPool_store_at(&transform_locks_pool, driven, (TransformLock) {
         .driver = driver,
         .local_offset = local_offset,
         .local_angle = local_angle,
         .lock_position = lock_position,
         .lock_orientation = lock_orientation,
         .inherit_velocity = inherit_velocity
-    };
+    });
 }
 void physics_remove_transform_lock(Entity entity) {
+    if(!physics_entity_valid(entity)) {
+        return;
+    }
     if(!entity_alive[entity]) {
         //Error
         return;
     }
     entity_delete_components(entity, TRANSFORM_LOCK);
-    transform_locks[entity] = (TransformLock){0};
+    if(transform_locks_pool.used[entity]) {
+        (void)TransformLockPool_release_at(&transform_locks_pool, entity);
+    }
 }
 void physics_set_transform_lock_current_transform(
         Entity driven,
@@ -413,6 +549,9 @@ void physics_set_transform_lock_current_transform(
         bool lock_orientation,
         bool inherit_velocity
         ) {
+    if(!physics_entity_valid(driven) || !physics_entity_valid(driver)) {
+        return;
+    }
     if(!entity_alive[driven] || !entity_alive[driver]) {
         return;
     }
@@ -449,11 +588,17 @@ Entity physics_set_joint(
     float stiffness,
     float damping
 ) {
+    if(!physics_entity_valid(a) || !physics_entity_valid(b)) {
+        return 0;
+    }
     if(!entity_alive[a] || !entity_alive[b]) {
         return 0;
     }
 
     Entity joint = entity_add();
+    if(!physics_entity_valid(joint) || !entity_alive[joint]) {
+        return 0;
+    }
 
     entity_add_components(joint, JOINT);
 
@@ -472,7 +617,7 @@ Entity physics_set_joint(
         .y = world_anchor_b.y - world_anchor_a.y
     };
 
-    joints[joint] = (Joint){
+    (void)JointPool_store_at(&joints_pool, joint, (Joint){
         .type = type,
         .a = a,
         .b = b,
@@ -485,15 +630,24 @@ Entity physics_set_joint(
         .rest_angle = orientations[b] - orientations[a],
         .angular_stiffness = 0.0f,
         .angular_damping = 0.0f
-    };
+    });
 
     return joint;
 }
 
 void physics_set_collision_report(Entity entity, Entity target, bool state) {
+    if(!physics_entity_valid(entity) || !physics_entity_valid(target)) {
+        return;
+    }
+    if(collision_reports_pool.used[entity] == 0) {
+        (void)CollisionReportPool_store_at(&collision_reports_pool, entity, (CollisionReport){0});
+    }
     collision_reports[entity].collisions[target] = state;
 }
 bool physics_get_collision_report(Entity entity, Entity target) {
+    if(!physics_entity_valid(entity) || !physics_entity_valid(target)) {
+        return false;
+    }
     if(collision_reports[entity].collisions[target] && collision_reports[target].collisions[entity]) {
         return true;
     }

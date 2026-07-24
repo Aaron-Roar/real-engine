@@ -8,7 +8,6 @@ ENGINE_SRC := \
 	console.c \
 	engine.c \
 	entity_components.c \
-	error.c \
 	graphics.c \
 	math2d.c \
 	physics.c \

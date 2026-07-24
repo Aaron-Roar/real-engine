@@ -2,11 +2,10 @@
 #include <stdint.h>
 #include <SDL3/SDL.h>
 #include "engine.h"
-
-#include <stdbool.h>
-#include <stdint.h>
-#include <SDL3/SDL.h>
-#include "engine.h"
+#include "entity_components.h"
+#include "physics.h"
+#include "graphics.h"
+#include "grid.h"
 
 SDL_Event sdl_event;
 
@@ -31,6 +30,28 @@ void engine_init() {
     }
 
     SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS);
+    if(!entity_tables_init()) {
+        SDL_Quit();
+        return;
+    }
+    if(!physics_tables_init()) {
+        entity_tables_destroy();
+        SDL_Quit();
+        return;
+    }
+    if(!graphics_tables_init()) {
+        physics_tables_destroy();
+        entity_tables_destroy();
+        SDL_Quit();
+        return;
+    }
+    if(!grid_tables_init()) {
+        graphics_tables_destroy();
+        physics_tables_destroy();
+        entity_tables_destroy();
+        SDL_Quit();
+        return;
+    }
 
     sdl_frequency = SDL_GetPerformanceFrequency();
     sdl_prev_counter = SDL_GetPerformanceCounter();
@@ -114,6 +135,10 @@ Time engine_get_dt() {
 }
 
 void engine_shutdown() {
+    grid_tables_destroy();
+    graphics_tables_destroy();
+    physics_tables_destroy();
+    entity_tables_destroy();
     engine_running = false;
     SDL_Quit();
 }

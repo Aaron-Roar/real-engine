@@ -9,7 +9,9 @@
 SDL_Renderer *sdl_renderer = NULL;
 SDL_Window *sdl_window = NULL;
 
-AnimatedSprite animated_sprites[MAX_ENTITIES] = {0};
+MEMORY_DEFINE_OBJECT_POOL(AnimatedSpritePool, AnimatedSprite)
+
+AnimatedSpritePool animated_sprites_pool = {0};
 const Color hit_box_color = (Color){255,0,0,255};
 const Color particle_color = (Color){0,0,255,255};
 
@@ -28,6 +30,18 @@ typedef struct ScreenRecorder {
 } ScreenRecorder;
 
 static ScreenRecorder screen_recorder = {0};
+
+bool graphics_tables_init(void) {
+    if(AnimatedSpritePool_init(&animated_sprites_pool, MAX_ENTITIES).kind == RESULT_ERROR) {
+        graphics_tables_destroy();
+        return false;
+    }
+    return true;
+}
+
+void graphics_tables_destroy(void) {
+    (void)AnimatedSpritePool_destroy(&animated_sprites_pool);
+}
 
 bool graphics_recording_start(const char *output_path, int fps) {
     if(screen_recorder.recording) {
@@ -346,6 +360,9 @@ void graphics_draw_grid() {
 }
 
 void graphics_scale_textures(Entity entity, Scale scale) {
+    if(entity >= MAX_ENTITIES || !entity_has_components(entity, ANIMATED_SPRITE)) {
+        return;
+    }
     for(int i = 0; i < MAX_TEXTURES; i += 1) {
         animated_sprites[entity].animation.texture_list.textures[i].size.x *= scale.x;
         animated_sprites[entity].animation.texture_list.textures[i].size.y *= scale.y;
@@ -671,8 +688,11 @@ void graphics_draw_sprite(AnimatedSprite sprite, Position pos, Orientation ort) 
 }
 
 void graphics_add_animated_sprite(Entity entity, AnimatedSprite sprite) {
-    animated_sprites[entity] = sprite;
-    entity_mask[entity] |= ANIMATED_SPRITE;
+    if(entity >= MAX_ENTITIES || !entity_alive[entity]) {
+        return;
+    }
+    (void)AnimatedSpritePool_store_at(&animated_sprites_pool, entity, sprite);
+    entity_add_components(entity, ANIMATED_SPRITE);
 }
 
 void graphics_draw_animated_sprites() {

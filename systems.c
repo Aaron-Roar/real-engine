@@ -1,6 +1,5 @@
 #include "entity_components.h"
 #include "systems.h"
-#include "error.h"
 #include "console.h"
 #include "grid.h"
 #include <math2d.h>
@@ -93,7 +92,6 @@ void system_update_velocities(double dt) {
 }
 
 void system_apply_forces() {
-  Error error = {0};
   CMask filter = FORCE | TARGETABLE;
   CMask target_filter = DYNAMIC | MASS;
 
@@ -107,9 +105,12 @@ void system_apply_forces() {
                         force_accelerations[targets[i]].y += forces[i].y/mass[targets[i]];
                     } else {
                         //Force on massless entity
-                        error.code |= ACCELERATING_MASSLESS_ENTITY | FAILED_UPDATE_ACCELERATION;
-                        error_add_entity(&error, i);
-                        error_add_entity(&error, targets[i]);
+                        console_write(
+                            LOG_ENGINE,
+                            "Error: failed to update acceleration, force entity %d targets massless entity %u\n",
+                            i,
+                            targets[i]
+                        );
                     }
                 }
             }
@@ -119,12 +120,10 @@ void system_apply_forces() {
         }
     }
   }
-  error_print(error);
 }
 
 void system_apply_torques() {
     //Apply force offset from centroid and torque applied directly
-  Error error = {0};
   CMask filter = TORQUE | TARGETABLE;
   CMask target_filter = DYNAMIC | MASS;
 
@@ -137,9 +136,12 @@ void system_apply_torques() {
                         torque_angular_accelerations[targets[i]] += torques[i]/physics_polygon_moment_of_inertia(hit_boxes[targets[i]], mass[targets[i]]);
                     } else {
                         //Force on massless entity
-                        error.code |= ACCELERATING_MASSLESS_ENTITY | FAILED_UPDATE_ACCELERATION;
-                        error_add_entity(&error, i);
-                        error_add_entity(&error, targets[i]);
+                        console_write(
+                            LOG_ENGINE,
+                            "Error: failed to update angular acceleration, torque entity %d targets massless entity %u\n",
+                            i,
+                            targets[i]
+                        );
                     }
                 }
             }
@@ -149,7 +151,6 @@ void system_apply_torques() {
         }
     }
   }
-  error_print(error);
 }
 
 void system_clear_force_torque_accelerations() {
