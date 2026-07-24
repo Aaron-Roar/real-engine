@@ -18,9 +18,6 @@ typedef struct EntityIdPool {
     size_t live_count;
 } EntityIdPool;
 extern EntityIdPool entity_id_pool;
-MEMORY_DECLARE_OBJECT_POOL(EntityAlivePool, bool);
-extern EntityAlivePool entity_alive_pool;
-#define entity_alive entity_alive_pool.objects
 typedef struct EntityList {
     uint32_t entity_amount;
     Entity concerned_entities[MAX_ENTITIES];
@@ -94,7 +91,9 @@ extern TargetPool targets_pool;
 //Target Capable Effects
 
 bool entity_tables_init(void);
+bool entity_tables_ensure_capacity(size_t capacity);
 void entity_tables_destroy(void);
+bool entity_is_alive(Entity entity);
 Entity entity_add();
 void entity_delete(Entity entity);
 void entity_add_components(Entity entity, CMask mask);

@@ -13,7 +13,7 @@ void system_generate_global_hitboxes() {
     CMask filter = HIT_BOX;
 
     for(int i = 0; i < MAX_ENTITIES; i += 1) {
-        if(entity_alive[i]) {
+        if(entity_is_alive(i)) {
             if( (entity_mask[i] & filter) == filter ) {
                 Position pos = positions[i];
                 Orientation ort = orientations[i];
@@ -28,7 +28,7 @@ void system_generate_global_hitboxes() {
 
 Shape system_generate_global_hitbox(Entity entity) {
     CMask filter = HIT_BOX;
-        if(entity_alive[entity]) {
+        if(entity_is_alive(entity)) {
             if( (entity_mask[entity] & filter) == filter ) {
                 Position pos = positions[entity];
                 Orientation ort = orientations[entity];
@@ -43,7 +43,7 @@ Shape system_generate_global_hitbox(Entity entity) {
 void system_update_positions(double dt) {
     CMask filter = DYNAMIC;
     for (int i = 0; i < MAX_ENTITIES; i++) {
-        if(entity_alive[i]) {
+        if(entity_is_alive(i)) {
             if( (entity_mask[i] & filter) == filter ) {
                 positions[i] = (Position){
                     .x = positions[i].x + (velocities[i].x)*dt,
@@ -57,7 +57,7 @@ void system_update_positions(double dt) {
 void system_update_orientations(double dt) {
     CMask filter = DYNAMIC;
     for (int i = 0; i < MAX_ENTITIES; i++) {
-        if(entity_alive[i]) {
+        if(entity_is_alive(i)) {
             if( (entity_mask[i] & filter) == filter ) {
                 orientations[i] = orientations[i] + angular_velocities[i]*dt;
             }
@@ -69,7 +69,7 @@ void system_update_orientations(double dt) {
 void system_update_angular_velocities(double dt) {
     CMask filter = DYNAMIC;
     for (int i = 0; i < MAX_ENTITIES; i++) {
-        if(entity_alive[i]) {
+        if(entity_is_alive(i)) {
             if( (entity_mask[i] & filter) == filter) {
                 angular_velocities[i] += (angular_accelerations[i] + torque_angular_accelerations[i]) * dt;
             }
@@ -80,7 +80,7 @@ void system_update_angular_velocities(double dt) {
 void system_update_velocities(double dt) {
     CMask filter = DYNAMIC;
     for (int i = 0; i < MAX_ENTITIES; i++) {
-        if(entity_alive[i]) {
+        if(entity_is_alive(i)) {
             if( (entity_mask[i] & filter) == filter) {
                 velocities[i] = (Velocity){
                     .x = velocities[i].x + (accelerations[i].x + force_accelerations[i].x)*dt,
@@ -96,9 +96,9 @@ void system_apply_forces() {
   CMask target_filter = DYNAMIC | MASS;
 
   for(int i = 0; i < MAX_ENTITIES; i++) {
-    if(entity_alive[i]) { //Check if this entity exists
+    if(entity_is_alive(i)) { //Check if this entity exists
         if( (entity_mask[i] & filter) == filter ) { //Check if this entity is a targetable force
-            if( entity_alive[targets[i]] ) { //Check if the target to the force exists
+            if(entity_is_alive(targets[i])) { //Check if the target to the force exists
                 if( (entity_mask[targets[i]] & target_filter) == target_filter ) { //Check if the target is moveable
                     if(mass[targets[i]] != 0) {
                         force_accelerations[targets[i]].x += forces[i].x/mass[targets[i]];
@@ -128,9 +128,9 @@ void system_apply_torques() {
   CMask target_filter = DYNAMIC | MASS;
 
   for(int i = 0; i < MAX_ENTITIES; i++) {
-    if(entity_alive[i]) { //Check if this entity exists
+    if(entity_is_alive(i)) { //Check if this entity exists
         if( (entity_mask[i] & filter) == filter ) { //Check if this entity is a targetable force
-            if( entity_alive[targets[i]] ) { //Check if the target to the force exists
+            if(entity_is_alive(targets[i])) { //Check if the target to the force exists
                 if( (entity_mask[targets[i]] & target_filter) == target_filter ) { //Check if the target is moveable
                     if(mass[targets[i]] != 0) {
                         torque_angular_accelerations[targets[i]] += torques[i]/physics_polygon_moment_of_inertia(hit_boxes[targets[i]], mass[targets[i]]);
@@ -155,6 +155,9 @@ void system_apply_torques() {
 
 void system_clear_force_torque_accelerations() {
     for(int i = 0; i < MAX_ENTITIES; i++) {
+        if(!entity_is_alive(i)) {
+            continue;
+        }
         force_accelerations[i].x = 0;
         force_accelerations[i].y = 0;
         torque_angular_accelerations[i] = 0;
@@ -576,7 +579,7 @@ void system_resolve_collision(Entity entity_1, Entity entity_2, Collision collis
 
 void system_add_entities_to_grid() {
     for(int i = 0; i < MAX_ENTITIES; i += 1) {
-        if(!entity_alive[i]) {
+        if(!entity_is_alive(i)) {
             continue;
         }
         if( (entity_mask[i] & HIT_BOX) == HIT_BOX) {
@@ -634,12 +637,12 @@ void system_apply_collisions_tuned() {
 
 void system_apply_collisions() {
     for(int i = 0; i < MAX_ENTITIES; i += 1) {
-        if(!entity_alive[i]) {
+        if(!entity_is_alive(i)) {
             continue;
         }
 
         for(int j = i + 1; j < MAX_ENTITIES; j += 1) {
-            if(!entity_alive[j]) {
+            if(!entity_is_alive(j)) {
                 continue;
             }
             if(i == j) {
@@ -672,7 +675,7 @@ void system_apply_collisions() {
 
 void system_apply_angle_locks() {
     for(Entity entity = 0; entity < MAX_ENTITIES; entity += 1) {
-        if(!entity_alive[entity]) {
+        if(!entity_is_alive(entity)) {
             continue;
         }
 
@@ -742,7 +745,7 @@ void system_apply_angle_locks() {
 
 void system_apply_axis_locks() {
     for(Entity entity = 0; entity < MAX_ENTITIES; entity += 1) {
-        if(!entity_alive[entity]) {
+        if(!entity_is_alive(entity)) {
             continue;
         }
 
@@ -784,7 +787,7 @@ void system_apply_axis_locks() {
 
 void system_apply_transform_locks() {
     for(Entity driven = 0; driven < MAX_ENTITIES; driven += 1) {
-        if(!entity_alive[driven]) {
+        if(!entity_is_alive(driven)) {
             continue;
         }
 
@@ -794,7 +797,7 @@ void system_apply_transform_locks() {
 
         Entity driver = transform_locks[driven].driver;
 
-        if(!entity_alive[driver]) {
+        if(!entity_is_alive(driver)) {
             physics_remove_transform_lock(driven);
             continue;
         }
@@ -834,6 +837,9 @@ void system_apply_transform_locks() {
 
 void system_clean_entities_past_lifetime() {
     for(int i = 0; i < MAX_ENTITIES; i += 1) {
+        if(!entity_is_alive(i)) {
+            continue;
+        }
         if( (entity_mask[i] & LIFETIME) == LIFETIME ) {
 
             if( (life_times[i].expirey_time != 0 && life_times[i].expirey_time <= engine_get_time()) ) {
@@ -888,7 +894,7 @@ static void system_add_joint_torque_for_one_tick(Entity target, Torque torque) {
 }
 
 static void system_add_joint_force_at_point_for_one_tick(Entity target, Position world_point, Force force) {
-    if(!entity_alive[target]) {
+    if(!entity_is_alive(target)) {
         return;
     }
 
@@ -922,7 +928,7 @@ static void system_apply_pin_joint(Entity joint_entity) {
     Entity a = joint.a;
     Entity b = joint.b;
 
-    if(!entity_alive[a] || !entity_alive[b]) {
+    if(!entity_is_alive(a) || !entity_is_alive(b)) {
         entity_delete(joint_entity);
         return;
     }
@@ -1077,7 +1083,7 @@ void system_apply_distance_joint(Entity joint_entity) {
 void system_apply_joints()
 {
     for(Entity joint_entity = 1; joint_entity < MAX_ENTITIES; joint_entity += 1) {
-        if(!entity_alive[joint_entity]) {
+        if(!entity_is_alive(joint_entity)) {
             continue;
         }
         Joint joint = joints[joint_entity];
@@ -1101,7 +1107,7 @@ void system_apply_joints()
 
 void system_update_aabbs() {
     for(int i = 0; i < MAX_ENTITIES; i += 1) {
-        if(!entity_alive[i]) {
+        if(!entity_is_alive(i)) {
             continue;
         }
         if( (entity_mask[i] & HIT_BOX) == HIT_BOX) {

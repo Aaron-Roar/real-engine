@@ -82,6 +82,9 @@ int main() {
         //Game Code
         if(engine_get_tick() % 1000 == 0) {
             for(int i = 0; i < MAX_ENTITIES; i += 1) {
+                if(!entity_is_alive(i)) {
+                    continue;
+                }
                 if( (entity_mask[i] & JOINT) == JOINT) {
                     if(joints[i].type == JOINT_PIN) {
                         joints[i].type = JOINT_DISTANCE;
@@ -112,4 +115,3 @@ int main() {
     graphics_end();
     engine_shutdown();
 }
-

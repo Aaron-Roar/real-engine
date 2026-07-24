@@ -23,6 +23,7 @@ extern AABBPool aabbs_pool;
 #define aabbs aabbs_pool.objects
 uint32_t world_y_to_row(Vec1D y);
 bool grid_tables_init(void);
+bool grid_tables_ensure_capacity(size_t capacity);
 void grid_tables_destroy(void);
 void add_entity_to_grids(Entity entity);
 bool checked_pair(Entity entity_1, Entity entity_2);

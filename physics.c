@@ -43,31 +43,58 @@ TransformLockPool transform_locks_pool = {0};
 JointPool joints_pool = {0};
 
 bool physics_tables_init(void) {
-    if(PositionPool_init(&positions_pool, MAX_ENTITIES).kind == RESULT_ERROR) { goto fail; }
-    if(OrientationPool_init(&orientations_pool, MAX_ENTITIES).kind == RESULT_ERROR) { goto fail; }
-    if(VelocityPool_init(&velocities_pool, MAX_ENTITIES).kind == RESULT_ERROR) { goto fail; }
-    if(AccelerationPool_init(&accelerations_pool, MAX_ENTITIES).kind == RESULT_ERROR) { goto fail; }
-    if(AccelerationPool_init(&force_accelerations_pool, MAX_ENTITIES).kind == RESULT_ERROR) { goto fail; }
-    if(MassPool_init(&mass_pool, MAX_ENTITIES).kind == RESULT_ERROR) { goto fail; }
-    if(ForcePool_init(&forces_pool, MAX_ENTITIES).kind == RESULT_ERROR) { goto fail; }
-    if(ShapePool_init(&hit_boxes_pool, MAX_ENTITIES).kind == RESULT_ERROR) { goto fail; }
-    if(ShapePool_init(&world_hit_boxes_pool, MAX_ENTITIES).kind == RESULT_ERROR) { goto fail; }
-    if(CollisionReportPool_init(&collision_reports_pool, MAX_ENTITIES).kind == RESULT_ERROR) { goto fail; }
-    if(AngularVelocityPool_init(&angular_velocities_pool, MAX_ENTITIES).kind == RESULT_ERROR) { goto fail; }
-    if(AngularAccelerationPool_init(&angular_accelerations_pool, MAX_ENTITIES).kind == RESULT_ERROR) { goto fail; }
-    if(AngularVelocityPool_init(&torque_angular_accelerations_pool, MAX_ENTITIES).kind == RESULT_ERROR) { goto fail; }
-    if(TorquePool_init(&torques_pool, MAX_ENTITIES).kind == RESULT_ERROR) { goto fail; }
-    if(FrictionPool_init(&frictions_pool, MAX_ENTITIES).kind == RESULT_ERROR) { goto fail; }
-    if(RestitutionPool_init(&restitutions_pool, MAX_ENTITIES).kind == RESULT_ERROR) { goto fail; }
-    if(AngleLockPool_init(&angle_locks_pool, MAX_ENTITIES).kind == RESULT_ERROR) { goto fail; }
-    if(AxisLockPool_init(&axis_locks_pool, MAX_ENTITIES).kind == RESULT_ERROR) { goto fail; }
-    if(TransformLockPool_init(&transform_locks_pool, MAX_ENTITIES).kind == RESULT_ERROR) { goto fail; }
-    if(JointPool_init(&joints_pool, MAX_ENTITIES).kind == RESULT_ERROR) { goto fail; }
+    if(PositionPool_init(&positions_pool, 0).kind == RESULT_ERROR) { goto fail; }
+    if(OrientationPool_init(&orientations_pool, 0).kind == RESULT_ERROR) { goto fail; }
+    if(VelocityPool_init(&velocities_pool, 0).kind == RESULT_ERROR) { goto fail; }
+    if(AccelerationPool_init(&accelerations_pool, 0).kind == RESULT_ERROR) { goto fail; }
+    if(AccelerationPool_init(&force_accelerations_pool, 0).kind == RESULT_ERROR) { goto fail; }
+    if(MassPool_init(&mass_pool, 0).kind == RESULT_ERROR) { goto fail; }
+    if(ForcePool_init(&forces_pool, 0).kind == RESULT_ERROR) { goto fail; }
+    if(ShapePool_init(&hit_boxes_pool, 0).kind == RESULT_ERROR) { goto fail; }
+    if(ShapePool_init(&world_hit_boxes_pool, 0).kind == RESULT_ERROR) { goto fail; }
+    if(CollisionReportPool_init(&collision_reports_pool, 0).kind == RESULT_ERROR) { goto fail; }
+    if(AngularVelocityPool_init(&angular_velocities_pool, 0).kind == RESULT_ERROR) { goto fail; }
+    if(AngularAccelerationPool_init(&angular_accelerations_pool, 0).kind == RESULT_ERROR) { goto fail; }
+    if(AngularVelocityPool_init(&torque_angular_accelerations_pool, 0).kind == RESULT_ERROR) { goto fail; }
+    if(TorquePool_init(&torques_pool, 0).kind == RESULT_ERROR) { goto fail; }
+    if(FrictionPool_init(&frictions_pool, 0).kind == RESULT_ERROR) { goto fail; }
+    if(RestitutionPool_init(&restitutions_pool, 0).kind == RESULT_ERROR) { goto fail; }
+    if(AngleLockPool_init(&angle_locks_pool, 0).kind == RESULT_ERROR) { goto fail; }
+    if(AxisLockPool_init(&axis_locks_pool, 0).kind == RESULT_ERROR) { goto fail; }
+    if(TransformLockPool_init(&transform_locks_pool, 0).kind == RESULT_ERROR) { goto fail; }
+    if(JointPool_init(&joints_pool, 0).kind == RESULT_ERROR) { goto fail; }
     return true;
 
 fail:
     physics_tables_destroy();
     return false;
+}
+
+bool physics_tables_ensure_capacity(size_t capacity) {
+    if(capacity > MAX_ENTITIES) {
+        return false;
+    }
+    if(capacity > positions_pool.capacity && PositionPool_expand(&positions_pool, capacity - positions_pool.capacity).kind == RESULT_ERROR) { return false; }
+    if(capacity > orientations_pool.capacity && OrientationPool_expand(&orientations_pool, capacity - orientations_pool.capacity).kind == RESULT_ERROR) { return false; }
+    if(capacity > velocities_pool.capacity && VelocityPool_expand(&velocities_pool, capacity - velocities_pool.capacity).kind == RESULT_ERROR) { return false; }
+    if(capacity > accelerations_pool.capacity && AccelerationPool_expand(&accelerations_pool, capacity - accelerations_pool.capacity).kind == RESULT_ERROR) { return false; }
+    if(capacity > force_accelerations_pool.capacity && AccelerationPool_expand(&force_accelerations_pool, capacity - force_accelerations_pool.capacity).kind == RESULT_ERROR) { return false; }
+    if(capacity > mass_pool.capacity && MassPool_expand(&mass_pool, capacity - mass_pool.capacity).kind == RESULT_ERROR) { return false; }
+    if(capacity > forces_pool.capacity && ForcePool_expand(&forces_pool, capacity - forces_pool.capacity).kind == RESULT_ERROR) { return false; }
+    if(capacity > hit_boxes_pool.capacity && ShapePool_expand(&hit_boxes_pool, capacity - hit_boxes_pool.capacity).kind == RESULT_ERROR) { return false; }
+    if(capacity > world_hit_boxes_pool.capacity && ShapePool_expand(&world_hit_boxes_pool, capacity - world_hit_boxes_pool.capacity).kind == RESULT_ERROR) { return false; }
+    if(capacity > collision_reports_pool.capacity && CollisionReportPool_expand(&collision_reports_pool, capacity - collision_reports_pool.capacity).kind == RESULT_ERROR) { return false; }
+    if(capacity > angular_velocities_pool.capacity && AngularVelocityPool_expand(&angular_velocities_pool, capacity - angular_velocities_pool.capacity).kind == RESULT_ERROR) { return false; }
+    if(capacity > angular_accelerations_pool.capacity && AngularAccelerationPool_expand(&angular_accelerations_pool, capacity - angular_accelerations_pool.capacity).kind == RESULT_ERROR) { return false; }
+    if(capacity > torque_angular_accelerations_pool.capacity && AngularVelocityPool_expand(&torque_angular_accelerations_pool, capacity - torque_angular_accelerations_pool.capacity).kind == RESULT_ERROR) { return false; }
+    if(capacity > torques_pool.capacity && TorquePool_expand(&torques_pool, capacity - torques_pool.capacity).kind == RESULT_ERROR) { return false; }
+    if(capacity > frictions_pool.capacity && FrictionPool_expand(&frictions_pool, capacity - frictions_pool.capacity).kind == RESULT_ERROR) { return false; }
+    if(capacity > restitutions_pool.capacity && RestitutionPool_expand(&restitutions_pool, capacity - restitutions_pool.capacity).kind == RESULT_ERROR) { return false; }
+    if(capacity > angle_locks_pool.capacity && AngleLockPool_expand(&angle_locks_pool, capacity - angle_locks_pool.capacity).kind == RESULT_ERROR) { return false; }
+    if(capacity > axis_locks_pool.capacity && AxisLockPool_expand(&axis_locks_pool, capacity - axis_locks_pool.capacity).kind == RESULT_ERROR) { return false; }
+    if(capacity > transform_locks_pool.capacity && TransformLockPool_expand(&transform_locks_pool, capacity - transform_locks_pool.capacity).kind == RESULT_ERROR) { return false; }
+    if(capacity > joints_pool.capacity && JointPool_expand(&joints_pool, capacity - joints_pool.capacity).kind == RESULT_ERROR) { return false; }
+    return true;
 }
 
 void physics_tables_destroy(void) {
@@ -282,7 +309,7 @@ void physics_set_velocity(Entity entity, Velocity v) {
     if(!physics_entity_valid(entity)) {
         return;
     }
-    if(!entity_alive[entity]) {
+    if(!entity_is_alive(entity)) {
         //Error
         return;
     }
@@ -293,7 +320,7 @@ void physics_set_position(Entity entity, Position p) {
     if(!physics_entity_valid(entity)) {
         return;
     }
-    if(!entity_alive[entity]) {
+    if(!entity_is_alive(entity)) {
         //Error
         return;
     }
@@ -305,7 +332,7 @@ void physics_set_mass(Entity entity, Mass m) {
     if(!physics_entity_valid(entity)) {
         return;
     }
-    if(!entity_alive[entity]) {
+    if(!entity_is_alive(entity)) {
         //Error
         return;
     }
@@ -317,12 +344,12 @@ Entity physics_set_force(Entity entity, Force f) {
     if(!physics_entity_valid(entity)) {
         return 0;
     }
-    if(!entity_alive[entity]) {
+    if(!entity_is_alive(entity)) {
         //Error
         return 0;
     }
     Entity force_entity = entity_add();
-    if(!physics_entity_valid(force_entity) || !entity_alive[force_entity]) {
+    if(!physics_entity_valid(force_entity) || !entity_is_alive(force_entity)) {
         return 0;
     }
     (void)ForcePool_store_at(&forces_pool, force_entity, f);
@@ -335,7 +362,7 @@ void physics_set_acceleration(Entity entity, Acceleration a) {
     if(!physics_entity_valid(entity)) {
         return;
     }
-    if(!entity_alive[entity]) {
+    if(!entity_is_alive(entity)) {
         //Error
         return;
     }
@@ -346,12 +373,12 @@ Entity physics_set_torque(Entity entity, Torque t) {
     if(!physics_entity_valid(entity)) {
         return 0;
     }
-    if(!entity_alive[entity]) {
+    if(!entity_is_alive(entity)) {
         //Error
         return 0;
     }
     Entity torque_entity = entity_add();
-    if(!physics_entity_valid(torque_entity) || !entity_alive[torque_entity]) {
+    if(!physics_entity_valid(torque_entity) || !entity_is_alive(torque_entity)) {
         return 0;
     }
     (void)TorquePool_store_at(&torques_pool, torque_entity, t);
@@ -364,7 +391,7 @@ void physics_set_hitbox(Entity entity, Shape hitbox) {
     if(!physics_entity_valid(entity)) {
         return;
     }
-    if(!entity_alive[entity]) {
+    if(!entity_is_alive(entity)) {
         //Error
         return;
     }
@@ -376,7 +403,7 @@ void physics_set_orientation(Entity entity, Orientation angle) {
     if(!physics_entity_valid(entity)) {
         return;
     }
-    if(!entity_alive[entity]) {
+    if(!entity_is_alive(entity)) {
         //Error
         return;
     }
@@ -387,7 +414,7 @@ void physics_set_angular_velocity(Entity entity, AngularVelocity v) {
     if(!physics_entity_valid(entity)) {
         return;
     }
-    if(!entity_alive[entity]) {
+    if(!entity_is_alive(entity)) {
         //Error
         return;
     }
@@ -400,7 +427,7 @@ Shape physics_get_global_hit_box(Entity entity) {
     if(!physics_entity_valid(entity)) {
         return (Shape){0};
     }
-    if(entity_alive[entity]) {
+    if(entity_is_alive(entity)) {
         if( (entity_mask[entity] & filter) == filter ) {
             return world_hit_boxes[entity];
         }
@@ -411,7 +438,7 @@ Shape physics_get_global_hit_box(Entity entity) {
     if(!physics_entity_valid(entity)) {
         return;
     }
-    if(!entity_alive[entity]) {
+    if(!entity_is_alive(entity)) {
         //Error
         return;
     }
@@ -433,7 +460,7 @@ void physics_set_dynamic(Entity entity) {
     if(!physics_entity_valid(entity)) {
         return;
     }
-    if(!entity_alive[entity]) {
+    if(!entity_is_alive(entity)) {
         //Error
         return;
     }
@@ -445,7 +472,7 @@ void physics_set_static(Entity entity) {
     if(!physics_entity_valid(entity)) {
         return;
     }
-    if(!entity_alive[entity]) {
+    if(!entity_is_alive(entity)) {
         //Error
         return;
     }
@@ -457,7 +484,7 @@ void physics_set_angle_lock(Entity entity, Orientation min, Orientation max) {
     if(!physics_entity_valid(entity)) {
         return;
     }
-    if(!entity_alive[entity]) {
+    if(!entity_is_alive(entity)) {
         //Error
         return;
     }
@@ -471,7 +498,7 @@ void physics_set_axis_lock(Entity entity, Axis axis, Position axis_point) {
     if(!physics_entity_valid(entity)) {
         return;
     }
-    if(!entity_alive[entity]) {
+    if(!entity_is_alive(entity)) {
         //Error
         return;
     }
@@ -492,7 +519,7 @@ void physics_set_friction(Entity entity, float friction) {
     if(!physics_entity_valid(entity)) {
         return;
     }
-    if(!entity_alive[entity]) {
+    if(!entity_is_alive(entity)) {
         //Error
         return;
     }
@@ -515,7 +542,7 @@ void physics_set_transform_lock(
     if(!physics_entity_valid(driven) || !physics_entity_valid(driver)) {
         return;
     }
-    if(!entity_alive[driven] || !entity_alive[driver]) {
+    if(!entity_is_alive(driven) || !entity_is_alive(driver)) {
         //Error
         return;
     }
@@ -533,7 +560,7 @@ void physics_remove_transform_lock(Entity entity) {
     if(!physics_entity_valid(entity)) {
         return;
     }
-    if(!entity_alive[entity]) {
+    if(!entity_is_alive(entity)) {
         //Error
         return;
     }
@@ -552,7 +579,7 @@ void physics_set_transform_lock_current_transform(
     if(!physics_entity_valid(driven) || !physics_entity_valid(driver)) {
         return;
     }
-    if(!entity_alive[driven] || !entity_alive[driver]) {
+    if(!entity_is_alive(driven) || !entity_is_alive(driver)) {
         return;
     }
 
@@ -591,12 +618,12 @@ Entity physics_set_joint(
     if(!physics_entity_valid(a) || !physics_entity_valid(b)) {
         return 0;
     }
-    if(!entity_alive[a] || !entity_alive[b]) {
+    if(!entity_is_alive(a) || !entity_is_alive(b)) {
         return 0;
     }
 
     Entity joint = entity_add();
-    if(!physics_entity_valid(joint) || !entity_alive[joint]) {
+    if(!physics_entity_valid(joint) || !entity_is_alive(joint)) {
         return 0;
     }
 

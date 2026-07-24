@@ -13,8 +13,24 @@ Grid grid = {0};
 BooleanPairs pair_checked = {0};
 
 bool grid_tables_init(void) {
-    if(AABBPool_init(&aabbs_pool, MAX_ENTITIES).kind == RESULT_ERROR) {
+    if(AABBPool_init(&aabbs_pool, 0).kind == RESULT_ERROR) {
         grid_tables_destroy();
+        return false;
+    }
+    return true;
+}
+
+bool grid_tables_ensure_capacity(size_t capacity) {
+    if(capacity > MAX_ENTITIES) {
+        return false;
+    }
+    if(capacity <= aabbs_pool.capacity) {
+        return true;
+    }
+    if(AABBPool_expand(
+        &aabbs_pool,
+        capacity - aabbs_pool.capacity
+    ).kind == RESULT_ERROR) {
         return false;
     }
     return true;

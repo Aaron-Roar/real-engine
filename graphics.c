@@ -32,8 +32,24 @@ typedef struct ScreenRecorder {
 static ScreenRecorder screen_recorder = {0};
 
 bool graphics_tables_init(void) {
-    if(AnimatedSpritePool_init(&animated_sprites_pool, MAX_ENTITIES).kind == RESULT_ERROR) {
+    if(AnimatedSpritePool_init(&animated_sprites_pool, 0).kind == RESULT_ERROR) {
         graphics_tables_destroy();
+        return false;
+    }
+    return true;
+}
+
+bool graphics_tables_ensure_capacity(size_t capacity) {
+    if(capacity > MAX_ENTITIES) {
+        return false;
+    }
+    if(capacity <= animated_sprites_pool.capacity) {
+        return true;
+    }
+    if(AnimatedSpritePool_expand(
+        &animated_sprites_pool,
+        capacity - animated_sprites_pool.capacity
+    ).kind == RESULT_ERROR) {
         return false;
     }
     return true;
@@ -567,7 +583,7 @@ void graphics_draw_hit_box(Entity entity, Fill fill_type) {
 
 void graphics_draw_hit_boxes() {
   for(int i = 0; i < MAX_ENTITIES; i += 1) {
-    if(entity_alive[i]) {
+    if(entity_is_alive(i)) {
         if( (entity_mask[i] & HIT_BOX) == HIT_BOX) {
             graphics_draw_hit_box(i, GRAPHICS_OUTLINE);
         }
@@ -589,7 +605,7 @@ void graphics_draw_particle(Entity entity, Fill fill_type) {
 }
 void graphics_draw_particles() {
   for(int i = 0; i < MAX_ENTITIES; i += 1) {
-    if(entity_alive[i]) {
+    if(entity_is_alive(i)) {
         if( (entity_mask[i] & HIT_BOX) == HIT_BOX) {
           if( (entity_mask[i] & PARTICLE) == PARTICLE) {
               graphics_draw_particle(i, GRAPHICS_OUTLINE);
@@ -688,7 +704,7 @@ void graphics_draw_sprite(AnimatedSprite sprite, Position pos, Orientation ort) 
 }
 
 void graphics_add_animated_sprite(Entity entity, AnimatedSprite sprite) {
-    if(entity >= MAX_ENTITIES || !entity_alive[entity]) {
+    if(entity >= MAX_ENTITIES || !entity_is_alive(entity)) {
         return;
     }
     (void)AnimatedSpritePool_store_at(&animated_sprites_pool, entity, sprite);
@@ -816,7 +832,7 @@ void graphics_draw_local_origin(Entity entity) {
 
 void graphics_draw_local_origins() {
     for(int i = 0; i < MAX_ENTITIES; i += 1) {
-        if(!entity_alive[i]) {
+        if(!entity_is_alive(i)) {
             continue;
         }
         if (!entity_has_components(i, HIT_BOX)) {

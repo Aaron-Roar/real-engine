@@ -72,6 +72,7 @@ typedef enum MemoryError {
     \
     PoolType##Result PoolType##_init(PoolType *pool, size_t capacity); \
     PoolType##Result PoolType##_expand(PoolType *pool, size_t additional_capacity); \
+    PoolType##Result PoolType##_defrag(PoolType *pool); \
     PoolType##Result PoolType##_shrink(PoolType *pool, size_t capacity); \
     PoolType##Result PoolType##_clear(PoolType *pool); \
     PoolType##Result PoolType##_destroy(PoolType *pool); \
@@ -115,6 +116,8 @@ typedef enum MemoryError {
  *   is greater than zero.
  * - expand allocates larger arrays, copies the current slots, and frees the
  *   old arrays.
+ * - defrag compacts used slots toward the front of the pool and zeroes the
+ *   trailing unused slots.
  * - shrink refuses to remove any slot that is still marked used.
  * - clear zeroes every allocated object and marks every slot unused, while
  *   keeping the allocated capacity.
@@ -200,6 +203,39 @@ typedef enum MemoryError {
         pool->objects = objects; \
         pool->used = used; \
         pool->capacity = capacity; \
+        return MEMORY_POOL_VALUE(PoolType##Result, true); \
+    } \
+    \
+    PoolType##Result PoolType##_defrag(PoolType *pool) { \
+        size_t read_index; \
+        size_t write_index; \
+        \
+        if(pool == NULL) { \
+            return MEMORY_POOL_ERROR(PoolType##Result, ERROR_MEMORY_POOL_NULL_POINTER); \
+        } \
+        if(pool->capacity == 0) { \
+            return MEMORY_POOL_VALUE(PoolType##Result, true); \
+        } \
+        if(pool->objects == NULL || pool->used == NULL) { \
+            return MEMORY_POOL_ERROR(PoolType##Result, ERROR_MEMORY_POOL_NULL_POINTER); \
+        } \
+        write_index = 0; \
+        for(read_index = 0; read_index < pool->capacity; read_index += 1) { \
+            if(pool->used[read_index] != 0) { \
+                if(write_index != read_index) { \
+                    pool->objects[write_index] = pool->objects[read_index]; \
+                    pool->used[write_index] = 1; \
+                    pool->used[read_index] = 0; \
+                    memset(&pool->objects[read_index], 0, sizeof(ObjectType)); \
+                } \
+                write_index += 1; \
+            } \
+        } \
+        while(write_index < pool->capacity) { \
+            pool->used[write_index] = 0; \
+            memset(&pool->objects[write_index], 0, sizeof(ObjectType)); \
+            write_index += 1; \
+        } \
         return MEMORY_POOL_VALUE(PoolType##Result, true); \
     } \
     \
