@@ -142,11 +142,11 @@ make build
 
 Readable Markdown docs are committed in the repo:
 
+* [Public API reference](docs/public_api.md)
 * [Documentation overview](docs/README.md)
 * [Architecture notes](docs/architecture.md)
 * [Entity ids](docs/entity_ids.md)
 * [Error handling](docs/errors.md)
-* [Public API reference](docs/public_api.md)
 
 Generate the Doxygen docs with:
 
