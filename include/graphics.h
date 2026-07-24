@@ -155,7 +155,7 @@ EngineResult graphics_start(void);
 void graphics_end(void);
 
 /**
- * Poll graphics events and close the console on quit.
+ * Poll graphics events and report whether the window should remain open.
  */
 bool graphics_poll_events(SDL_Event *event);
 

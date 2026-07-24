@@ -39,7 +39,7 @@ Rohr Engine currently focuses on data-oriented 2D simulation:
 * Constraints include joints, axis locks, angle locks, and transform locks.
 * Sprite animation is driven through SDL3 textures.
 * Screen recording can write MP4 output through ffmpeg.
-* A terminal console exists for engine logs and debugging.
+* A simple stdout console exists for engine logs and debugging.
 * Doxygen comments are used for API documentation.
 
 The engine is still early and in development so your mileage may vary.
@@ -97,7 +97,6 @@ engine/
 * `pkg-config`
 * `sdl3`
 * `sdl3-image`
-* `ncurses`
 * `ffmpeg` for recording or converting demo media
 * Math library: `libm` / `-lm`
 

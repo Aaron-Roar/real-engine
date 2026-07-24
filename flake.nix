@@ -35,13 +35,11 @@
             pkgs.lib.makeSearchPath "lib/pkgconfig" [
               pkgs.sdl3
               pkgs.sdl3-image
-              pkgs.ncurses
             ]
           }:${
             pkgs.lib.makeSearchPath "share/pkgconfig" [
               pkgs.sdl3
               pkgs.sdl3-image
-              pkgs.ncurses
             ]
           }''${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}"
 
@@ -83,7 +81,6 @@
         buildInputs = with pkgs; [
           sdl3
           sdl3-image
-          ncurses
         ];
       };
     };

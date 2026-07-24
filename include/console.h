@@ -17,7 +17,7 @@ extern bool console_active;
 /** Enable debug console writes. */
 #define CONSOLE_DEBUG_ON true
 /** Disable debug console writes. */
-#define CONSOLE_DEBUG_OFF true
+#define CONSOLE_DEBUG_OFF false
 
 /** Global console debug state. */
 extern bool console_debug;
@@ -40,7 +40,11 @@ void console_print_logs(void);
 void console_init(void);
 /** Shut down console state. */
 void console_shutdown(void);
-/** Read one console input line. */
+/** Read one console input line.
+ *
+ * The portable stdout console does not provide live input and always returns
+ * false.
+ */
 bool console_read(ConsoleLogString *input);
 /** Write a formatted message to the console. */
 void console_write(LogSourceType source, const char *fmt, ...);

@@ -8,32 +8,29 @@ const Color background_color = (Color){255,255,255,255};
 const int amount_of_entities = 20;
 AnimationAsset animation = {0};
 AnimatedSprite sprite = {0};
+const Time demo_duration_seconds = 10.0;
+
+#define PRINT_ENGINE_ERROR(engine_result) \
+    fprintf(stderr, "%s\n", rohr_error_default_message((engine_result).result.error))
 
 int main(void) {
     EngineResult result;
     EntityResult entity_result;
     AnimationAssetResult animation_result;
 
-    rohr_console_init();
-    rohr_console_set_debug(CONSOLE_DEBUG_OFF);
     if(rohr_error_check(result = rohr_engine_init())) {
-        rohr_console_write(LOG_ENGINE, rohr_error_default_message(result.result.error));
+        PRINT_ENGINE_ERROR(result);
         return 1;
     }
     rohr_engine_set_dt(1/(float)120);
-    if(rohr_error_check(result = rohr_level_editor_init())) {
-        rohr_console_write(LOG_ENGINE, rohr_error_default_message(result.result.error));
-        rohr_engine_shutdown();
-        return 1;
-    }
     if(rohr_error_check(result = rohr_graphics_start())) {
-        rohr_console_write(LOG_ENGINE, rohr_error_default_message(result.result.error));
+        PRINT_ENGINE_ERROR(result);
         rohr_engine_shutdown();
         return 1;
     }
 
     if(rohr_error_check(animation_result = rohr_graphics_load_animation(elderfly_fly_files))) {
-        rohr_console_write(LOG_ENGINE, rohr_error_default_message(animation_result.result.error));
+        PRINT_ENGINE_ERROR(animation_result);
         goto fail;
     }
     animation = animation_result.result.value;
@@ -41,7 +38,7 @@ int main(void) {
 
     Entity magnet_smash;
     if(rohr_error_check(entity_result = rohr_entity_add())) {
-        rohr_console_write(LOG_ENGINE, rohr_error_default_message(entity_result.result.error));
+        PRINT_ENGINE_ERROR(entity_result);
         goto fail;
     }
     magnet_smash = entity_result.result.value;
@@ -67,7 +64,7 @@ int main(void) {
     for(int i = 0; i < amount_of_entities; i += 1) {
         Entity ball;
         if(rohr_error_check(entity_result = rohr_entity_add())) {
-            rohr_console_write(LOG_ENGINE, rohr_error_default_message(entity_result.result.error));
+            PRINT_ENGINE_ERROR(entity_result);
             goto fail;
         }
         ball = entity_result.result.value;
@@ -84,7 +81,7 @@ int main(void) {
         rohr_physics_set_dynamic(ball);
         //set_transform_lock(ball, water_smash, (Vec2D){rohr_tools_random_range(100, 400), rohr_tools_random_range(100, 400)}, rohr_tools_random_range(0, 10), true, true, false);
         if(rohr_error_check(entity_result = rohr_physics_set_joint(ball, magnet_smash, JOINT_DISTANCE, (Vec2D){0}, (Vec2D){0}, 10, 0))) {
-            rohr_console_write(LOG_ENGINE, rohr_error_default_message(entity_result.result.error));
+            PRINT_ENGINE_ERROR(entity_result);
             goto fail;
         }
         sprite = rohr_graphics_create_animated_sprite(animation, (Scale){size/10, size/10});
@@ -100,8 +97,12 @@ int main(void) {
     bool phase_1 = false;
     bool phase_2 = false;
     bool phase_3 = false;
-    while (rohr_console_is_active()) {
+    while (rohr_engine_get_time() < demo_duration_seconds) {
         rohr_system_clean_entities_past_lifetime();
+        SDL_Event event = rohr_engine_poll_event();
+        if(event.type == SDL_EVENT_QUIT) {
+            break;
+        }
         if(!phase_1 && rohr_engine_get_time() > 3) {
             phase_1 = true;
         }
@@ -111,13 +112,6 @@ int main(void) {
         if(!phase_3 && rohr_engine_get_time() > 7) {
             phase_3 = true;
         }
-
-        //Console
-        ConsoleLogString console_line = {0};
-        if(rohr_console_read(&console_line)) {
-            rohr_console_write(LOG_CONSOLE, "%s", console_line.string);
-        }
-        rohr_level_editor_update();
 
         //Game Code
         if(rohr_engine_get_tick() % 1000 == 0) {
