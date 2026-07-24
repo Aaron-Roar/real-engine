@@ -140,6 +140,13 @@ make build
 
 ## Documentation
 
+Readable Markdown docs are committed in the repo:
+
+* [Documentation overview](docs/README.md)
+* [Architecture notes](docs/architecture.md)
+* [Entity ids](docs/entity_ids.md)
+* [Error handling](docs/errors.md)
+
 Generate the Doxygen docs with:
 
 ```sh
