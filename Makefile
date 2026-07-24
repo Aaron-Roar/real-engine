@@ -7,6 +7,7 @@ LIBS := $(shell pkg-config --libs $(PKGS)) -lm
 ENGINE_SRC := \
 	console.c \
 	engine.c \
+	error.c \
 	entity_components.c \
 	graphics.c \
 	math2d.c \

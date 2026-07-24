@@ -43,7 +43,7 @@ static void entity_id_pool_init(void) {
     entity_id_pool.next_index = 0;
 }
 
-bool entity_tables_init(void) {
+EngineResult entity_tables_init(void) {
     if(EntityAlivePool_init(&entity_alive_pool, 0).kind == RESULT_ERROR) {
         goto fail;
     }
@@ -63,21 +63,21 @@ bool entity_tables_init(void) {
         goto fail;
     }
     entity_id_pool_init();
-    return true;
+    return engine_result_value(true);
 
 fail:
     entity_tables_destroy();
-    return false;
+    return engine_result_error(ERROR_ENGINE_ENTITY_TABLES_INIT_FAILED);
 }
 
-bool entity_tables_ensure_capacity(size_t capacity) {
+EngineResult entity_tables_ensure_capacity(size_t capacity) {
     size_t new_capacity;
 
     if(capacity > MAX_ENTITIES) {
-        return false;
+        return engine_result_error(ERROR_ENGINE_MAX_ENTITIES_EXCEEDED);
     }
     if(capacity <= entity_alive_pool.capacity) {
-        return true;
+        return engine_result_value(true);
     }
     new_capacity = entity_alive_pool.capacity == 0 ? 16 : entity_alive_pool.capacity;
     while(new_capacity < capacity) {
@@ -86,13 +86,13 @@ bool entity_tables_ensure_capacity(size_t capacity) {
     if(new_capacity > MAX_ENTITIES) {
         new_capacity = MAX_ENTITIES;
     }
-    if(new_capacity > entity_alive_pool.capacity && EntityAlivePool_expand(&entity_alive_pool, new_capacity - entity_alive_pool.capacity).kind == RESULT_ERROR) { return false; }
-    if(new_capacity > entity_mask_pool.capacity && EntityMaskPool_expand(&entity_mask_pool, new_capacity - entity_mask_pool.capacity).kind == RESULT_ERROR) { return false; }
-    if(new_capacity > targets_pool.capacity && TargetPool_expand(&targets_pool, new_capacity - targets_pool.capacity).kind == RESULT_ERROR) { return false; }
-    if(new_capacity > parents_pool.capacity && ParentPool_expand(&parents_pool, new_capacity - parents_pool.capacity).kind == RESULT_ERROR) { return false; }
-    if(new_capacity > children_pool.capacity && ChildrenPool_expand(&children_pool, new_capacity - children_pool.capacity).kind == RESULT_ERROR) { return false; }
-    if(new_capacity > life_times_pool.capacity && LifeTimePool_expand(&life_times_pool, new_capacity - life_times_pool.capacity).kind == RESULT_ERROR) { return false; }
-    return true;
+    if(new_capacity > entity_alive_pool.capacity && EntityAlivePool_expand(&entity_alive_pool, new_capacity - entity_alive_pool.capacity).kind == RESULT_ERROR) { return engine_result_error(ERROR_ENGINE_TABLE_EXPANSION_FAILED); }
+    if(new_capacity > entity_mask_pool.capacity && EntityMaskPool_expand(&entity_mask_pool, new_capacity - entity_mask_pool.capacity).kind == RESULT_ERROR) { return engine_result_error(ERROR_ENGINE_TABLE_EXPANSION_FAILED); }
+    if(new_capacity > targets_pool.capacity && TargetPool_expand(&targets_pool, new_capacity - targets_pool.capacity).kind == RESULT_ERROR) { return engine_result_error(ERROR_ENGINE_TABLE_EXPANSION_FAILED); }
+    if(new_capacity > parents_pool.capacity && ParentPool_expand(&parents_pool, new_capacity - parents_pool.capacity).kind == RESULT_ERROR) { return engine_result_error(ERROR_ENGINE_TABLE_EXPANSION_FAILED); }
+    if(new_capacity > children_pool.capacity && ChildrenPool_expand(&children_pool, new_capacity - children_pool.capacity).kind == RESULT_ERROR) { return engine_result_error(ERROR_ENGINE_TABLE_EXPANSION_FAILED); }
+    if(new_capacity > life_times_pool.capacity && LifeTimePool_expand(&life_times_pool, new_capacity - life_times_pool.capacity).kind == RESULT_ERROR) { return engine_result_error(ERROR_ENGINE_TABLE_EXPANSION_FAILED); }
+    return engine_result_value(true);
 }
 
 void entity_tables_destroy(void) {
@@ -216,10 +216,10 @@ Entity entity_add() {
 
     required_capacity = (size_t)index + 1;
     if(
-        !entity_tables_ensure_capacity(required_capacity) ||
-        !physics_tables_ensure_capacity(required_capacity) ||
-        !graphics_tables_ensure_capacity(required_capacity) ||
-        !grid_tables_ensure_capacity(required_capacity)
+        entity_tables_ensure_capacity(required_capacity).kind == RESULT_ERROR ||
+        physics_tables_ensure_capacity(required_capacity).kind == RESULT_ERROR ||
+        graphics_tables_ensure_capacity(required_capacity).kind == RESULT_ERROR ||
+        grid_tables_ensure_capacity(required_capacity).kind == RESULT_ERROR
     ) {
         console_write(LOG_ENGINE, "Error: failed to add entity, table expansion failed\n");
         if(reused_slot && entity_id_pool.free_count < MAX_ENTITIES) {

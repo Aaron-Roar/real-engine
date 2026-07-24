@@ -91,10 +91,10 @@ typedef struct Color {
 
 Color graphics_creat_color_hex(uint32_t hex_color_code);
 Color graphics_creat_color_rgba(uint8_t red, uint8_t green, uint8_t blue, uint8_t alpha);
-bool graphics_tables_init(void);
-bool graphics_tables_ensure_capacity(size_t capacity);
+EngineResult graphics_tables_init(void);
+EngineResult graphics_tables_ensure_capacity(size_t capacity);
 void graphics_tables_destroy(void);
-bool graphics_start();
+EngineResult graphics_start();
 void graphics_end();
 bool graphics_poll_events(SDL_Event *event);
 void graphics_draw_background(Color color);

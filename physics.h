@@ -123,8 +123,8 @@ extern JointPool joints_pool;
 #define axis_locks axis_locks_pool.objects
 #define transform_locks transform_locks_pool.objects
 #define joints joints_pool.objects
-bool physics_tables_init(void);
-bool physics_tables_ensure_capacity(size_t capacity);
+EngineResult physics_tables_init(void);
+EngineResult physics_tables_ensure_capacity(size_t capacity);
 void physics_tables_destroy(void);
 Shape physics_shape_world_translate(Shape shape, Position position, Orientation angle);
 float physics_polygon_moment_of_inertia(Shape shape, Mass mass_value);

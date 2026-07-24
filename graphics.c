@@ -31,22 +31,22 @@ typedef struct ScreenRecorder {
 
 static ScreenRecorder screen_recorder = {0};
 
-bool graphics_tables_init(void) {
+EngineResult graphics_tables_init(void) {
     if(AnimatedSpritePool_init(&animated_sprites_pool, 0).kind == RESULT_ERROR) {
         graphics_tables_destroy();
-        return false;
+        return engine_result_error(ERROR_ENGINE_GRAPHICS_TABLES_INIT_FAILED);
     }
-    return true;
+    return engine_result_value(true);
 }
 
-bool graphics_tables_ensure_capacity(size_t capacity) {
+EngineResult graphics_tables_ensure_capacity(size_t capacity) {
     size_t new_capacity;
 
     if(capacity > MAX_ENTITIES) {
-        return false;
+        return engine_result_error(ERROR_ENGINE_MAX_ENTITIES_EXCEEDED);
     }
     if(capacity <= animated_sprites_pool.capacity) {
-        return true;
+        return engine_result_value(true);
     }
     new_capacity = animated_sprites_pool.capacity == 0 ? 16 : animated_sprites_pool.capacity;
     while(new_capacity < capacity) {
@@ -59,9 +59,9 @@ bool graphics_tables_ensure_capacity(size_t capacity) {
         &animated_sprites_pool,
         new_capacity - animated_sprites_pool.capacity
     ).kind == RESULT_ERROR) {
-        return false;
+        return engine_result_error(ERROR_ENGINE_TABLE_EXPANSION_FAILED);
     }
-    return true;
+    return engine_result_value(true);
 }
 
 void graphics_tables_destroy(void) {
@@ -428,12 +428,11 @@ Position graphics_screen_to_world(Position screen) {
     };
 }
 
-bool graphics_start() {
+EngineResult graphics_start() {
     console_write(LOG_ENGINE, "---Initializing Graphics---\n");
     if (!SDL_InitSubSystem(SDL_INIT_VIDEO)) {
         SDL_Log("Couldn't initialize SDL: %s", SDL_GetError());
-        //Can fail need error
-        return false;
+        return engine_result_error(ERROR_ENGINE_GRAPHICS_INIT_FAILED);
     }
 
     console_write(LOG_ENGINE, "Starting game window and renderer\n");
@@ -448,7 +447,7 @@ bool graphics_start() {
             &sdl_renderer
         )) {
         SDL_Log("Couldn't create window/renderer: %s", SDL_GetError());
-        return false;
+        return engine_result_error(ERROR_ENGINE_GRAPHICS_INIT_FAILED);
     }
 
     console_write(LOG_ENGINE, "Configuring renderer\n");
@@ -461,7 +460,7 @@ bool graphics_start() {
 
     console_write(LOG_ENGINE, "Graphics initialization complete\n");
     console_write(LOG_ENGINE, "---Initializing Graphics---\n");
-    return true;
+    return engine_result_value(true);
 }
 
 void graphics_renderer_end() {
@@ -595,7 +594,7 @@ void graphics_draw_hit_box(Entity entity, Fill fill_type) {
 void graphics_draw_hit_boxes() {
   for(int i = 0; i < MAX_ENTITIES; i += 1) {
     if(entity_index_is_alive(i)) {
-        if( (entity_mask[i] & HIT_BOX) == HIT_BOX) {
+        if( entity_index_has_components(i, HIT_BOX)) {
             graphics_draw_hit_box(entity_from_index(i), GRAPHICS_OUTLINE);
         }
     }

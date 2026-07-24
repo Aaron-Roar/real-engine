@@ -23,34 +23,41 @@ bool engine_dt_overwritten = false;
 SDLTime sdl_prev_counter = 0;
 SDLTime sdl_frequency = 0;
 
-void engine_init() {
+EngineResult engine_init() {
+    EngineResult result;
+
     if(engine_running) {
-        // Error: engine already running
-        return;
+        return engine_result_error(ERROR_ENGINE_ALREADY_RUNNING);
     }
 
-    SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS);
-    if(!entity_tables_init()) {
-        SDL_Quit();
-        return;
+    if(!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS)) {
+        return engine_result_error(ERROR_ENGINE_SDL_INIT_FAILED);
     }
-    if(!physics_tables_init()) {
+    result = entity_tables_init();
+    if(result.kind == RESULT_ERROR) {
+        SDL_Quit();
+        return result;
+    }
+    result = physics_tables_init();
+    if(result.kind == RESULT_ERROR) {
         entity_tables_destroy();
         SDL_Quit();
-        return;
+        return result;
     }
-    if(!graphics_tables_init()) {
+    result = graphics_tables_init();
+    if(result.kind == RESULT_ERROR) {
         physics_tables_destroy();
         entity_tables_destroy();
         SDL_Quit();
-        return;
+        return result;
     }
-    if(!grid_tables_init()) {
+    result = grid_tables_init();
+    if(result.kind == RESULT_ERROR) {
         graphics_tables_destroy();
         physics_tables_destroy();
         entity_tables_destroy();
         SDL_Quit();
-        return;
+        return result;
     }
 
     sdl_frequency = SDL_GetPerformanceFrequency();
@@ -62,6 +69,7 @@ void engine_init() {
 
     engine_paused = false;
     engine_running = true;
+    return engine_result_value(true);
 }
 
 void engine_pause() {

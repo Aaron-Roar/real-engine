@@ -22,10 +22,16 @@ AnimatedSprite sprite_orm = {0};
 int main() {
     console_init();
     console_set_debug(CONSOLE_DEBUG_OFF);
-    engine_init();
+    EngineResult engine_result = engine_init();
+    if(engine_result.kind == RESULT_ERROR) {
+        console_write(LOG_ENGINE, "Error: failed to initialize engine: %s\n", engine_error_string(engine_result.result.error));
+        return 1;
+    }
     engine_set_dt(1/(float)120);
     level_editor_init();
-    if (!graphics_start()) {
+    EngineResult graphics_result = graphics_start();
+    if(graphics_result.kind == RESULT_ERROR) {
+        console_write(LOG_ENGINE, "Error: failed to initialize graphics: %s\n", engine_error_string(graphics_result.result.error));
         engine_shutdown();
         return 1;
     }
@@ -149,4 +155,3 @@ int main() {
     graphics_end();
     engine_shutdown();
 }
-

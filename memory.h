@@ -6,40 +6,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-
-typedef enum {
-    RESULT_VALUE,
-    RESULT_ERROR,
-} ResultKind;
-
-typedef enum MemoryError {
-    ERROR_MEMORY_POOL_NONE = 0,
-    ERROR_MEMORY_POOL_NULL_POINTER,
-    ERROR_MEMORY_POOL_CAPACITY_OVERFLOW,
-    ERROR_MEMORY_POOL_ALLOCATION_FAILED,
-    ERROR_MEMORY_POOL_FULL,
-    ERROR_MEMORY_POOL_INVALID_OBJECT,
-    ERROR_MEMORY_POOL_OBJECT_NOT_USED,
-    ERROR_MEMORY_POOL_SHRINK_WOULD_REMOVE_USED_OBJECT,
-} MemoryError;
-
-/*
- * A result type needs an explicit result name in C.
- *
- * C macros cannot reliably build a type name from an arbitrary C type because
- * valid types can include spaces, pointers, and other tokens that cannot be
- * pasted into an identifier. Pass the PascalCase ResultType explicitly.
- */
-#define DECLARE_RESULT_TYPE(ResultType, ValueType) \
-    typedef union Result##ResultType { \
-        ValueType value; \
-        MemoryError error; \
-    } Result##ResultType; \
-    \
-    typedef struct ResultType { \
-        ResultKind kind; \
-        Result##ResultType result; \
-    } ResultType
+#include "error.h"
 
 /*
  * Declare a fixed-size object pool type and its generated function prototypes.
@@ -49,8 +16,8 @@ typedef enum MemoryError {
  * initialization: objects for the stored values and used for slot state.
  *
  * The generated functions all return explicit result types:
- * - PoolTypeResult contains a bool success value or a MemoryError.
- * - PoolTypeObjectResult contains an ObjectType pointer or a MemoryError.
+ * - PoolTypeResult contains a bool success value or an EngineError.
+ * - PoolTypeObjectResult contains an ObjectType pointer or an EngineError.
  *
  * PoolType_store copies an ObjectType value into the first free slot
  * and returns a borrowed pointer to the stored object.
@@ -98,7 +65,7 @@ typedef enum MemoryError {
  * Build an error result for one of the memory result types.
  *
  * ResultType must be a result type declared by DECLARE_RESULT_TYPE, and
- * ErrorValue must be one of the MemoryError enum values.
+ * ErrorValue must be one of the EngineError enum values.
  */
 #define MEMORY_POOL_ERROR(ResultType, ErrorValue) \
     (ResultType) { \
