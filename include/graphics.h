@@ -19,99 +19,200 @@
 #define RECORDING_WIDTH  WINDOW_WIDTH
 #define RECORDING_HEIGHT WINDOW_HEIGHT
 
+/** 2D scale factor for textures and sprites. */
 typedef struct {
+    /** Horizontal scale. */
     float x;
+    /** Vertical scale. */
     float y;
 } Scale;
 
+/** Descriptor for loading a texture from disk. */
 typedef struct {
+  /** Path to the texture file. */
   const char *file;
+  /** Source texture size metadata. */
   Scale size;
 } TextureDescriptor;
 
+/** Descriptor for loading an animation from texture descriptors. */
 typedef struct {
+  /** Texture descriptors for each animation frame. */
   TextureDescriptor texture_descriptors[MAX_ANIMATIONS_FRAMES];
+  /** Number of valid descriptors. */
   uint8_t amount_of_descriptors;
+  /** Frame duration measured in engine ticks. */
   Tick ticks_per_frame;
+  /** Frame duration measured in engine time. */
   Time time_per_frame;
 } AnimationDescriptor;
 
+/** SDL texture handle owned by the graphics module. */
 typedef SDL_Texture* Texture;
 
+/** Loaded texture and its size metadata. */
 typedef struct {
+    /** SDL texture handle. */
     Texture texture;
+    /** Texture size metadata. */
     Scale size;
 } TextureAsset;
+
+/** Result type for functions that return a TextureAsset. */
 ERROR_DECLARE_RESULT_TYPE(TextureAssetResult, TextureAsset);
 
+/** Fixed list of loaded textures for an animation. */
 typedef struct {
+    /** Loaded texture assets. */
     TextureAsset textures[MAX_TEXTURES];
+    /** Number of valid textures. */
     int amount;
 } TextureList;
 
+/** Loaded animation asset. */
 typedef struct {
+    /** Textures used as animation frames. */
     TextureList texture_list;
+    /** Frame duration measured in engine ticks. */
     Tick ticks_per_frame;
+    /** Frame duration measured in engine time. */
     Time time_per_frame;
 } AnimationAsset;
+
+/** Result type for functions that return an AnimationAsset. */
 ERROR_DECLARE_RESULT_TYPE(AnimationAssetResult, AnimationAsset);
 
+/** Horizontal facing direction for sprite drawing. */
 typedef enum {DIRECTION_LEFT, DIRECTION_RIGHT} Direction;
 
 
+/** Runtime animated sprite state. */
 typedef struct {
+    /** Animation asset used by this sprite. */
     AnimationAsset animation;
+    /** Current animation frame index. */
     int animation_frame;
+    /** Tick when the frame last advanced. */
     Tick last_update_tick;
+    /** Time when the frame last advanced. */
     Time last_update_time;
+    /** Current draw direction. */
     Direction direction;
+    /** Draw scale. */
     Scale scale;
 } AnimatedSprite;
 
+/** Fixed set of animated sprites. */
 typedef struct {
+    /** Sprite entries. */
     AnimatedSprite sprite_set[MAX_ANIMATION_SETS];
+    /** Number of valid sprite entries. */
     uint8_t amount_of_sets;
 } AnimatedSpriteSet;
 
+/** Pool storing animated sprites by EntityIndex. */
 MEMORY_DECLARE_OBJECT_POOL(AnimatedSpritePool, AnimatedSprite);
+
+/** Pool backing the animated_sprites table. */
 extern AnimatedSpritePool animated_sprites_pool;
+
+/** Animated sprite table indexed by EntityIndex. */
 #define animated_sprites animated_sprites_pool.objects
 
+/** Shape fill mode for debug drawing. */
 typedef enum Fill {
+    /** Draw only the outline. */
     GRAPHICS_OUTLINE,
+    /** Draw filled geometry. */
     GRAPHICS_FILLED
 } Fill;
 
+/** RGBA color value. */
 typedef struct Color {
+  /** Red channel. */
   uint8_t red;
+  /** Green channel. */
   uint8_t green;
+  /** Blue channel. */
   uint8_t blue;
+  /** Alpha channel. */
   uint8_t alpha;
 } Color;
 
+/**
+ * Create a color from a 32-bit RGBA hex value.
+ */
 Color graphics_creat_color_hex(uint32_t hex_color_code);
+
+/**
+ * Create the SDL window and renderer.
+ */
 EngineResult graphics_start();
+
+/**
+ * Destroy graphics resources and stop SDL video.
+ */
 void graphics_end();
+
+/**
+ * Poll graphics events and close the console on quit.
+ */
 bool graphics_poll_events(SDL_Event *event);
+
+/** Clear the render target with a background color. */
 void graphics_draw_background(Color color);
+
+/** Present the current frame. */
 void graphics_show();
+
+/** Draw one entity hitbox. */
 void graphics_draw_hit_box(Entity entity, Fill fill_type);
+
+/** Draw every live entity hitbox. */
 void graphics_draw_hit_boxes();
+
+/** Load a texture from a descriptor. */
 TextureAssetResult graphics_load_texture(TextureDescriptor text_desc);
+
+/** Load an animation from texture descriptors. */
 AnimationAssetResult graphics_load_animation(AnimationDescriptor anim_desc);
+
+/** Create sprite runtime state from an animation asset. */
 AnimatedSprite graphics_create_animated_sprite(AnimationAsset asset_ptr, Scale scale);
+
+/** Attach an animated sprite to an entity. */
 EngineResult graphics_add_animated_sprite(Entity entity, AnimatedSprite sprite);
+
+/** Draw all live animated sprites. */
 void graphics_draw_animated_sprites();
+
+/** Update frame state for all live animated sprites. */
 void graphics_update_sprite_frames(Tick current_tick, Time current_time);
+
+/** Scale an entity's animated sprite textures. */
 void graphics_scale_textures(Entity entity, Scale scale);
+
+/** Convert world coordinates to logical screen coordinates. */
 Position graphics_world_to_screen(Position pos);
+
+/** Convert logical screen coordinates to world coordinates. */
 Position graphics_screen_to_world(Position screen);
+
+/** Get the mouse position in logical screen coordinates. */
 Position graphics_get_mouse_screen_position(void);
+
+/** Draw the editor/debug grid. */
 void graphics_draw_grid();
+
+/** Start recording frames to an output file through ffmpeg. */
 bool graphics_recording_start(
     const char *output_path,
     int fps
 );
+
+/** Draw all particle entities. */
 void graphics_draw_particles();
+
+/** Draw local origin axes for all live hitbox entities. */
 void graphics_draw_local_origins();
 #endif

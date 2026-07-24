@@ -8,7 +8,7 @@
 #include <string.h>
 #include "error.h"
 
-/*
+/**
  * Declare a fixed-size object pool type and its generated function prototypes.
  *
  * PoolType is the concrete pool struct name to create. ObjectType is the
@@ -49,7 +49,7 @@
     PoolType##Result PoolType##_release_at(PoolType *pool, size_t index); \
     PoolType##Result PoolType##_release(PoolType *pool, ObjectType *object)
 
-/*
+/**
  * Build a successful result value for one of the memory result types.
  *
  * ResultType must be a result type declared by ERROR_DECLARE_RESULT_TYPE, and Value
@@ -61,7 +61,7 @@
         .result.value = (Value), \
     }
 
-/*
+/**
  * Build an error result for one of the memory result types.
  *
  * ResultType must be a result type declared by ERROR_DECLARE_RESULT_TYPE, and
@@ -73,7 +73,7 @@
         .result.error = (ErrorValue), \
     }
 
-/*
+/**
  * Define the object pool functions declared by MEMORY_DECLARE_OBJECT_POOL.
  *
  * Include this macro in exactly one translation unit for each PoolType.
