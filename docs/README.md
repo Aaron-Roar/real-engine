@@ -1,6 +1,6 @@
-# Real Engine Documentation
+# Rohr Engine Documentation
 
-Real Engine is a lightweight C and SDL3 game engine built around explicit
+Rohr Engine is a lightweight C and SDL3 game engine built around explicit
 engine systems, stable entity ids, component tables, object pools, and a small
 error/result API.
 

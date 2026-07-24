@@ -1,6 +1,6 @@
-# Real Engine
+# Rohr Engine
 
-Real Engine is a small 2D game engine written in C with SDL3.
+Rohr Engine is a small 2D game engine written in C with SDL3.
 
 This project grew out of a passion for systems development, which gradually led me toward exploring engine design. It is a hands-on side project where I can experiment with low-level concepts, build each component from the ground up, and refine the design as it develops.
 
@@ -26,7 +26,7 @@ These GIFs are generated from the example programs in `examples/`.
 
 ## What It Does
 
-Real Engine currently focuses on data-oriented 2D simulation:
+Rohr Engine currently focuses on data-oriented 2D simulation:
 
 * Entity ids are stable handles, separate from table indices.
 * Component data is stored in indexed tables for cache-friendly systems.
@@ -188,7 +188,7 @@ Please keep the style of the project in mind: plain C, explicit ownership, minim
 
 ## License Intent
 
-I want Real Engine to be usable as a library in other projects, including closed-source games or applications, while still requiring changes to the engine itself to stay open when distributed.
+I want Rohr Engine to be usable as a library in other projects, including closed-source games or applications, while still requiring changes to the engine itself to stay open when distributed.
 
 That sounds closest to the GNU Lesser General Public License, likely `LGPL-3.0-or-later`, but the license is not finalized until the repository includes the proper license files. If you plan to use this seriously before that is finished, please check the current repo state first.
 
@@ -213,4 +213,4 @@ Things I would like to keep improving:
 * Tests and validation tools
 * More complete documentation
 
-Real Engine is an active personal project. It is rough in places, but the goal is to keep improving it in the open and make the engine easier to use, inspect, and contribute to over time.
+Rohr Engine is an active personal project. It is rough in places, but the goal is to keep improving it in the open and make the engine easier to use, inspect, and contribute to over time.

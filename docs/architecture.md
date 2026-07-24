@@ -1,6 +1,6 @@
 # Architecture {#architecture}
 
-Real Engine keeps systems separate and explicit. Public engine APIs live in
+Rohr Engine keeps systems separate and explicit. Public engine APIs live in
 `include/`, implementation files live in `src/`, and private engine contracts
 that should not be application-facing live in `src/engine_internal.h`.
 

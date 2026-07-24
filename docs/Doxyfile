@@ -1,4 +1,4 @@
-PROJECT_NAME           = "Real Engine"
+PROJECT_NAME           = "Rohr Engine"
 PROJECT_BRIEF          = "A lightweight C and SDL3 game engine"
 OUTPUT_DIRECTORY       = build/docs
 

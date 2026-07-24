@@ -21,7 +21,7 @@ ENGINE_SRC := \
 	src/controller.c
 
 ENGINE_OBJ := $(patsubst src/%.c,build/obj/%.o,$(ENGINE_SRC))
-ENGINE_LIB := lib/libreal_engine.a
+ENGINE_LIB := lib/librohr_engine.a
 DOXYGEN := doxygen
 PANDOC := pandoc
 DOCS_DOXYFILE := docs/Doxyfile
@@ -50,7 +50,7 @@ help:
 		"		  Equivalent to make build" \
 		"" \
 		"  build-engine" \
-		"		  Builds lib/libreal_engine.a" \
+		"		  Builds lib/librohr_engine.a" \
 		"" \
 		"  build-example-pit" \
 		"		  Builds examples/flies-in-pit/flies_in_pit.c" \
@@ -129,7 +129,7 @@ docs: $(README_HTML)
 
 $(README_HTML): README.md docs/assets/flies_in_pit.gif docs/assets/flies_around_ball.gif
 	@mkdir -p $(DOCS_OUTPUT)
-	$(PANDOC) README.md --standalone --embed-resources --metadata title="Real Engine" -o $@
+	$(PANDOC) README.md --standalone --embed-resources --metadata title="Rohr Engine" -o $@
 
 clean-docs:
 	rm -rf $(DOCS_OUTPUT)
